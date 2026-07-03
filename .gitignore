@@ -3,9 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Ignore local connections/credentials configuration
-connections.json
-
 # Ignore temporary scratch/test files
 scratch/
 test_*.py
