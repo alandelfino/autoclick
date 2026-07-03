@@ -1,0 +1,16 @@
+# Ignore python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore local connections/credentials configuration
+connections.json
+
+# Ignore temporary scratch/test files
+scratch/
+test_*.py
+.agents
+AGENTS.md
+task.md
+walkthrough.md
+implementation_plan.md
