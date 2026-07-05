@@ -25,10 +25,10 @@ class DatabaseMixin:
     def run_db_query(self, conn_type, conn_config, query_text):
         if conn_type == 'sqlite':
             if sqlite3 is None:
-                raise ImportError("Módulo sqlite3 não disponível.")
+                raise ImportError("sqlite3 module not available.")
             db_path = conn_config.get("filepath", "")
             if not db_path:
-                raise ValueError("Caminho do banco SQLite não fornecido.")
+                raise ValueError("SQLite database path not provided.")
                 
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
@@ -48,7 +48,7 @@ class DatabaseMixin:
             
         elif conn_type == 'postgres':
             if psycopg2 is None:
-                raise ImportError("Biblioteca psycopg2 não instalada.\nPara usar conexões PostgreSQL reais, instale via: pip install psycopg2-binary")
+                raise ImportError("psycopg2 library not installed.\nTo use real PostgreSQL connections, install it via: pip install psycopg2-binary")
             host = conn_config.get("host", "localhost")
             port = conn_config.get("port", "5432")
             database = conn_config.get("database", "")
@@ -72,7 +72,7 @@ class DatabaseMixin:
             
         elif conn_type == 'mysql':
             if pymysql is None:
-                raise ImportError("Biblioteca pymysql não instalada.\nPara usar conexões MySQL reais, instale via: pip install pymysql")
+                raise ImportError("pymysql library not installed.\nTo use real MySQL connections, install it via: pip install pymysql")
             host = conn_config.get("host", "localhost")
             port = conn_config.get("port", "3306")
             database = conn_config.get("database", "")
@@ -97,19 +97,19 @@ class DatabaseMixin:
             conn.close()
             return result
             
-        raise ValueError(f"Tipo de banco desconhecido: {conn_type}")
+        raise ValueError(f"Unknown database type: {conn_type}")
 
     def get_db_schema(self, conn_type, conn_config):
         if conn_type == 'sqlite':
             if sqlite3 is None:
-                raise ImportError("Módulo sqlite3 não disponível.")
+                raise ImportError("sqlite3 module not available.")
             db_path = conn_config.get("filepath", "")
             if not db_path:
-                raise ValueError("Caminho do banco SQLite não fornecido.")
+                raise ValueError("SQLite database path not provided.")
                 
             import os
             if not os.path.exists(db_path):
-                raise FileNotFoundError(f"Arquivo SQLite não encontrado: {db_path}")
+                raise FileNotFoundError(f"SQLite file not found: {db_path}")
                 
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
@@ -127,7 +127,7 @@ class DatabaseMixin:
             
         elif conn_type == 'postgres':
             if psycopg2 is None:
-                raise ImportError("Biblioteca psycopg2 não instalada.\nPara usar conexões PostgreSQL reais, instale via: pip install psycopg2-binary")
+                raise ImportError("psycopg2 library not installed.\nTo use real PostgreSQL connections, install it via: pip install psycopg2-binary")
             host = conn_config.get("host", "localhost")
             port = conn_config.get("port", "5432")
             database = conn_config.get("database", "")
@@ -159,7 +159,7 @@ class DatabaseMixin:
             
         elif conn_type == 'mysql':
             if pymysql is None:
-                raise ImportError("Biblioteca pymysql não instalada.\nPara usar conexões MySQL reais, instale via: pip install pymysql")
+                raise ImportError("pymysql library not installed.\nTo use real MySQL connections, install it via: pip install pymysql")
             host = conn_config.get("host", "localhost")
             port = conn_config.get("port", "3306")
             database = conn_config.get("database", "")
@@ -191,5 +191,4 @@ class DatabaseMixin:
             conn.close()
             return schema
             
-        raise ValueError(f"Tipo de banco desconhecido: {conn_type}")
-
+        raise ValueError(f"Unknown database type: {conn_type}")

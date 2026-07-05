@@ -17,6 +17,7 @@ import re
 # --- Models ---
 from models.node import VisualNode
 from models.connection import VisualConnection
+from core.i18n_helper import t
 
 # --- Connectors (Mixins) ---
 from connectors.database import DatabaseMixin
@@ -55,7 +56,7 @@ class FlowBuilderProApp(
 ):
     def __init__(self, root):
         self.root = root
-        self.root.title("AutoClick Visual Flow Editor - Profissional")
+        self.root.title(t("app.title"))
         
         # Maximized full size
         try:
@@ -201,7 +202,7 @@ class FlowBuilderProApp(
         self.load_flow_from_filepath(filepath)
 
     def close_flow(self):
-        if messagebox.askyesno("Fechar Fluxo", "Deseja fechar o fluxo atual? Alterações não salvas serão perdidas."):
+        if messagebox.askyesno(t("menu.file_close"), t("messages.confirm_close")):
             self.clear_flow(ask=False, recreate_start=False)
             self.current_filepath = None
             
@@ -256,18 +257,18 @@ class FlowBuilderProApp(
                 json.dump(flow_data, f, indent=4, ensure_ascii=False)
                 
             self.current_filepath = filepath
-            self.log_message(f"Fluxo salvo com sucesso em: {filepath}")
+            self.log_message(t("messages.save_success").format(filepath))
             if show_popup:
-                messagebox.showinfo("Sucesso", "Fluxo salvo com sucesso localmente!")
+                messagebox.showinfo(t("messages.success"), t("messages.save_success").format(filepath))
         except Exception as e:
-            self.log_message(f"ERRO ao salvar fluxo: {str(e)}")
-            messagebox.showerror("Erro", f"Não foi possível salvar o fluxo:\n{str(e)}")
+            self.log_message(f"{t('messages.error_save').format(str(e))}")
+            messagebox.showerror(t("messages.error"), f"{t('messages.error_save').format(str(e))}")
 
     def save_flow_to_file(self):
         filepath = filedialog.asksaveasfilename(
             defaultextension=".flow",
-            filetypes=[("Arquivos de Fluxo", "*.flow"), ("Todos os Arquivos", "*.*")],
-            title="Salvar Fluxo Como"
+            filetypes=[("Flow Files", "*.flow"), ("All Files", "*.*")],
+            title=t("menu.file_save_as")
         )
         if not filepath:
             return
@@ -275,8 +276,8 @@ class FlowBuilderProApp(
 
     def load_flow_from_file(self):
         filepath = filedialog.askopenfilename(
-            filetypes=[("Arquivos de Fluxo", "*.flow"), ("Todos os Arquivos", "*.*")],
-            title="Carregar Fluxo Local"
+            filetypes=[("Flow Files", "*.flow"), ("All Files", "*.*")],
+            title=t("menu.file_open")
         )
         if not filepath:
             return
@@ -343,13 +344,13 @@ class FlowBuilderProApp(
             self.canvas.scan_mark(0, 0)
             self.canvas.scan_dragto(int(cur_x - saved_x), int(cur_y - saved_y), gain=1)
             
-            self.log_message(f"Fluxo carregado com sucesso de: {filepath}")
+            self.log_message(t("messages.success") + f": {filepath}")
             self.select_node(None)
             self.draw_grid()
             
         except Exception as e:
-            self.log_message(f"ERRO ao carregar fluxo: {str(e)}")
-            messagebox.showerror("Erro", f"Não foi possível carregar o arquivo de fluxo:\n{str(e)}")
+            self.log_message(f"{t('messages.error_load').format(str(e))}")
+            messagebox.showerror(t("messages.error"), f"{t('messages.error_load').format(str(e))}")
 
     # --- Node Creation and Management ---
 
@@ -427,7 +428,7 @@ class FlowBuilderProApp(
     def delete_node_by_ref(self, node):
         if node.type == 'start':
             return
-        if messagebox.askyesno("Confirmar Exclusão", f"Deseja realmente excluir o nó '{node.name}'?"):
+        if messagebox.askyesno(t("messages.warning"), f"{t('canvas.context_delete')} '{node.name}'?"):
             node_id = node.id
             if self.selected_node == node:
                 self.close_node_window()
@@ -438,7 +439,7 @@ class FlowBuilderProApp(
             node.delete()
             if node_id in self.nodes:
                 del self.nodes[node_id]
-            self.log_message(f"Nó {node_id} ('{node.name}') removido.")
+            self.log_message(f"Node {node_id} ('{node.name}') removed.")
             self.auto_connect_loops()
 
     def delete_node_from_config(self):
@@ -448,12 +449,12 @@ class FlowBuilderProApp(
 
     def delete_selected_node(self):
         if not self.selected_node:
-            messagebox.showwarning("Aviso", "Por favor, selecione um nó para deletar.")
+            messagebox.showwarning(t("messages.warning"), "Please select a node to delete.")
             return
             
         node = self.selected_node
         if node.type == 'start':
-            messagebox.showwarning("Aviso", "O nó de Início não pode ser excluído.")
+            messagebox.showwarning(t("messages.warning"), "The Start node cannot be deleted.")
             return
             
         node_id = node.id
@@ -469,10 +470,10 @@ class FlowBuilderProApp(
         del self.nodes[node_id]
         
         self.select_node(None)
-        self.log_message(f"Nó {node_id} removido com sucesso.")
+        self.log_message(f"Node {node_id} successfully removed.")
 
     def clear_flow(self, ask=True, recreate_start=True):
-        if ask and not messagebox.askyesno("Confirmar", "Deseja limpar todo o fluxo e criar um novo?"):
+        if ask and not messagebox.askyesno(t("messages.warning"), t("messages.confirm_clear")):
             return
             
         for node in list(self.nodes.values()):
@@ -499,7 +500,7 @@ class FlowBuilderProApp(
         if recreate_start:
             self.create_start_node()
             
-        self.log_message("Canvas limpo. Novo fluxo iniciado.")
+        self.log_message("Canvas cleared. New flow started.")
         self.draw_grid()
 
     # --- Flow Execution Engine (Async Execution Thread) ---
@@ -509,11 +510,11 @@ class FlowBuilderProApp(
             return
             
         if not self.nodes:
-            messagebox.showwarning("Aviso", "Não há nós no canvas para executar.")
+            messagebox.showwarning(t("messages.warning"), "No nodes in canvas to execute.")
             return
             
         # 1. Ask for confirmation
-        if not messagebox.askyesno("Confirmar Execução", "Deseja realmente iniciar a execução do fluxo?"):
+        if not messagebox.askyesno("Confirm Execution", "Do you really want to start executing the flow?"):
             return
             
         # 2. Check countdown config
@@ -577,14 +578,14 @@ class FlowBuilderProApp(
         if not start_node:
             start_node = self.create_start_node()
             
-        self.log_message(f"Iniciando a execução do fluxo pelo nó de início: '{start_node.name}'")
+        self.log_message(f"Starting execution of the flow from the start node: '{start_node.name}'")
 
         # Determine loop configuration
-        loop_mode = start_node.properties.get('loop_mode', 'Executar 1 vez')
+        loop_mode = start_node.properties.get('loop_mode', 'Run once')
         loop_count_val = start_node.properties.get('loop_count', 5)
-        if loop_mode == "Executar 1 vez":
+        if loop_mode in ["Executar 1 vez", "Run once"]:
             max_runs = 1
-        elif loop_mode == "Executar N vezes":
+        elif loop_mode in ["Executar N vezes", "Run N times"]:
             try:
                 max_runs = int(loop_count_val)
             except ValueError:
@@ -595,7 +596,7 @@ class FlowBuilderProApp(
         # Set running state UI
         self.is_running = True
         self.is_paused = False
-        self.run_btn.config(state="disabled", text="⚡ EXECUTANDO...")
+        self.run_btn.config(state="disabled", text=f"⚡ {t('menu.run_start').upper()}...")
         self.stop_btn.config(state="normal")
         
         # System Tray icon integration
@@ -613,24 +614,24 @@ class FlowBuilderProApp(
             return
         self.is_running = False
         self.is_paused = False
-        self.log_message(">> Solicitação de parada recebida. Interrompendo fluxo...")
+        self.log_message(">> Stop request received. Interrupting flow...")
 
     def toggle_pause(self):
         if not self.is_running:
             return
         self.is_paused = not self.is_paused
         if self.is_paused:
-            self.log_message(">> EXECUÇÃO PAUSADA. Pressione [Ctrl+P] para continuar.")
-            self.root.after(0, lambda: self.run_btn.config(text="⏸ PAUSADO"))
+            self.log_message(">> EXECUTION PAUSADA. Press [Ctrl+P] to resume.")
+            self.root.after(0, lambda: self.run_btn.config(text="⏸ PAUSED"))
         else:
-            self.log_message(">> EXECUÇÃO RETOMADA.")
-            self.root.after(0, lambda: self.run_btn.config(text="⚡ EXECUTANDO..."))
+            self.log_message(">> EXECUTION RESUMED.")
+            self.root.after(0, lambda: self.run_btn.config(text=f"⚡ {t('menu.run_start').upper()}..."))
 
     def run_flow_thread(self, start_node, max_runs):
         payload = {}
         current_run = 0
-        self.log_message("=== INICIANDO EXECUÇÃO DO FLUXO ===")
-        self.log_message(f"Payload Inicial: {json.dumps(payload)}")
+        self.log_message("=== STARTING FLOW EXECUTION ===")
+        self.log_message(f"Initial Payload: {json.dumps(payload)}")
         
         self.start_hotkey_listener()
         last_node = None
@@ -641,7 +642,7 @@ class FlowBuilderProApp(
                 if max_runs != -1 and current_run > max_runs:
                     break
                     
-                self.log_message(f"--- Rodada {current_run} " + (f"de {max_runs}" if max_runs != -1 else "(Loop Infinito)") + " ---")
+                self.log_message(f"--- Round {current_run} " + (f"of {max_runs}" if max_runs != -1 else "(Infinite Loop)") + " ---")
                 
                 current_node = start_node
                 while current_node and self.is_running:
@@ -666,7 +667,7 @@ class FlowBuilderProApp(
                         self.execution_history[current_node.id]["output"] = copy.deepcopy(payload)
                         self.last_run_payload = copy.deepcopy(payload)
                         
-                        self.log_message(f"Payload atualizado: {json.dumps(payload, ensure_ascii=False)}")
+                        self.log_message(f"Payload updated: {json.dumps(payload, ensure_ascii=False)}")
                         
                         # Pause brief moment (1.2s) to show visual highlights
                         time.sleep(1.2)
@@ -706,11 +707,11 @@ class FlowBuilderProApp(
                     
                 # Short delay between loop runs
                 if self.is_running and (max_runs == -1 or current_run < max_runs):
-                    self.log_message("Aguardando 1s antes de reiniciar a rodada...")
+                    self.log_message("Waiting 1s before restarting round...")
                     time.sleep(1.0)
                 
         except Exception as e:
-            self.log_message(f"ERRO durante a execução: {str(e)}")
+            self.log_message(f"ERROR during execution: {str(e)}")
             if last_node:
                 self.root.after(0, lambda n=last_node: n.highlight_execution(False))
                 
@@ -718,7 +719,7 @@ class FlowBuilderProApp(
         def reset_ui():
             self.is_running = False
             self.is_paused = False
-            self.run_btn.config(state="normal", text="▶ EXECUTAR FLUXO")
+            self.run_btn.config(state="normal", text="▶ " + t("menu.run_start").upper())
             self.stop_btn.config(state="disabled")
             
             # Stop tray icon and restore window if hidden
@@ -728,8 +729,8 @@ class FlowBuilderProApp(
             self.root.after(0, self.root.deiconify)
             self.root.after(0, lambda: self.root.state('zoomed'))
             
-            self.log_message("=== EXECUÇÃO DO FLUXO FINALIZADA ===")
-            self.log_message(f"Payload Final: {json.dumps(payload, ensure_ascii=False, indent=2)}")
+            self.log_message("=== FLOW EXECUTION FINISHED ===")
+            self.log_message(f"Final Payload: {json.dumps(payload, ensure_ascii=False, indent=2)}")
             if self.selected_node and self.properties_container:
                 self.build_properties_panel(self.selected_node)
             
@@ -812,13 +813,13 @@ class FlowBuilderProApp(
         main_frame.pack(fill="both", expand=True)
         
         chk_hide = ttk.Checkbutton(
-            main_frame, text="Ocultar a Janela ao executar", 
+            main_frame, text=t("menu.settings_hide_window"), 
             variable=temp_hide_var
         )
         chk_hide.pack(anchor="w", pady=(0, 15))
         
         lbl_countdown = tk.Label(
-            main_frame, text="Contagem regressiva para executar (segundos):", 
+            main_frame, text=t("menu.settings_countdown"), 
             font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc"
         )
         lbl_countdown.pack(anchor="w", pady=(0, 5))
@@ -836,23 +837,23 @@ class FlowBuilderProApp(
                 if sec < 0:
                     raise ValueError()
             except ValueError:
-                messagebox.showerror("Erro", "A contagem regressiva deve ser um número inteiro maior ou igual a 0.")
+                messagebox.showerror(t("messages.error"), t("menu.settings_error_countdown"))
                 return
                 
             self.hide_window_var.set(temp_hide_var.get())
             self.countdown_seconds_var.set(sec)
-            self.log_message(f"Configurações aplicadas: Ocultar={temp_hide_var.get()}, Segundos={sec}")
+            self.log_message(t("menu.settings_applied_log").format(temp_hide_var.get(), sec))
             settings_win.destroy()
             
         btn_apply = tk.Button(
-            btn_frame, text="Aplicar ✔", font=("Segoe UI", 9, "bold"),
+            btn_frame, text=t("menu.settings_apply"), font=("Segoe UI", 9, "bold"),
             bg="#22c55e", fg="#ffffff", activebackground="#16a34a", activeforeground="#ffffff",
             bd=0, padx=15, pady=6, cursor="hand2", command=apply_settings
         )
         btn_apply.pack(side="right", padx=(5, 0))
         
         btn_cancel = tk.Button(
-            btn_frame, text="Cancelar", font=("Segoe UI", 9, "bold"),
+            btn_frame, text=t("menu.settings_cancel"), font=("Segoe UI", 9, "bold"),
             bg="#94a3b8", fg="#ffffff", activebackground="#64748b", activeforeground="#ffffff",
             bd=0, padx=15, pady=6, cursor="hand2", command=settings_win.destroy
         )

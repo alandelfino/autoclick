@@ -4,8 +4,7 @@ Connections tab — Management UI for database and API connections.
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-import json
-import os
+from core.i18n_helper import t
 
 
 class ConnectionsTabMixin:
@@ -22,14 +21,14 @@ class ConnectionsTabMixin:
             try:
                 self.save_flow_to_filepath(self.current_filepath, show_popup=False)
             except Exception as e:
-                self.log_message(f"Erro ao salvar conexões no fluxo: {str(e)}")
+                self.log_message(f"Error saving connections to flow: {str(e)}")
 
     def setup_connections_tab(self):
         # Configure layout for Connections tab (list only)
         main_frame = ttk.Frame(self.tab_conn, padding=10)
         main_frame.pack(fill="both", expand=True)
         
-        lbl_list = tk.Label(main_frame, text="Conexões Configuradas", font=("Segoe UI", 10, "bold"), fg="#1e293b")
+        lbl_list = tk.Label(main_frame, text=t("connections_tab.configured_connections"), font=("Segoe UI", 10, "bold"), fg="#1e293b")
         lbl_list.pack(anchor="w", pady=(0, 5))
         
         # Treeview frame to hold Treeview + scrollbar
@@ -38,8 +37,8 @@ class ConnectionsTabMixin:
         
         # Treeview list
         self.conn_tree = ttk.Treeview(tree_frame, columns=("Nome", "Tipo"), show="headings", selectmode="browse")
-        self.conn_tree.heading("Nome", text="Nome")
-        self.conn_tree.heading("Tipo", text="Tipo")
+        self.conn_tree.heading("Nome", text=t("connections_tab.name"))
+        self.conn_tree.heading("Tipo", text=t("connections_tab.type"))
         self.conn_tree.column("Nome", width=250)
         self.conn_tree.column("Tipo", width=120)
         self.conn_tree.pack(side="left", fill="both", expand=True)
@@ -58,7 +57,7 @@ class ConnectionsTabMixin:
         
         # New Connection button
         btn_new_conn = tk.Button(
-            btn_frame, text="➕ Nova Conexão", font=("Segoe UI", 9, "bold"),
+            btn_frame, text=t("connection_dialogs.new_conn"), font=("Segoe UI", 9, "bold"),
             bg="#2563eb", fg="#ffffff", activebackground="#1d4ed8", activeforeground="#ffffff",
             bd=0, padx=15, pady=8, cursor="hand2", command=self.open_new_connection_window
         )
@@ -66,7 +65,7 @@ class ConnectionsTabMixin:
         
         # Edit Connection button
         btn_edit_conn = tk.Button(
-            btn_frame, text="✏️ Editar Conexão", font=("Segoe UI", 9, "bold"),
+            btn_frame, text=t("connections_tab.edit_conn"), font=("Segoe UI", 9, "bold"),
             bg="#f59e0b", fg="#ffffff", activebackground="#d97706", activeforeground="#ffffff",
             bd=0, padx=15, pady=8, cursor="hand2", command=self.open_edit_connection_window
         )
@@ -74,7 +73,7 @@ class ConnectionsTabMixin:
         
         # Delete Connection button
         btn_del_conn = tk.Button(
-            btn_frame, text="🗑️ Excluir Conexão", font=("Segoe UI", 9, "bold"),
+            btn_frame, text=t("connections_tab.delete_conn"), font=("Segoe UI", 9, "bold"),
             bg="#ef4444", fg="#ffffff", activebackground="#dc2626", activeforeground="#ffffff",
             bd=0, padx=15, pady=8, cursor="hand2", command=self.delete_connection_from_list
         )
@@ -101,7 +100,7 @@ class ConnectionsTabMixin:
     def open_edit_connection_window(self):
         selected = self.conn_tree.selection()
         if not selected:
-            messagebox.showwarning("Aviso", "Por favor, selecione uma conexão para editar.")
+            messagebox.showwarning(t("messages.warning"), t("connections_tab.select_edit"))
             return
         conn_name = selected[0]
         self.open_connection_window(conn_name)
@@ -109,12 +108,12 @@ class ConnectionsTabMixin:
     def delete_connection_from_list(self):
         selected = self.conn_tree.selection()
         if not selected:
-            messagebox.showwarning("Aviso", "Por favor, selecione uma conexão para excluir.")
+            messagebox.showwarning(t("messages.warning"), t("connections_tab.select_delete"))
             return
         conn_name = selected[0]
-        if messagebox.askyesno("Confirmar Exclusão", f"Tem certeza que deseja excluir a conexão '{conn_name}'?"):
+        if messagebox.askyesno(t("connection_dialogs.confirm_delete_title"), t("connection_dialogs.confirm_delete_msg").format(conn_name)):
             if conn_name in self.saved_connections:
                 del self.saved_connections[conn_name]
                 self.save_connections()
-                self.log_message(f"Conexão '{conn_name}' excluída.")
+                self.log_message(f"Connection '{conn_name}' deleted.")
             self.populate_connections_list()

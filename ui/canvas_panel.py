@@ -3,6 +3,7 @@ Canvas panel — Canvas setup, grid drawing, zoom/pan controls, and auto-layout.
 """
 import tkinter as tk
 from tkinter import ttk
+from core.i18n_helper import t
 
 
 class CanvasPanelMixin:
@@ -13,13 +14,13 @@ class CanvasPanelMixin:
         self.notebook = ttk.Notebook(self.center_panel)
         self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
         
-        # Tab 1: Fluxo
+        # Tab 1: Fluxo (Flow)
         self.tab_flow = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_flow, text="Fluxo")
+        self.notebook.add(self.tab_flow, text=t("canvas.tab_flow"))
         
-        # Tab 2: Conexões
+        # Tab 2: Conexões (Connections)
         self.tab_conn = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_conn, text="Conexões")
+        self.notebook.add(self.tab_conn, text=t("canvas.tab_conn"))
         
         # Create full window size canvas inside self.tab_flow (not packed yet)
         self.canvas = tk.Canvas(self.tab_flow, bg="#f1f5f9", highlightthickness=0)
@@ -138,7 +139,7 @@ class CanvasPanelMixin:
         vh = self.canvas.winfo_height()
         self.apply_zoom(factor, vw / 2.0, vh / 2.0)
         self.zoom_scale = 1.0
-        self.log_message("Zoom resetado para 100%")
+        self.log_message(t("canvas.zoom_reset"))
 
     def apply_zoom(self, factor, ref_x, ref_y):
         new_scale = self.zoom_scale * factor
@@ -195,9 +196,9 @@ class CanvasPanelMixin:
 
     def show_node_context_menu(self, event, node):
         menu = tk.Menu(self.root, tearoff=0)
-        menu.add_command(label="Editar", command=lambda: self.open_node_config_window(node))
+        menu.add_command(label=t("canvas.context_edit"), command=lambda: self.open_node_config_window(node))
         if node.type != 'start':
-            menu.add_command(label="Excluir", command=lambda: self.delete_node_by_ref(node))
+            menu.add_command(label=t("canvas.context_delete"), command=lambda: self.delete_node_by_ref(node))
         menu.post(event.x_root, event.y_root)
 
     def on_pan_drag(self, event):
@@ -245,7 +246,7 @@ class CanvasPanelMixin:
                 c.waypoints[i] = [wp[0] + dx, wp[1] + dy]
             c.update_line()
             
-        self.log_message("Visualização centralizada.")
+        self.log_message(t("canvas.view_centered"))
         self.draw_grid()
 
     def auto_layout_nodes(self):
@@ -315,5 +316,5 @@ class CanvasPanelMixin:
             c.waypoints.clear()
             c.update_line()
             
-        self.log_message("Auto-layout completo!")
+        self.log_message(t("canvas.auto_layout_complete"))
         self.center_view()

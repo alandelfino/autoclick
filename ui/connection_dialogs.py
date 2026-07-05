@@ -6,6 +6,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 import threading
+from core.i18n_helper import t
 
 
 class ConnectionDialogsMixin:
@@ -20,7 +21,8 @@ class ConnectionDialogsMixin:
             self.conn_window = None
             
         self.conn_window = tk.Toplevel(self.root)
-        self.conn_window.title(f"Configuração de Conexão: {conn_name if conn_name else 'Nova Conexão'}")
+        display_name = conn_name if conn_name else t("connection_dialogs.new_connection")
+        self.conn_window.title(t("connection_dialogs.config_title").format(display_name))
         self.conn_window.transient(self.root)
         self.conn_window.grab_set()
         
@@ -54,15 +56,16 @@ class ConnectionDialogsMixin:
             conn_type = 'postgres'
         
         # Title of section
+        action_name = t("connection_dialogs.edit_conn") if is_edit else t("connection_dialogs.create_conn")
         lbl_title = tk.Label(
             self.conn_form_frame, 
-            text=f"{'Editar' if is_edit else 'Criar'} Conexão " + (f"({conn_type.upper()})" if conn_type else ""),
+            text=f"{action_name} " + (f"({conn_type.upper()})" if conn_type else ""),
             font=("Segoe UI", 12, "bold"), fg="#1e293b"
         )
         lbl_title.pack(anchor="w", pady=(0, 15))
         
         # 1. Connection Name field
-        lbl_name = tk.Label(self.conn_form_frame, text="Nome da Conexão (Único):", font=("Segoe UI", 9, "bold"), fg="#475569")
+        lbl_name = tk.Label(self.conn_form_frame, text=t("connection_dialogs.conn_name_unique"), font=("Segoe UI", 9, "bold"), fg="#475569")
         lbl_name.pack(anchor="w", pady=(0, 2))
         
         ent_name = ttk.Entry(self.conn_form_frame, font=("Segoe UI", 9))
@@ -76,7 +79,7 @@ class ConnectionDialogsMixin:
         
         if not conn_type:
             # 2. Connection Type selection (Creation mode)
-            lbl_type = tk.Label(self.conn_form_frame, text="Tipo de Conexão:", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_type = tk.Label(self.conn_form_frame, text=t("connection_dialogs.conn_type"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_type.pack(anchor="w", pady=(0, 2))
             
             cb_type = ttk.Combobox(self.conn_form_frame, values=["API", "PostgreSQL", "MySQL", "SQLite"], state="readonly")
@@ -96,7 +99,7 @@ class ConnectionDialogsMixin:
         self.conn_form_data["type"] = conn_type
         
         if conn_type == 'sqlite':
-            lbl_path = tk.Label(self.conn_form_frame, text="Caminho do Arquivo SQLite (.db / .sqlite):", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_path = tk.Label(self.conn_form_frame, text=t("connection_dialogs.db_path"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_path.pack(anchor="w", pady=(0, 2))
             
             path_frame = ttk.Frame(self.conn_form_frame)
@@ -109,8 +112,8 @@ class ConnectionDialogsMixin:
             
             def browse_db_file():
                 fn = filedialog.askopenfilename(
-                    filetypes=[("Bancos de Dados", "*.db;*.sqlite;*.sqlite3"), ("Todos os Arquivos", "*.*")],
-                    title="Selecionar Banco SQLite"
+                    filetypes=[(t("connection_dialogs.filetype_db"), "*.db;*.sqlite;*.sqlite3"), (t("connection_dialogs.filetype_all"), "*.*")],
+                    title=t("connection_dialogs.select_sqlite_title")
                 )
                 if fn:
                     ent_path.delete(0, tk.END)
@@ -118,7 +121,7 @@ class ConnectionDialogsMixin:
                     self.invalidate_connection()
                     
             btn_browse = tk.Button(
-                path_frame, text="Procurar...", font=("Segoe UI", 9, "bold"),
+                path_frame, text=t("connection_dialogs.browse"), font=("Segoe UI", 9, "bold"),
                 bg="#e2e8f0", fg="#475569", activebackground="#cbd5e1", activeforeground="#475569",
                 bd=0, padx=10, cursor="hand2", command=browse_db_file
             )
@@ -130,7 +133,7 @@ class ConnectionDialogsMixin:
             grid_frame.pack(fill="x", pady=(0, 15))
             
             # Host
-            lbl_host = tk.Label(grid_frame, text="Host:", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_host = tk.Label(grid_frame, text=t("connection_dialogs.db_host"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_host.grid(row=0, column=0, sticky="w", pady=2, padx=(0, 5))
             ent_host = ttk.Entry(grid_frame, font=("Segoe UI", 9))
             ent_host.insert(0, conn_info.get("host", "localhost"))
@@ -139,7 +142,7 @@ class ConnectionDialogsMixin:
             
             # Port
             default_port = "5432" if conn_type == 'postgres' else "3306"
-            lbl_port = tk.Label(grid_frame, text="Porta:", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_port = tk.Label(grid_frame, text=t("connection_dialogs.db_port"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_port.grid(row=0, column=2, sticky="w", pady=2, padx=(0, 5))
             ent_port = ttk.Entry(grid_frame, font=("Segoe UI", 9), width=8)
             ent_port.insert(0, conn_info.get("port", default_port))
@@ -147,7 +150,7 @@ class ConnectionDialogsMixin:
             self.conn_form_data["port"] = ent_port
             
             # Database
-            lbl_db = tk.Label(grid_frame, text="Banco de Dados:", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_db = tk.Label(grid_frame, text=t("connection_dialogs.db_name"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_db.grid(row=1, column=0, sticky="w", pady=2, padx=(0, 5))
             ent_db = ttk.Entry(grid_frame, font=("Segoe UI", 9))
             ent_db.insert(0, conn_info.get("database", ""))
@@ -155,7 +158,7 @@ class ConnectionDialogsMixin:
             self.conn_form_data["database"] = ent_db
             
             # User
-            lbl_user = tk.Label(grid_frame, text="Usuário:", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_user = tk.Label(grid_frame, text=t("connection_dialogs.db_user"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_user.grid(row=2, column=0, sticky="w", pady=2, padx=(0, 5))
             ent_user = ttk.Entry(grid_frame, font=("Segoe UI", 9))
             ent_user.insert(0, conn_info.get("user", ""))
@@ -163,7 +166,7 @@ class ConnectionDialogsMixin:
             self.conn_form_data["user"] = ent_user
             
             # Password
-            lbl_pass = tk.Label(grid_frame, text="Senha:", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_pass = tk.Label(grid_frame, text=t("connection_dialogs.db_password"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_pass.grid(row=3, column=0, sticky="w", pady=2, padx=(0, 5))
             ent_pass = ttk.Entry(grid_frame, font=("Segoe UI", 9), show="*")
             ent_pass.insert(0, conn_info.get("password", ""))
@@ -174,28 +177,28 @@ class ConnectionDialogsMixin:
             
         elif conn_type == 'api':
             # API endpoint configuration
-            lbl_url = tk.Label(self.conn_form_frame, text="URL Base (ex: https://api.github.com):", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_url = tk.Label(self.conn_form_frame, text=t("connection_dialogs.api_url"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_url.pack(anchor="w", pady=(0, 2))
             ent_url = ttk.Entry(self.conn_form_frame, font=("Segoe UI", 9))
             ent_url.insert(0, conn_info.get("base_url", ""))
             ent_url.pack(fill="x", pady=(0, 10))
             self.conn_form_data["base_url"] = ent_url
             
-            lbl_headers = tk.Label(self.conn_form_frame, text="Headers Padrão (JSON):", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_headers = tk.Label(self.conn_form_frame, text=t("connection_dialogs.api_headers"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_headers.pack(anchor="w", pady=(0, 2))
             ent_headers = ttk.Entry(self.conn_form_frame, font=("Segoe UI", 9))
             ent_headers.insert(0, conn_info.get("default_headers", ""))
             ent_headers.pack(fill="x", pady=(0, 10))
             self.conn_form_data["default_headers"] = ent_headers
             
-            lbl_auth = tk.Label(self.conn_form_frame, text="Autenticação:", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_auth = tk.Label(self.conn_form_frame, text=t("connection_dialogs.api_auth"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_auth.pack(anchor="w", pady=(0, 2))
             cb_auth = ttk.Combobox(self.conn_form_frame, values=["None", "Bearer Token", "Basic Auth", "API Key"], state="readonly")
             cb_auth.set(conn_info.get("auth_type", "None"))
             cb_auth.pack(fill="x", pady=(0, 10))
             self.conn_form_data["auth_type"] = cb_auth
             
-            lbl_token = tk.Label(self.conn_form_frame, text="Token / Valor Auth:", font=("Segoe UI", 9, "bold"), fg="#475569")
+            lbl_token = tk.Label(self.conn_form_frame, text=t("connection_dialogs.api_token"), font=("Segoe UI", 9, "bold"), fg="#475569")
             lbl_token.pack(anchor="w", pady=(0, 2))
             ent_token = ttk.Entry(self.conn_form_frame, font=("Segoe UI", 9))
             ent_token.insert(0, conn_info.get("auth_token", ""))
@@ -208,7 +211,7 @@ class ConnectionDialogsMixin:
         
         # Save connection button (starts disabled)
         self.btn_save = tk.Button(
-            btn_frame, text="💾 Salvar Conexão", font=("Segoe UI", 9, "bold"),
+            btn_frame, text=t("connection_dialogs.save_conn"), font=("Segoe UI", 9, "bold"),
             bg="#cbd5e1", fg="#64748b", activebackground="#cbd5e1", activeforeground="#64748b",
             bd=0, padx=12, pady=6, cursor="arrow", command=self.save_connection_action,
             state="disabled"
@@ -217,7 +220,7 @@ class ConnectionDialogsMixin:
         
         # Connect connection button
         self.btn_connect = tk.Button(
-            btn_frame, text="🔌 Conectar", font=("Segoe UI", 9, "bold"),
+            btn_frame, text=t("connection_dialogs.connect"), font=("Segoe UI", 9, "bold"),
             bg="#2563eb", fg="#ffffff", activebackground="#1d4ed8", activeforeground="#ffffff",
             bd=0, padx=12, pady=6, cursor="hand2", command=self.connect_connection_action
         )
@@ -226,7 +229,7 @@ class ConnectionDialogsMixin:
         if is_edit:
             # Delete connection button
             btn_del = tk.Button(
-                btn_frame, text="🗑️ Excluir", font=("Segoe UI", 9, "bold"),
+                btn_frame, text=t("connection_dialogs.delete"), font=("Segoe UI", 9, "bold"),
                 bg="#ef4444", fg="#ffffff", activebackground="#dc2626", activeforeground="#ffffff",
                 bd=0, padx=12, pady=6, cursor="hand2", command=self.delete_connection_action
             )
@@ -261,7 +264,7 @@ class ConnectionDialogsMixin:
             
         name = name_widget.get().strip()
         if not name:
-            messagebox.showwarning("Aviso", "Por favor, defina um nome único para a conexão.")
+            messagebox.showwarning(t("messages.warning"), t("connection_dialogs.define_unique_name"))
             return
             
         conn_type = self.conn_form_data.get("type")
@@ -289,8 +292,8 @@ class ConnectionDialogsMixin:
             
         self.saved_connections[name] = config
         self.save_connections()
-        self.log_message(f"Conexão '{name}' salva com sucesso.")
-        messagebox.showinfo("Sucesso", f"Conexão '{name}' salva com sucesso!")
+        self.log_message(f"Connection '{name}' successfully saved.")
+        messagebox.showinfo(t("messages.success"), t("connection_dialogs.saved_successfully").format(name))
         
         self.populate_connections_list()
         self.conn_tree.selection_set(name)
@@ -303,11 +306,11 @@ class ConnectionDialogsMixin:
         if not selected:
             return
         name = selected[0]
-        if messagebox.askyesno("Confirmar Exclusão", f"Tem certeza que deseja excluir a conexão '{name}'?"):
+        if messagebox.askyesno(t("connection_dialogs.confirm_delete_title"), t("connection_dialogs.confirm_delete_msg").format(name)):
             if name in self.saved_connections:
                 del self.saved_connections[name]
                 self.save_connections()
-                self.log_message(f"Conexão '{name}' excluída.")
+                self.log_message(f"Connection '{name}' deleted.")
                 
             self.populate_connections_list()
             if hasattr(self, 'conn_window') and self.conn_window:
@@ -335,8 +338,8 @@ class ConnectionDialogsMixin:
             
         # Run test/schema fetch asynchronously to prevent UI freeze
         def run_connect():
-            self.log_message(f"Conectando ao banco/servidor do tipo {conn_type.upper()}...")
-            self.btn_connect.config(state="disabled", text="🔌 Conectando...")
+            self.log_message(f"Connecting to database/server of type {conn_type.upper()}...")
+            self.btn_connect.config(state="disabled", text=t("connection_dialogs.connecting"))
             try:
                 schema_info = {}
                 if conn_type == 'sqlite':
@@ -353,7 +356,7 @@ class ConnectionDialogsMixin:
                     status = f"HTTP {res['status_code']}"
                     schema_info = {}
                     
-                self.log_message(f"Conexão estabelecida com sucesso: {status}")
+                self.log_message(f"Connection successfully established: {status}")
                 
                 def success_ui():
                     self.temp_schema = schema_info
@@ -363,18 +366,18 @@ class ConnectionDialogsMixin:
                         activebackground="#059669", activeforeground="#ffffff",
                         cursor="hand2"
                     )
-                    self.btn_connect.config(state="normal", text="🔌 Conectar")
+                    self.btn_connect.config(state="normal", text=t("connection_dialogs.connect"))
                     
                     if conn_type in ['sqlite', 'postgres', 'mysql']:
                         num_tables = len(schema_info)
-                        msg = f"Conectado com sucesso!\nCarregadas {num_tables} tabelas do banco de dados."
+                        msg = t("connection_dialogs.db_connected_msg").format(num_tables)
                     else:
-                        msg = f"Conectado com sucesso!\nAPI respondendo com status: {status}"
-                    messagebox.showinfo("Conexão Estabelecida", msg)
+                        msg = t("connection_dialogs.api_connected_msg").format(status)
+                    messagebox.showinfo(t("connection_dialogs.connected_title"), msg)
                     
                 self.root.after(0, success_ui)
             except Exception as e:
-                self.log_message(f"Falha na conexão: {str(e)}")
+                self.log_message(f"Connection failed: {str(e)}")
                 
                 def fail_ui():
                     self.temp_schema = None
@@ -384,8 +387,8 @@ class ConnectionDialogsMixin:
                         activebackground="#cbd5e1", activeforeground="#64748b",
                         cursor="arrow"
                     )
-                    self.btn_connect.config(state="normal", text="🔌 Conectar")
-                    messagebox.showerror("Falha na Conexão", f"Não foi possível conectar:\n{str(e)}")
+                    self.btn_connect.config(state="normal", text=t("connection_dialogs.connect"))
+                    messagebox.showerror(t("connection_dialogs.failed_title"), t("connection_dialogs.failed_msg").format(str(e)))
                     
                 self.root.after(0, fail_ui)
                 

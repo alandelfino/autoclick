@@ -2,6 +2,7 @@
 Left panel — Toolbox for adding nodes and debug console.
 """
 import tkinter as tk
+from core.i18n_helper import t
 
 
 class LeftPanelMixin:
@@ -10,27 +11,27 @@ class LeftPanelMixin:
     def setup_left_panel(self):
         # 1. TOOLBOX SECTION
         section_toolbox = tk.Label(
-            self.left_panel, text="ADICIONAR NÓS", font=("Segoe UI", 9, "bold"),
+            self.left_panel, text=t("toolbox.add_nodes"), font=("Segoe UI", 9, "bold"),
             fg="#94a3b8", bg="#0f172a"
         )
         section_toolbox.pack(pady=(15, 5), padx=10, anchor="w")
         
         # Add Node Buttons
         nodes_to_add = [
-            ("Clique por Coordenada", "click", "#a855f7"),
-            ("Capturar Dados Window", "capture", "#f97316"),
-            ("Condicional", "condition", "#0d9488"),
-            ("Pressionar Tecla", "key", "#db2777"),
-            ("Digitar Texto", "type_text", "#10b981"),
-            ("Aguardar / Delay", "delay", "#f59e0b"),
-            ("Mover Cursor", "move_mouse", "#06b6d4"),
-            ("PostgreSQL Query", "postgres", "#336791"),
-            ("MySQL Query", "mysql", "#00758f"),
-            ("SQLite Query", "sqlite", "#003b57"),
-            ("Requisição API", "api", "#0284c7"),
-            ("Loop", "loop", "#8b5cf6"),
-            ("Variável de Armazenamento", "storage_var", "#ec4899"),
-            ("Interromper Loop", "break_loop", "#a21caf")
+            (t("toolbox.nodes.click"), "click", "#a855f7"),
+            (t("toolbox.nodes.capture"), "capture", "#f97316"),
+            (t("toolbox.nodes.condition"), "condition", "#0d9488"),
+            (t("toolbox.nodes.key"), "key", "#db2777"),
+            (t("toolbox.nodes.type_text"), "type_text", "#10b981"),
+            (t("toolbox.nodes.delay"), "delay", "#f59e0b"),
+            (t("toolbox.nodes.move_mouse"), "move_mouse", "#06b6d4"),
+            (t("toolbox.nodes.postgres"), "postgres", "#336791"),
+            (t("toolbox.nodes.mysql"), "mysql", "#00758f"),
+            (t("toolbox.nodes.sqlite"), "sqlite", "#003b57"),
+            (t("toolbox.nodes.api"), "api", "#0284c7"),
+            (t("toolbox.nodes.loop"), "loop", "#8b5cf6"),
+            (t("toolbox.nodes.storage_var"), "storage_var", "#ec4899"),
+            (t("toolbox.nodes.break_loop"), "break_loop", "#a21caf")
         ]
         
         for name, type_key, color in nodes_to_add:
@@ -89,7 +90,7 @@ class LeftPanelMixin:
         
         # 2. DEBUG LOG WINDOW (at the bottom)
         log_label = tk.Label(
-            self.left_panel, text="CONSOLE DE DEPURAÇÃO", font=("Segoe UI", 9, "bold"),
+            self.left_panel, text=t("toolbox.debug_console"), font=("Segoe UI", 9, "bold"),
             fg="#94a3b8", bg="#0f172a"
         )
         log_label.pack(pady=(5, 5), padx=10, anchor="w")

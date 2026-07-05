@@ -195,21 +195,21 @@ class PropertiesPanelMixin:
             
         lbl1 = tk.Label(
             self.properties_container, 
-            text="Nenhum nó selecionado.\n\nClique em um nó no painel para visualizar e editar suas configurações.", 
+            text=t("properties.no_node_selected"), 
             font=("Segoe UI", 9, "italic"), fg="#64748b", bg="#f8fafc", justify="center", wraplength=350
         )
         lbl1.pack(pady=40)
         
         lbl2 = tk.Label(
             self.input_payload_container,
-            text="Selecione um nó para visualizar o payload de entrada.",
+            text=t("properties.select_node_input"),
             font=("Segoe UI", 9, "italic"), fg="#64748b", bg="#f8fafc", justify="center", wraplength=350
         )
         lbl2.pack(pady=40)
         
         lbl3 = tk.Label(
             self.output_payload_container,
-            text="Selecione um nó para visualizar o payload de saída.",
+            text=t("properties.select_node_output"),
             font=("Segoe UI", 9, "italic"), fg="#64748b", bg="#f8fafc", justify="center", wraplength=350
         )
         lbl3.pack(pady=40)
@@ -259,16 +259,16 @@ class PropertiesPanelMixin:
         self.build_payload_tree(
             self.input_payload_container, 
             input_data, 
-            "Nenhum parâmetro de entrada disponível de nós anteriores. Adicione um nó de captura ou clique antes deste no fluxo.", 
+            t("properties.no_input_params"), 
             is_mock=is_mock_input if input_data else False
         )
         self.build_payload_tree(
             self.output_payload_container, 
             output_data, 
-            "Este nó não produz parâmetros de saída configurados.", 
+            t("properties.no_output_params"), 
             is_mock=is_mock_output if output_data else False
         )
-        lbl_name = tk.Label(self.properties_container, text="Nome do Nós:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+        lbl_name = tk.Label(self.properties_container, text=t("properties.node_name"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
         lbl_name.pack(anchor="w", pady=(0, 2))
         
         ent_name = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -284,7 +284,7 @@ class PropertiesPanelMixin:
         # 2. Node Specific Properties
         if node.type == 'click':
             # Fields: X, Y
-            lbl_x = tk.Label(self.properties_container, text="Coordenada X:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_x = tk.Label(self.properties_container, text=t("properties.coord_x"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_x.pack(anchor="w", pady=(0, 2))
             
             ent_x = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -292,7 +292,7 @@ class PropertiesPanelMixin:
             ent_x.pack(fill="x", pady=(0, 8))
             ent_x.property_key = 'x'
             
-            lbl_y = tk.Label(self.properties_container, text="Coordenada Y:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_y = tk.Label(self.properties_container, text=t("properties.coord_y"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_y.pack(anchor="w", pady=(0, 2))
             
             ent_y = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -317,7 +317,7 @@ class PropertiesPanelMixin:
             
             # Smart coordinate capturing helper
             btn_capture = tk.Button(
-                self.properties_container, text="🎯 Capturar Coordenada da Tela", font=("Segoe UI", 9, "bold"),
+                self.properties_container, text=t("properties.capture_coordinates"), font=("Segoe UI", 9, "bold"),
                 bg="#3b82f6", fg="#ffffff", activebackground="#2563eb", activeforeground="#ffffff",
                 bd=0, pady=8, cursor="hand2", command=lambda: self.launch_coordinate_capture(ent_x, ent_y)
             )
@@ -325,30 +325,34 @@ class PropertiesPanelMixin:
             
         elif node.type == 'capture':
             # Fields: Capture Type (Combobox)
-            lbl_type = tk.Label(self.properties_container, text="Tipo de Captura:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_type = tk.Label(self.properties_container, text=t("properties.capture_type"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_type.pack(anchor="w", pady=(0, 2))
             
-            cb_type = ttk.Combobox(self.properties_container, values=["Dados da Janela Ativa", "Dados do Mouse somente"], state="readonly")
-            initial_val = self.temp_properties.get('capture_type', 'Dados da Janela Ativa')
-            if initial_val == 'Janela Ativa':
-                initial_val = 'Dados da Janela Ativa'
-            elif initial_val in ['Posição do Mouse', 'Janela e Mouse']:
-                initial_val = 'Dados do Mouse somente'
+            cb_type = ttk.Combobox(self.properties_container, values=[t("properties.capture_active_window"), t("properties.capture_mouse_only")], state="readonly")
+            initial_val = self.temp_properties.get('capture_type', 'Active Window Data')
+            if initial_val in ['Janela Ativa', 'Dados da Janela Ativa', 'Active Window Data']:
+                initial_val = t("properties.capture_active_window")
+            elif initial_val in ['Posição do Mouse', 'Janela e Mouse', 'Dados do Mouse somente', 'Mouse Data Only']:
+                initial_val = t("properties.capture_mouse_only")
             cb_type.set(initial_val)
             cb_type.pack(fill="x", pady=(0, 15))
             cb_type.property_key = 'capture_type'
             
             def save_capture_type(event):
-                self.temp_properties['capture_type'] = cb_type.get()
+                sel = cb_type.get()
+                if sel == t("properties.capture_active_window"):
+                    self.temp_properties['capture_type'] = 'Active Window Data'
+                else:
+                    self.temp_properties['capture_type'] = 'Mouse Data Only'
                 
             cb_type.bind("<<ComboboxSelected>>", save_capture_type)
             
         elif node.type == 'condition':
             # Fields: Variable, Operator, Value
-            lbl_var = tk.Label(self.properties_container, text="Variável do Payload:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_var = tk.Label(self.properties_container, text=t("properties.payload_var"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_var.pack(anchor="w", pady=(0, 2))
             
-            lbl_var_hint = tk.Label(self.properties_container, text="Ex: active_window.title", font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f8fafc")
+            lbl_var_hint = tk.Label(self.properties_container, text=t("properties.payload_var_hint"), font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f8fafc")
             lbl_var_hint.pack(anchor="w", pady=(0, 2))
             
             ent_var = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -357,15 +361,24 @@ class PropertiesPanelMixin:
             ent_var.pack(fill="x", pady=(0, 10))
             ent_var.property_key = 'variable'
             
-            lbl_op = tk.Label(self.properties_container, text="Operação:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_op = tk.Label(self.properties_container, text=t("properties.operation"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_op.pack(anchor="w", pady=(0, 2))
             
-            cb_op = ttk.Combobox(self.properties_container, values=["igual", "diferente", "contém", "maior que"], state="readonly")
-            cb_op.set(self.temp_properties.get('operator', 'igual'))
+            cb_op = ttk.Combobox(self.properties_container, values=[t("properties.op_equals"), t("properties.op_different"), t("properties.op_contains"), t("properties.op_greater_than")], state="readonly")
+            initial_op = self.temp_properties.get('operator', 'equals')
+            if initial_op in ['igual', 'equals']:
+                initial_op = t("properties.op_equals")
+            elif initial_op in ['diferente', 'different']:
+                initial_op = t("properties.op_different")
+            elif initial_op in ['contém', 'contains']:
+                initial_op = t("properties.op_contains")
+            elif initial_op in ['maior que', 'greater than']:
+                initial_op = t("properties.op_greater_than")
+            cb_op.set(initial_op)
             cb_op.pack(fill="x", pady=(0, 10))
             cb_op.property_key = 'operator'
             
-            lbl_val = tk.Label(self.properties_container, text="Valor de Comparação:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_val = tk.Label(self.properties_container, text=t("properties.comp_value"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_val.pack(anchor="w", pady=(0, 2))
             
             ent_val = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -374,7 +387,7 @@ class PropertiesPanelMixin:
             ent_val.property_key = 'value'
             
             # Interactive Variable Value Preview
-            preview_frame = tk.LabelFrame(self.properties_container, text="Valor Atual da Variável:", font=("Segoe UI", 8, "bold"), fg="#1e293b", bg="#f8fafc", padx=5, pady=5)
+            preview_frame = tk.LabelFrame(self.properties_container, text=t("properties.payload_preview"), font=("Segoe UI", 8, "bold"), fg="#1e293b", bg="#f8fafc", padx=5, pady=5)
             preview_frame.pack(fill="x", pady=(5, 10))
             
             preview_lbl = tk.Label(preview_frame, text="", font=("Consolas", 9), fg="#16a34a", bg="#f8fafc", anchor="w", justify="left", wraplength=350)
@@ -383,18 +396,28 @@ class PropertiesPanelMixin:
             def update_preview(event=None):
                 var_name = ent_var.get().strip()
                 if not var_name:
-                    preview_lbl.config(text="[Digite o nome da variável]")
+                    preview_lbl.config(text="[Enter variable name]")
                     return
                 val = get_payload_value(input_data, var_name)
                 if val is not None:
                     formatted_val = self.format_preview_value(val)
                     preview_lbl.config(text=f"{formatted_val} ({type(val).__name__})")
                 else:
-                    preview_lbl.config(text=f"[Não encontrada no payload]")
+                    preview_lbl.config(text=f"[Not found in payload]")
             
             def save_condition_fields(event=None):
                 self.temp_properties['variable'] = ent_var.get().strip()
-                self.temp_properties['operator'] = cb_op.get()
+                sel_op = cb_op.get()
+                if sel_op == t("properties.op_equals"):
+                    self.temp_properties['operator'] = 'equals'
+                elif sel_op == t("properties.op_different"):
+                    self.temp_properties['operator'] = 'different'
+                elif sel_op == t("properties.op_contains"):
+                    self.temp_properties['operator'] = 'contains'
+                elif sel_op == t("properties.op_greater_than"):
+                    self.temp_properties['operator'] = 'greater than'
+                else:
+                    self.temp_properties['operator'] = sel_op
                 self.temp_properties['value'] = ent_val.get()
                 update_preview()
                 
@@ -414,7 +437,7 @@ class PropertiesPanelMixin:
             
         elif node.type == 'key':
             # Fields: Key, Count
-            lbl_key = tk.Label(self.properties_container, text="Tecla:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_key = tk.Label(self.properties_container, text=t("properties.key"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_key.pack(anchor="w", pady=(0, 2))
             
             cb_key = ttk.Combobox(self.properties_container, values=[
@@ -424,7 +447,7 @@ class PropertiesPanelMixin:
             cb_key.pack(fill="x", pady=(0, 10))
             cb_key.property_key = 'key'
             
-            lbl_cnt = tk.Label(self.properties_container, text="Quantidade de vezes:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_cnt = tk.Label(self.properties_container, text=t("properties.quantity"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_cnt.pack(anchor="w", pady=(0, 2))
             
             ent_cnt = ttk.Spinbox(self.properties_container, from_=1, to=999, width=10)
@@ -447,12 +470,12 @@ class PropertiesPanelMixin:
             
         elif node.type == 'type_text':
             # Fields: Text
-            lbl_txt = tk.Label(self.properties_container, text="Texto a Digitar:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_txt = tk.Label(self.properties_container, text=t("properties.text_to_type"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_txt.pack(anchor="w", pady=(0, 2))
             
             lbl_hint = tk.Label(
                 self.properties_container, 
-                text="Variáveis do payload podem ser referenciadas,\nex: Olá {active_window.title} !", 
+                text=t("properties.text_to_type_hint"), 
                 font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f8fafc", justify="left"
             )
             lbl_hint.pack(anchor="w", pady=(0, 5))
@@ -463,7 +486,7 @@ class PropertiesPanelMixin:
             txt_area.property_key = 'text'
             
             # Interactive Expression Preview
-            preview_frame = tk.LabelFrame(self.properties_container, text="Pré-visualização do Resultado:", font=("Segoe UI", 8, "bold"), fg="#1e293b", bg="#f8fafc", padx=5, pady=5)
+            preview_frame = tk.LabelFrame(self.properties_container, text=t("properties.preview_result"), font=("Segoe UI", 8, "bold"), fg="#1e293b", bg="#f8fafc", padx=5, pady=5)
             preview_frame.pack(fill="x", pady=(5, 10))
             
             preview_lbl = tk.Label(preview_frame, text="", font=("Consolas", 9), fg="#16a34a", bg="#f8fafc", anchor="w", justify="left", wraplength=350)
@@ -479,7 +502,7 @@ class PropertiesPanelMixin:
                     if val is not None:
                         formatted_text = formatted_text.replace(f"{{{ph}}}", self.format_preview_value(val))
                     else:
-                        formatted_text = formatted_text.replace(f"{{{ph}}}", f"[Indefinido: {ph}]")
+                        formatted_text = formatted_text.replace(f"{{{ph}}}", f"[Undefined: {ph}]")
                 
                 preview_lbl.config(text=formatted_text)
             
@@ -503,16 +526,23 @@ class PropertiesPanelMixin:
             # Section: Configuração de Loop
             lbl_loop_title = tk.Label(
                 self.properties_container, 
-                text="Configurações de Execução (Loop)", 
+                text=t("properties.loop_settings"), 
                 font=("Segoe UI", 10, "bold"), fg="#1e293b", bg="#f8fafc"
             )
             lbl_loop_title.pack(anchor="w", pady=(0, 10))
             
-            lbl_mode = tk.Label(self.properties_container, text="Modo de Execução:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_mode = tk.Label(self.properties_container, text=t("properties.execution_mode"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_mode.pack(anchor="w", pady=(0, 2))
             
-            loop_mode_cb = ttk.Combobox(self.properties_container, values=["Executar 1 vez", "Executar N vezes", "Loop Infinito"], state="readonly")
-            loop_mode_cb.set(self.temp_properties.get('loop_mode', 'Executar 1 vez'))
+            loop_mode_cb = ttk.Combobox(self.properties_container, values=[t("properties.loop_mode_once"), t("properties.loop_mode_n_times"), t("properties.loop_mode_infinite")], state="readonly")
+            initial_mode = self.temp_properties.get('loop_mode', 'Run once')
+            if initial_mode in ['Executar 1 vez', 'Run once']:
+                initial_mode = t("properties.loop_mode_once")
+            elif initial_mode in ['Executar N vezes', 'Run N times']:
+                initial_mode = t("properties.loop_mode_n_times")
+            elif initial_mode in ['Loop Infinito', 'Infinite Loop']:
+                initial_mode = t("properties.loop_mode_infinite")
+            loop_mode_cb.set(initial_mode)
             loop_mode_cb.pack(fill="x", pady=(0, 10))
             loop_mode_cb.property_key = 'loop_mode'
             
@@ -520,7 +550,7 @@ class PropertiesPanelMixin:
             loop_count_frame = tk.Frame(self.properties_container, bg="#f8fafc")
             loop_count_frame.pack(fill="x", pady=(0, 15))
             
-            lbl_count = tk.Label(loop_count_frame, text="Quantidade de rodadas:", fg="#475569", bg="#f8fafc", font=("Segoe UI", 9, "bold"))
+            lbl_count = tk.Label(loop_count_frame, text=t("properties.execution_rounds"), fg="#475569", bg="#f8fafc", font=("Segoe UI", 9, "bold"))
             lbl_count.pack(side="left")
             
             loop_count_spin = ttk.Spinbox(loop_count_frame, from_=1, to=9999, width=8)
@@ -529,14 +559,20 @@ class PropertiesPanelMixin:
             loop_count_spin.property_key = 'loop_count'
             
             def save_loop_fields(event=None):
-                self.temp_properties['loop_mode'] = loop_mode_cb.get()
+                sel = loop_mode_cb.get()
+                if sel == t("properties.loop_mode_once"):
+                    self.temp_properties['loop_mode'] = 'Run once'
+                elif sel == t("properties.loop_mode_n_times"):
+                    self.temp_properties['loop_mode'] = 'Run N times'
+                else:
+                    self.temp_properties['loop_mode'] = 'Infinite Loop'
                 try:
                     self.temp_properties['loop_count'] = int(loop_count_spin.get())
                 except ValueError:
                     self.temp_properties['loop_count'] = 5
             
             def update_spin_state(*args):
-                if loop_mode_cb.get() == "Executar N vezes":
+                if loop_mode_cb.get() == t("properties.loop_mode_n_times"):
                     loop_count_spin.config(state="normal")
                 else:
                     loop_count_spin.config(state="disabled")
@@ -548,7 +584,7 @@ class PropertiesPanelMixin:
             update_spin_state()
         elif node.type in ['postgres', 'mysql', 'sqlite']:
             # Select connection
-            lbl_conn = tk.Label(self.properties_container, text="Conexão Salva:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_conn = tk.Label(self.properties_container, text=t("properties.saved_conn"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_conn.pack(anchor="w", pady=(0, 2))
             
             db_type = 'sqlite' if node.type == 'sqlite' else ('postgres' if node.type == 'postgres' else 'mysql')
@@ -560,7 +596,7 @@ class PropertiesPanelMixin:
             cb_conn.property_key = 'connection_name'
             
             # SQL Command
-            lbl_sql = tk.Label(self.properties_container, text="Comando SQL:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_sql = tk.Label(self.properties_container, text=t("properties.sql_command"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_sql.pack(anchor="w", pady=(0, 2))
             
             sql_text = tk.Text(self.properties_container, font=("Consolas", 9), height=10, bd=1, relief="solid", width=40)
@@ -573,7 +609,7 @@ class PropertiesPanelMixin:
             
             # DB Schema Preview Frame
             schema_frame = tk.LabelFrame(
-                self.properties_container, text="Tabelas e Campos Disponíveis (Preview):",
+                self.properties_container, text=t("properties.db_tables_preview"),
                 font=("Segoe UI", 8, "bold"), fg="#1e293b", bg="#f8fafc", padx=5, pady=5
             )
             schema_frame.pack(fill="x", pady=(0, 15))
@@ -603,7 +639,7 @@ class PropertiesPanelMixin:
                 schema = conn_info.get("schema", {})
                 
                 if not schema:
-                    schema_tree.insert("", "end", text="Esquema não carregado. Conecte no menu Conexões.")
+                    schema_tree.insert("", "end", text=t("properties.db_schema_not_loaded"))
                     return
                     
                 for table, columns in sorted(schema.items()):
@@ -652,11 +688,11 @@ class PropertiesPanelMixin:
                 conn_name = cb_conn.get()
                 query = sql_text.get("1.0", "end-1c")
                 if not conn_name:
-                    messagebox.showwarning("Aviso", "Por favor, selecione uma conexão.")
+                    messagebox.showwarning(t("messages.warning"), t("connection_dialogs.select_connection"))
                     return
                 
-                btn_run_db.config(state="disabled", text="⌛ Executando...")
-                self.log_message(f">> Executando query de teste no nó '{node.name}'...")
+                btn_run_db.config(state="disabled", text="⌛ Running...")
+                self.log_message(f">> Running test query for node '{node.name}'...")
                 
                 def thread_target():
                     try:
@@ -665,37 +701,37 @@ class PropertiesPanelMixin:
                         result = self.run_db_query(db_type, conn_config, resolved_sql)
                         
                         self.temp_properties['sample_payload'] = result
-                        self.log_message(f">> Teste executado com sucesso no nó '{node.name}'.")
+                        self.log_message(f">> Test executed successfully for node '{node.name}'.")
                         
                         def update_ui():
                             self.build_payload_tree(
                                 self.output_payload_container,
                                 result,
-                                "Este nó não produz parâmetros de saída configurados.",
+                                t("properties.no_output_params"),
                                 is_mock=False
                             )
-                            btn_run_db.config(state="normal", text="⚡ Executar e Capturar Payload")
+                            btn_run_db.config(state="normal", text=t("properties.run_test"))
                         self.root.after(0, update_ui)
                         
                     except Exception as e:
                         err_msg = str(e)
-                        self.log_message(f">> Erro no teste do nó '{node.name}': {err_msg}")
+                        self.log_message(f">> Error in node '{node.name}' test: {err_msg}")
                         def err_ui():
-                            messagebox.showerror("Erro de Execução", f"Falha ao executar query:\n{err_msg}")
-                            btn_run_db.config(state="normal", text="⚡ Executar e Capturar Payload")
+                            messagebox.showerror(t("messages.error"), t("messages.query_error").format(err_msg))
+                            btn_run_db.config(state="normal", text=t("properties.run_test"))
                         self.root.after(0, err_ui)
                         
                 threading.Thread(target=thread_target, daemon=True).start()
                 
             btn_run_db = tk.Button(
-                self.properties_container, text="⚡ Executar e Capturar Payload", font=("Segoe UI", 9, "bold"),
+                self.properties_container, text=t("properties.run_test"), font=("Segoe UI", 9, "bold"),
                 bg="#22c55e", fg="#ffffff", activebackground="#16a34a", activeforeground="#ffffff",
                 bd=0, pady=8, cursor="hand2", command=run_capture_db
             )
             btn_run_db.pack(fill="x", pady=5)
  
         elif node.type == 'api':
-            lbl_conn = tk.Label(self.properties_container, text="Conexão de API (Opcional):", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_conn = tk.Label(self.properties_container, text=t("properties.api_conn"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_conn.pack(anchor="w", pady=(0, 2))
             
             api_conns = [""] + [name for name, c in self.saved_connections.items() if c.get('type') == 'api']
@@ -704,7 +740,7 @@ class PropertiesPanelMixin:
             cb_conn.pack(fill="x", pady=(0, 10))
             cb_conn.property_key = 'connection_name'
             
-            lbl_method = tk.Label(self.properties_container, text="Método HTTP:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_method = tk.Label(self.properties_container, text=t("properties.http_method"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_method.pack(anchor="w", pady=(0, 2))
             
             cb_method = ttk.Combobox(self.properties_container, values=["GET", "POST", "PUT", "DELETE", "PATCH"], state="readonly")
@@ -712,7 +748,7 @@ class PropertiesPanelMixin:
             cb_method.pack(fill="x", pady=(0, 10))
             cb_method.property_key = 'method'
             
-            lbl_path = tk.Label(self.properties_container, text="Endpoint / URL:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_path = tk.Label(self.properties_container, text=t("properties.endpoint_url"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_path.pack(anchor="w", pady=(0, 2))
             
             ent_path = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -720,7 +756,7 @@ class PropertiesPanelMixin:
             ent_path.pack(fill="x", pady=(0, 10))
             ent_path.property_key = 'path'
             
-            lbl_headers = tk.Label(self.properties_container, text="Headers Adicionais (JSON):", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_headers = tk.Label(self.properties_container, text=t("properties.additional_headers"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_headers.pack(anchor="w", pady=(0, 2))
             
             headers_text = tk.Text(self.properties_container, font=("Consolas", 9), height=3, bd=1, relief="solid", width=40)
@@ -728,7 +764,7 @@ class PropertiesPanelMixin:
             headers_text.pack(fill="x", pady=(0, 10))
             headers_text.property_key = 'headers'
             
-            lbl_body = tk.Label(self.properties_container, text="Corpo da Requisição (Body):", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_body = tk.Label(self.properties_container, text=t("properties.request_body"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_body.pack(anchor="w", pady=(0, 2))
             
             body_text = tk.Text(self.properties_container, font=("Consolas", 9), height=5, bd=1, relief="solid", width=40)
@@ -756,8 +792,8 @@ class PropertiesPanelMixin:
                 headers = headers_text.get("1.0", "end-1c")
                 body = body_text.get("1.0", "end-1c")
                 
-                btn_run_api.config(state="disabled", text="⌛ Enviando...")
-                self.log_message(f">> Enviando requisição API de teste para o nó '{node.name}'...")
+                btn_run_api.config(state="disabled", text="⌛ Sending...")
+                self.log_message(f">> Sending test API request for node '{node.name}'...")
                 
                 def thread_target():
                     try:
@@ -768,37 +804,37 @@ class PropertiesPanelMixin:
                         
                         result = self.run_api_request(conn_config, method, resolved_path, resolved_headers, resolved_body)
                         self.temp_properties['sample_payload'] = result
-                        self.log_message(f">> Teste de API executado com sucesso (HTTP {result['status_code']}).")
+                        self.log_message(f">> API test completed successfully (HTTP {result['status_code']}).")
                         
                         def update_ui():
                             self.build_payload_tree(
                                 self.output_payload_container,
                                 result,
-                                "Este nó não produz parâmetros de saída configurados.",
+                                t("properties.no_output_params"),
                                 is_mock=False
                             )
-                            btn_run_api.config(state="normal", text="⚡ Executar e Capturar Payload")
+                            btn_run_api.config(state="normal", text=t("properties.run_test"))
                         self.root.after(0, update_ui)
                         
                     except Exception as e:
                         err_msg = str(e)
-                        self.log_message(f">> Erro na requisição API do nó '{node.name}': {err_msg}")
+                        self.log_message(f">> Error in node '{node.name}' API request: {err_msg}")
                         def err_ui():
-                            messagebox.showerror("Erro de API", f"Falha ao enviar requisição:\n{err_msg}")
-                            btn_run_api.config(state="normal", text="⚡ Executar e Capturar Payload")
+                            messagebox.showerror(t("messages.error"), t("messages.api_error").format(err_msg))
+                            btn_run_api.config(state="normal", text=t("properties.run_test"))
                         self.root.after(0, err_ui)
                         
                 threading.Thread(target=thread_target, daemon=True).start()
                 
             btn_run_api = tk.Button(
-                self.properties_container, text="⚡ Executar e Capturar Payload", font=("Segoe UI", 9, "bold"),
+                self.properties_container, text=t("properties.run_test"), font=("Segoe UI", 9, "bold"),
                 bg="#22c55e", fg="#ffffff", activebackground="#16a34a", activeforeground="#ffffff",
                 bd=0, pady=8, cursor="hand2", command=run_capture_api
             )
             btn_run_api.pack(fill="x", pady=5)
  
         elif node.type == 'delay':
-            lbl_sec = tk.Label(self.properties_container, text="Tempo de Espera (segundos):", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_sec = tk.Label(self.properties_container, text=t("properties.wait_time"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_sec.pack(anchor="w", pady=(0, 2))
             
             ent_sec = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -816,7 +852,7 @@ class PropertiesPanelMixin:
             ent_sec.bind("<KeyRelease>", save_delay_field)
   
         elif node.type == 'move_mouse':
-            lbl_x = tk.Label(self.properties_container, text="Coordenada X:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_x = tk.Label(self.properties_container, text=t("properties.coord_x"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_x.pack(anchor="w", pady=(0, 2))
             
             ent_x = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -824,7 +860,7 @@ class PropertiesPanelMixin:
             ent_x.pack(fill="x", pady=(0, 8))
             ent_x.property_key = 'x'
             
-            lbl_y = tk.Label(self.properties_container, text="Coordenada Y:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_y = tk.Label(self.properties_container, text=t("properties.coord_y"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_y.pack(anchor="w", pady=(0, 2))
             
             ent_y = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -848,19 +884,19 @@ class PropertiesPanelMixin:
             ent_y.bind("<KeyRelease>", save_coords)
             
             btn_capture = tk.Button(
-                self.properties_container, text="🎯 Capturar Coordenada da Tela", font=("Segoe UI", 9, "bold"),
+                self.properties_container, text=t("properties.capture_coordinates"), font=("Segoe UI", 9, "bold"),
                 bg="#3b82f6", fg="#ffffff", activebackground="#2563eb", activeforeground="#ffffff",
                 bd=0, pady=8, cursor="hand2", command=lambda: self.launch_coordinate_capture(ent_x, ent_y)
             )
             btn_capture.pack(fill="x", pady=5)
 
         elif node.type == 'loop':
-            lbl_val = tk.Label(self.properties_container, text="Valor / Array:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_val = tk.Label(self.properties_container, text=t("properties.val_array"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_val.pack(anchor="w", pady=(0, 2))
             
             lbl_hint = tk.Label(
                 self.properties_container, 
-                text="Use {variavel} para payloads ou digite JSON como [1, 2, 3]", 
+                text=t("properties.val_array_hint"), 
                 font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f8fafc"
             )
             lbl_hint.pack(anchor="w", pady=(0, 5))
@@ -876,7 +912,7 @@ class PropertiesPanelMixin:
             ent_val.bind("<KeyRelease>", update_loop_temp)
             
         elif node.type == 'break_loop':
-            lbl_loop = tk.Label(self.properties_container, text="Selecione o Loop para Interromper:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_loop = tk.Label(self.properties_container, text=t("properties.select_loop_to_interrupt"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_loop.pack(anchor="w", pady=(0, 2))
             
             loop_nodes = [n.name for n in self.nodes.values() if n.type == 'loop']
@@ -891,7 +927,7 @@ class PropertiesPanelMixin:
             cb_loop.bind("<<ComboboxSelected>>", save_break_loop)
             
         elif node.type == 'storage_var':
-            lbl_var_name = tk.Label(self.properties_container, text="Nome da Variável (Armazenamento):", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_var_name = tk.Label(self.properties_container, text=t("properties.storage_var_name"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_var_name.pack(anchor="w", pady=(0, 2))
             
             ent_var_name = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -899,10 +935,10 @@ class PropertiesPanelMixin:
             ent_var_name.pack(fill="x", pady=(0, 10))
             ent_var_name.property_key = 'variable_name'
             
-            lbl_var_val = tk.Label(self.properties_container, text="Valor da Variável:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_var_val = tk.Label(self.properties_container, text=t("properties.storage_var_value"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_var_val.pack(anchor="w", pady=(0, 2))
             
-            lbl_val_hint = tk.Label(self.properties_container, text="Pode usar placeholders como {active_window.title}", font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f8fafc")
+            lbl_val_hint = tk.Label(self.properties_container, text=t("properties.storage_var_hint"), font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f8fafc")
             lbl_val_hint.pack(anchor="w", pady=(0, 2))
             
             ent_var_val = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
@@ -934,9 +970,9 @@ class PropertiesPanelMixin:
                 keys_str = ", ".join(str(k) for k in keys[:10]) + ", ..."
             else:
                 keys_str = ", ".join(str(k) for k in keys)
-            return f"dict ({len(val)} itens: {{{keys_str}}})"
+            return f"dict ({len(val)} items: {{{keys_str}}})"
         elif isinstance(val, list):
-            return f"list ({len(val)} itens)"
+            return f"list ({len(val)} items)"
         else:
             val_str = str(val)
             if len(val_str) > 200:

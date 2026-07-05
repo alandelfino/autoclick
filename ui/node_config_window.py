@@ -3,6 +3,7 @@ Node config window — Toplevel dialog for editing node configuration.
 """
 import tkinter as tk
 from tkinter import ttk
+from core.i18n_helper import t
 
 
 class NodeConfigWindowMixin:
@@ -25,7 +26,7 @@ class NodeConfigWindowMixin:
             
         # Create a new top-level popup window
         self.node_window = tk.Toplevel(self.root)
-        self.node_window.title(f"Configuração do Nó: {node.name}")
+        self.node_window.title(t("node_config.title").format(node.name))
         self.node_window.transient(self.root)
         
         # Dimension window and center on screen
@@ -45,7 +46,7 @@ class NodeConfigWindowMixin:
         
         # Button: "Aplicar"
         btn_apply = tk.Button(
-            footer_bar, text="Aplicar Mudanças ✔", font=("Segoe UI", 9, "bold"),
+            footer_bar, text=t("node_config.apply"), font=("Segoe UI", 9, "bold"),
             bg="#22c55e", fg="#ffffff", activebackground="#16a34a", activeforeground="#ffffff",
             bd=0, padx=20, pady=8, cursor="hand2", command=self.apply_node_changes
         )
@@ -53,7 +54,7 @@ class NodeConfigWindowMixin:
         
         # Button: "Cancelar"
         btn_cancel = tk.Button(
-            footer_bar, text="Cancelar ✕", font=("Segoe UI", 9, "bold"),
+            footer_bar, text=t("node_config.cancel"), font=("Segoe UI", 9, "bold"),
             bg="#94a3b8", fg="#ffffff", activebackground="#64748b", activeforeground="#ffffff",
             bd=0, padx=20, pady=8, cursor="hand2", command=self.close_node_window
         )
@@ -64,13 +65,13 @@ class NodeConfigWindowMixin:
         paned.pack(fill="both", expand=True, padx=10, pady=10)
         
         # Column 1: INPUT DATA
-        left_col = ttk.LabelFrame(paned, text=" INPUT DATA (Entrada) ", padding=10)
+        left_col = ttk.LabelFrame(paned, text=t("node_config.input_data"), padding=10)
         
         # Column 2: PARAMETERS
-        center_col = ttk.LabelFrame(paned, text=" PARAMETERS (Configuração) ", padding=10)
+        center_col = ttk.LabelFrame(paned, text=t("node_config.parameters"), padding=10)
         
         # Column 3: OUTPUT DATA
-        right_col = ttk.LabelFrame(paned, text=" OUTPUT DATA (Saída) ", padding=10)
+        right_col = ttk.LabelFrame(paned, text=t("node_config.output_data"), padding=10)
         
         # Add to panedwindow with equal weights
         paned.add(left_col, weight=1)
@@ -111,7 +112,7 @@ class NodeConfigWindowMixin:
             self.selected_node.properties = copy.deepcopy(self.temp_properties)
             self.selected_node.rename(self.temp_node_name)
             self.selected_node.update_summary_text()
-            self.log_message(f"Configurações do nó '{self.selected_node.name}' aplicadas.")
+            self.log_message(t("node_config.applied_log").format(self.selected_node.name))
             if getattr(self, 'current_filepath', None):
                 self.save_flow_to_filepath(self.current_filepath, show_popup=False)
         self.close_node_window()

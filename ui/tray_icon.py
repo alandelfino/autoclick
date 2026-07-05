@@ -7,6 +7,7 @@ import time
 import threading
 import pystray
 from PIL import Image, ImageDraw
+from core.i18n_helper import t
 
 
 class TrayIconMixin:
@@ -34,10 +35,10 @@ class TrayIconMixin:
             restore_app()
             
         menu = pystray.Menu(
-            pystray.MenuItem("Restaurar App", lambda icon, item: restore_app()),
-            pystray.MenuItem("Parar Execução", lambda icon, item: force_stop_and_restore())
+            pystray.MenuItem(t("tray_icon.restore"), lambda icon, item: restore_app()),
+            pystray.MenuItem(t("tray_icon.stop"), lambda icon, item: force_stop_and_restore())
         )
-        self.tray_icon = pystray.Icon("autoclick", create_image(), "AutoClick Executando...", menu)
+        self.tray_icon = pystray.Icon("autoclick", create_image(), t("tray_icon.running"), menu)
         threading.Thread(target=self.tray_icon.run, daemon=True).start()
 
     def start_hotkey_listener(self):
@@ -54,7 +55,7 @@ class TrayIconMixin:
         user32.RegisterHotKey(None, 101, 0, 0x70)
         user32.RegisterHotKey(None, 102, 0, 0x71)
         
-        self.log_message(">> Atalhos Globais ativados: [F1] para Parar, [F2] para Pausar/Continuar")
+        self.log_message(">> Global Hotkeys active: [F1] to Stop, [F2] to Pause/Resume")
         
         msg = wintypes.MSG()
         while self.is_running:
@@ -63,15 +64,17 @@ class TrayIconMixin:
                 if msg.message == 0x0312: # WM_HOTKEY
                     hotkey_id = msg.wParam
                     if hotkey_id == 101:
-                        self.log_message(">> ATALHO DETECTADO: [F1] - Parando Execução!")
+                        self.log_message(">> HOTKEY DETECTED: [F1] - Stopping Execution!")
                         self.stop_flow_execution()
                     elif hotkey_id == 102:
-                        self.log_message(">> ATALHO DETECTADO: [F2] - Alternando Pausa/Continuação!")
+                        self.log_message(">> HOTKEY DETECTED: [F2] - Toggling Pause/Resume!")
                         self.toggle_pause()
+                user32.UnregisterHotKey(None, 101)
+                user32.RegisterHotKey(None, 101, 0, 0x70) # Re-register cleanly if needed, or dispatch
                 user32.TranslateMessage(ctypes.byref(msg))
                 user32.DispatchMessageW(ctypes.byref(msg))
             time.sleep(0.05)
             
         user32.UnregisterHotKey(None, 101)
         user32.UnregisterHotKey(None, 102)
-        self.log_message(">> Atalhos Globais desativados.")
+        self.log_message(">> Global Hotkeys deactivated.")

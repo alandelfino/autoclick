@@ -6,6 +6,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import base64
+from core.i18n_helper import t
 
 
 class ApiMixin:
@@ -65,7 +66,7 @@ class ApiMixin:
                 for k, v in custom_h.items():
                     req_headers[str(k)] = str(v)
             except Exception as e:
-                raise ValueError(f"Headers adicionais inválidos (esperado JSON): {str(e)}")
+                raise ValueError(t("messages.invalid_headers").format(str(e)))
                 
         # Send Request
         data_bytes = None
@@ -86,7 +87,7 @@ class ApiMixin:
             res_headers = dict(e.headers)
             res_body = e.read().decode('utf-8')
         except urllib.error.URLError as e:
-            raise ConnectionError(f"Erro de conexão URL: {e.reason}")
+            raise ConnectionError(t("messages.url_connection_error").format(e.reason))
             
         try:
             parsed_body = json.loads(res_body)

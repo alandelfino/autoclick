@@ -3,6 +3,7 @@ VisualConnection — Graphical representation of a connection line between two n
 """
 import tkinter as tk
 from tkinter import messagebox
+from core.i18n_helper import t
 
 
 def compute_catmull_rom_chain(points_list, steps=15):
@@ -145,13 +146,13 @@ class VisualConnection:
     def on_right_click_waypoint(self, event, idx):
         menu = tk.Menu(self.canvas, tearoff=0)
         menu.add_command(
-            label="Excluir Ponto de Intersecção",
+            label=t("connection.delete_waypoint"),
             command=lambda: self.confirm_delete_waypoint(idx)
         )
         menu.post(event.x_root, event.y_root)
 
     def confirm_delete_waypoint(self, idx):
-        if messagebox.askyesno("Confirmar Exclusão", "Deseja realmente excluir este ponto de intersecção?"):
+        if messagebox.askyesno(t("connection_dialogs.confirm_delete_title"), t("connection.delete_waypoint_msg")):
             if 0 <= idx < len(self.waypoints):
                 self.waypoints.pop(idx)
                 self.update_line()

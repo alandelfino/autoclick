@@ -2,6 +2,7 @@
 Start screen — Welcome screen with New Flow / Open Flow buttons.
 """
 import tkinter as tk
+from core.i18n_helper import t
 
 
 class StartScreenMixin:
@@ -27,7 +28,7 @@ class StartScreenMixin:
         
         # Description
         desc_lbl = tk.Label(
-            card, text="Crie e gerencie seus fluxos de automação visual de forma profissional.", font=("Segoe UI", 10),
+            card, text=t("start_screen.desc"), font=("Segoe UI", 10),
             fg="#94a3b8", bg="#1e293b"
         )
         desc_lbl.pack(pady=(0, 35))
@@ -37,14 +38,14 @@ class StartScreenMixin:
         btn_frame.pack(fill="x")
         
         new_btn = tk.Button(
-            btn_frame, text="📄 Novo Fluxo", font=("Segoe UI", 11, "bold"),
+            btn_frame, text=t("start_screen.new_flow"), font=("Segoe UI", 11, "bold"),
             bg="#10b981", fg="#ffffff", activebackground="#059669", activeforeground="#ffffff",
             bd=0, padx=25, pady=12, cursor="hand2", command=self.new_flow_action
         )
         new_btn.pack(side="left", padx=10, expand=True, fill="x")
         
         load_btn = tk.Button(
-            btn_frame, text="📂 Abrir Fluxo", font=("Segoe UI", 11, "bold"),
+            btn_frame, text=t("start_screen.open_flow"), font=("Segoe UI", 11, "bold"),
             bg="#3b82f6", fg="#ffffff", activebackground="#2563eb", activeforeground="#ffffff",
             bd=0, padx=25, pady=12, cursor="hand2", command=self.load_flow_action
         )

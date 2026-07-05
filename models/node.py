@@ -10,6 +10,7 @@ import json
 
 from core.automation import click_mouse, simulate_keypress, get_active_window_info, simulate_type_text
 from core.payload import get_payload_value, resolve_value
+from core.i18n_helper import t
 
 
 class BreakLoopException(Exception):
@@ -313,10 +314,10 @@ class VisualNode:
 
     def execute(self, payload, log_func):
         """Runs the action of the node, writes to log, updates payload, and returns next port path."""
-        log_func(f"Executando '{self.name}' ({self.type.upper()})...")
+        log_func(t("logs.node_executing").format(self.name, self.type.upper()))
         
         if self.type == 'start':
-            log_func(" -> Iniciando execução do fluxo...")
+            log_func(t("logs.start_executing"))
             return 'out'
             
         elif self.type == 'click':
@@ -332,16 +333,16 @@ class VisualNode:
                 y = int(y_resolved)
             except ValueError:
                 y = 0
-            log_func(f" -> Clicando na coordenada ({x}, {y})")
+            log_func(t("logs.click_executing").format(x, y))
             click_mouse(x, y)
             payload['last_click'] = {'x': x, 'y': y}
             return 'out'
             
         elif self.type == 'capture':
-            capture_type = self.properties.get('capture_type', 'Dados da Janela Ativa')
-            if capture_type in ['Dados da Janela Ativa', 'Janela Ativa']:
+            capture_type = self.properties.get('capture_type', 'Active Window Data')
+            if capture_type in ['Dados da Janela Ativa', 'Janela Ativa', 'Active Window Data']:
                 title, hwnd = get_active_window_info()
-                log_func(f" -> Janela ativa capturada: '{title}' (HWND: {hwnd})")
+                log_func(t("logs.capture_window_success").format(title, hwnd))
                 payload['active_window'] = {'title': title, 'hwnd': hwnd}
             else:
                 class POINT(ctypes.Structure):
@@ -360,7 +361,7 @@ class VisualNode:
                 y = ci.ptScreenPos.y
                 h_cursor = ci.hCursor
                 cursor_name = get_cursor_name(h_cursor)
-                log_func(f" -> Mouse capturado: X={x}, Y={y}, Cursor={cursor_name} (Handle={h_cursor})")
+                log_func(t("logs.capture_mouse_success").format(x, y, cursor_name, h_cursor))
                 payload['captured_mouse'] = {'x': x, 'y': y, 'cursor_name': cursor_name, 'cursor_handle': h_cursor}
             return 'out'
             
@@ -373,7 +374,7 @@ class VisualNode:
                 count = int(count_resolved)
             except ValueError:
                 count = 1
-            log_func(f" -> Pressionando tecla '{key}' ({count} vezes)")
+            log_func(t("logs.key_pressing").format(key, count))
             simulate_keypress(key, count)
             payload['last_key'] = {'key': key, 'count': count}
             return 'out'
@@ -381,7 +382,7 @@ class VisualNode:
         elif self.type == 'type_text':
             raw_text = self.properties.get('text', '')
             formatted_text = str(resolve_value(raw_text, payload))
-            log_func(f" -> Digitando texto: '{formatted_text}'")
+            log_func(t("logs.text_typing").format(formatted_text))
             simulate_type_text(formatted_text)
             payload['last_typed'] = formatted_text
             return 'out'
@@ -393,7 +394,7 @@ class VisualNode:
                 secs = float(secs_resolved)
             except ValueError:
                 secs = 1.0
-            log_func(f" -> Aguardando {secs}s...")
+            log_func(t("logs.delay_waiting").format(secs))
             time.sleep(secs)
             return 'out'
             
@@ -410,7 +411,7 @@ class VisualNode:
                 y = int(y_resolved)
             except ValueError:
                 y = 0
-            log_func(f" -> Movendo cursor do mouse para X={x}, Y={y}")
+            log_func(t("logs.move_mouse_executing").format(x, y))
             ctypes.windll.user32.SetCursorPos(x, y)
             payload['last_mouse_pos'] = {'x': x, 'y': y}
             return 'out'
@@ -419,7 +420,7 @@ class VisualNode:
             variable = self.properties.get('variable', '')
             if variable.startswith('{') and variable.endswith('}'):
                 variable = variable[1:-1]
-            operator = self.properties.get('operator', 'igual')
+            operator = self.properties.get('operator', 'equals')
             target_value_raw = self.properties.get('value', '')
             
             # Resolve value from payload
@@ -429,34 +430,34 @@ class VisualNode:
                 
             target_value = resolve_value(str(target_value_raw), payload)
             
-            log_func(f" -> Condicional: valor atual de '{variable}' = '{actual_value}'")
-            log_func(f" -> Comparando: '{actual_value}' {operator} '{target_value}'")
+            log_func(t("logs.condition_current_val").format(variable, actual_value))
+            log_func(t("logs.condition_comparing").format(actual_value, operator, target_value))
             
             # Perform evaluation
             result = False
             str_actual = str(actual_value).lower()
             str_target = str(target_value).lower()
             
-            if operator == 'igual':
+            if operator in ['igual', 'equals']:
                 result = str_actual == str_target
-            elif operator == 'diferente':
+            elif operator in ['diferente', 'different']:
                 result = str_actual != str_target
-            elif operator == 'contém':
+            elif operator in ['contém', 'contains']:
                 result = str_target in str_actual
-            elif operator == 'maior que':
+            elif operator in ['maior que', 'greater than']:
                 try:
                     result = float(actual_value) > float(target_value)
                 except ValueError:
                     result = False
                     
-            log_func(f" -> Resultado da condição: {result}")
+            log_func(t("logs.condition_result").format(result))
             return 'out_true' if result else 'out_false'
             
         elif self.type == 'sqlite':
             conn_name = self.properties.get('connection_name', '')
             sql_raw = self.properties.get('sql', '')
             sql = resolve_value(sql_raw, payload)
-            log_func(f" -> Executando SQLite query em '{conn_name}'")
+            log_func(t("logs.db_sqlite_executing").format(conn_name))
             app = getattr(self.canvas, 'app', None)
             if app:
                 conn_config = app.saved_connections.get(conn_name)
@@ -466,20 +467,20 @@ class VisualNode:
                         var_name = app.get_var_name(self.name)
                         payload[var_name] = result
                         payload['last_db_result'] = result
-                        log_func(" -> SQLite OK.")
+                        log_func(t("logs.db_sqlite_ok"))
                     except Exception as e:
-                        log_func(f" -> ERRO SQLite: {str(e)}")
+                        log_func(t("logs.db_sqlite_error").format(str(e)))
                         raise e
                 else:
-                    log_func(" -> ERRO: Conexão SQLite não configurada ou não encontrada.")
-                    raise ValueError("Conexão SQLite não encontrada.")
+                    log_func(t("logs.db_sqlite_not_found"))
+                    raise ValueError("SQLite connection not found.")
             return 'out'
 
         elif self.type == 'postgres':
             conn_name = self.properties.get('connection_name', '')
             sql_raw = self.properties.get('sql', '')
             sql = resolve_value(sql_raw, payload)
-            log_func(f" -> Executando PostgreSQL query em '{conn_name}'")
+            log_func(t("logs.db_postgres_executing").format(conn_name))
             app = getattr(self.canvas, 'app', None)
             if app:
                 conn_config = app.saved_connections.get(conn_name)
@@ -489,20 +490,20 @@ class VisualNode:
                         var_name = app.get_var_name(self.name)
                         payload[var_name] = result
                         payload['last_db_result'] = result
-                        log_func(" -> PostgreSQL OK.")
+                        log_func(t("logs.db_postgres_ok"))
                     except Exception as e:
-                        log_func(f" -> ERRO PostgreSQL: {str(e)}")
+                        log_func(t("logs.db_postgres_error").format(str(e)))
                         raise e
                 else:
-                    log_func(" -> ERRO: Conexão PostgreSQL não encontrada.")
-                    raise ValueError("Conexão PostgreSQL não encontrada.")
+                    log_func(t("logs.db_postgres_not_found"))
+                    raise ValueError("PostgreSQL connection not found.")
             return 'out'
 
         elif self.type == 'mysql':
             conn_name = self.properties.get('connection_name', '')
             sql_raw = self.properties.get('sql', '')
             sql = resolve_value(sql_raw, payload)
-            log_func(f" -> Executando MySQL query em '{conn_name}'")
+            log_func(t("logs.db_mysql_executing").format(conn_name))
             app = getattr(self.canvas, 'app', None)
             if app:
                 conn_config = app.saved_connections.get(conn_name)
@@ -512,13 +513,13 @@ class VisualNode:
                         var_name = app.get_var_name(self.name)
                         payload[var_name] = result
                         payload['last_db_result'] = result
-                        log_func(" -> MySQL OK.")
+                        log_func(t("logs.db_mysql_ok"))
                     except Exception as e:
-                        log_func(f" -> ERRO MySQL: {str(e)}")
+                        log_func(t("logs.db_mysql_error").format(str(e)))
                         raise e
                 else:
-                    log_func(" -> ERRO: Conexão MySQL não encontrada.")
-                    raise ValueError("Conexão MySQL não encontrada.")
+                    log_func(t("logs.db_mysql_not_found"))
+                    raise ValueError("MySQL connection not found.")
             return 'out'
 
         elif self.type == 'api':
@@ -531,7 +532,7 @@ class VisualNode:
             body_raw = self.properties.get('body', '')
             body_text = resolve_value(body_raw, payload)
             
-            log_func(f" -> Executando requisição API [{method}] em '{conn_name or 'URL Direta'}'")
+            log_func(t("logs.api_executing").format(method, conn_name or 'URL Direta'))
             app = getattr(self.canvas, 'app', None)
             if app:
                 conn_config = app.saved_connections.get(conn_name) if conn_name else None
@@ -540,9 +541,9 @@ class VisualNode:
                     var_name = app.get_var_name(self.name)
                     payload[var_name] = result
                     payload['last_api_result'] = result
-                    log_func(f" -> API OK (Status: {result['status_code']})")
+                    log_func(t("logs.api_ok").format(result['status_code']))
                 except Exception as e:
-                    log_func(f" -> ERRO API: {str(e)}")
+                    log_func(t("logs.api_error").format(str(e)))
                     raise e
             return 'out'
 
@@ -556,7 +557,7 @@ class VisualNode:
             # Check if interrupted
             if var_name in payload and isinstance(payload[var_name], dict):
                 if payload[var_name].get('status') == 'broken':
-                    log_func(f" -> Detecção de interrupção (break) do loop '{self.name}'. Prosseguindo pelo Done.")
+                    log_func(t("logs.loop_break_detect").format(self.name))
                     payload[var_name]['status'] = 'done'
                     return 'out_done'
             
@@ -597,7 +598,7 @@ class VisualNode:
                     is_running = True
             
             if not is_running:
-                log_func(f" -> Iniciando loop '{self.name}' com {len(items)} itens.")
+                log_func(t("logs.loop_start").format(self.name, len(items)))
                 payload[var_name] = {
                     'item': None,
                     'index': 0,
@@ -610,10 +611,10 @@ class VisualNode:
             curr_idx = payload[var_name]['index']
             if curr_idx < len(items):
                 payload[var_name]['item'] = items[curr_idx]
-                log_func(f" -> Iteração do loop '{self.name}' {curr_idx + 1}/{len(items)}: item = {items[curr_idx]}")
+                log_func(t("logs.loop_iteration").format(self.name, curr_idx + 1, len(items), items[curr_idx]))
                 return 'out_item'
             else:
-                log_func(f" -> Loop '{self.name}' finalizado normalmente.")
+                log_func(t("logs.loop_end").format(self.name))
                 payload[var_name]['status'] = 'done'
                 return 'out_done'
 
@@ -628,14 +629,14 @@ class VisualNode:
                         break
             
             if not loop_node:
-                log_func(f" -> AVISO: Nó de Loop '{loop_name}' não encontrado para interrupção.")
+                log_func(t("logs.loop_break_warning").format(loop_name))
                 return 'out'
                 
             var_name = app.get_var_name(loop_node.name)
             if var_name in payload and isinstance(payload[var_name], dict):
                 payload[var_name]['status'] = 'broken'
                 
-            log_func(f" -> Executando interrupção (break) do loop '{loop_name}'...")
+            log_func(t("logs.loop_break_executing").format(loop_name))
             raise BreakLoopException(loop_node.id)
 
         elif self.type == 'storage_var':
@@ -644,7 +645,7 @@ class VisualNode:
             resolved_value = resolve_value(var_val_raw, payload)
             
             payload[var_name] = resolved_value
-            log_func(f" -> Variável de armazenamento '{var_name}' definida como: {resolved_value}")
+            log_func(t("logs.storage_set").format(var_name, resolved_value))
             return 'out'
             
         return None

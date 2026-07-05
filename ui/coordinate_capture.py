@@ -36,7 +36,7 @@ class CoordinateCaptureMixin:
         
         lbl = tk.Label(
             instruction_window, 
-            text="Modo Captura: Segure [Ctrl] (mira) e clique no local. [ESC] para cancelar.", 
+            text=t("coordinate_capture.mode_instructions"), 
             font=("Segoe UI", 10, "bold"), fg="#ffffff", bg="#1e293b"
         )
         lbl.pack(expand=True)
@@ -61,7 +61,7 @@ class CoordinateCaptureMixin:
             if "Control" in event.keysym:
                 ctrl_pressed[0] = True
                 overlay.config(cursor="cross")
-                lbl.config(text="MIRA ATIVA: Clique para capturar a coordenada!")
+                lbl.config(text=t("coordinate_capture.target_active"))
                 instruction_window.configure(bg="#10b981") # Change to green when Ctrl is active
                 lbl.configure(bg="#10b981")
                 
@@ -69,7 +69,7 @@ class CoordinateCaptureMixin:
             if "Control" in event.keysym:
                 ctrl_pressed[0] = False
                 overlay.config(cursor="arrow")
-                lbl.config(text="Modo Captura: Segure [Ctrl] (mira) e clique no local. [ESC] para cancelar.")
+                lbl.config(text=t("coordinate_capture.mode_instructions"))
                 instruction_window.configure(bg="#1e293b")
                 lbl.configure(bg="#1e293b")
                 
@@ -88,7 +88,7 @@ class CoordinateCaptureMixin:
                     self.selected_node.update_summary_text()
                     
                 close_and_restore()
-                self.log_message(f"Coordenada capturada com sucesso: X={x}, Y={y}")
+                self.log_message(f"Coordinate successfully captured: X={x}, Y={y}")
                 
         overlay.bind("<KeyPress>", on_key_press)
         overlay.bind("<KeyRelease>", on_key_release)
