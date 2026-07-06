@@ -169,7 +169,4 @@ class CanvasInteractionsMixin:
                         messagebox.showwarning("Aviso", "Esta conexão específica já existe.")
                         
             self.active_port_drag = None
-            if hasattr(self, 'auto_connect_loops'):
-                self.auto_connect_loops()
-            if getattr(self, 'current_filepath', None):
-                self.save_flow_to_filepath(self.current_filepath, show_popup=False)
+        self.trigger_auto_save()

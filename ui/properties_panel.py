@@ -913,19 +913,20 @@ class PropertiesPanelMixin:
             ent_val.bind("<KeyRelease>", update_loop_temp)
             
         elif node.type == 'break_loop':
-            lbl_loop = tk.Label(self.properties_container, text=t("properties.select_loop_to_interrupt"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
-            lbl_loop.pack(anchor="w", pady=(0, 2))
+            lbl_info = tk.Label(
+                self.properties_container, 
+                text=t("properties.loop_break_info"), 
+                font=("Segoe UI", 9, "italic"), fg="#475569", bg="#f8fafc", justify="left", wraplength=350
+            )
+            lbl_info.pack(anchor="w", pady=(10, 10))
             
-            loop_nodes = [n.name for n in self.nodes.values() if n.type == 'loop']
-            cb_loop = ttk.Combobox(self.properties_container, values=loop_nodes, state="readonly")
-            cb_loop.set(self.temp_properties.get('loop_node_name', ''))
-            cb_loop.pack(fill="x", pady=(0, 10))
-            cb_loop.property_key = 'loop_node_name'
-            
-            def save_break_loop(event=None):
-                self.temp_properties['loop_node_name'] = cb_loop.get()
-                
-            cb_loop.bind("<<ComboboxSelected>>", save_break_loop)
+        elif node.type == 'continue_loop':
+            lbl_info = tk.Label(
+                self.properties_container, 
+                text=t("properties.loop_continue_info"), 
+                font=("Segoe UI", 9, "italic"), fg="#475569", bg="#f8fafc", justify="left", wraplength=350
+            )
+            lbl_info.pack(anchor="w", pady=(10, 10))
             
         elif node.type == 'storage_var':
             lbl_var_name = tk.Label(self.properties_container, text=t("properties.storage_var_name"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
@@ -1137,14 +1138,14 @@ class PropertiesPanelMixin:
                 
             try:
                 if isinstance(self.active_text_widget, tk.Text):
-                    self.active_text_widget.insert(tk.INSERT, f"{{{path}}}")
+                    self.active_text_widget.insert(tk.INSERT, f"{{{{{path}}}}}")
                 elif isinstance(self.active_text_widget, ttk.Entry) or isinstance(self.active_text_widget, tk.Entry):
                     if getattr(self.active_text_widget, 'is_payload_var_field', False):
                         self.active_text_widget.delete(0, tk.END)
                         self.active_text_widget.insert(0, path)
                     else:
                         insert_pos = self.active_text_widget.index(tk.INSERT)
-                        self.active_text_widget.insert(insert_pos, f"{{{path}}}")
+                        self.active_text_widget.insert(insert_pos, f"{{{{{path}}}}}")
                     
                 self.active_text_widget.event_generate("<KeyRelease>")
             except Exception:

@@ -11,6 +11,7 @@
     "toolbox": {
       "add_nodes": "ADICIONAR NÓS",
       "debug_console": "CONSOLE DE DEPURAÇÃO",
+      "expand_log": "Expandir",
       "nodes": {
         "click": "Clique por Coordenada",
         "capture": "Capturar Dados Window",
@@ -27,7 +28,8 @@
         "storage_var": "Variável de Armazenamento",
         "break_loop": "Interromper Loop",
         "confirm_dialog": "Confirmar Ação (Windows)",
-        "alert_dialog": "Alerta / Aviso (Windows)"
+        "alert_dialog": "Alerta / Aviso (Windows)",
+        "continue_loop": "Próximo Item Loop"
       }
     },
     "menu": {
@@ -42,6 +44,8 @@
       "edit": "Editar",
       "edit_auto_layout": "Auto-Ajustar",
       "edit_center": "Centralizar",
+      "edit_undo": "Desfazer",
+      "edit_redo": "Refazer",
       "run": "Executar",
       "run_start": "Executar Fluxo",
       "run_stop": "Parar Execução",
@@ -53,7 +57,8 @@
       "settings_apply": "Aplicar ✔",
       "settings_cancel": "Cancelar",
       "settings_error_countdown": "A contagem regressiva deve ser um número inteiro maior ou igual a 0.",
-      "settings_applied_log": "Configurações aplicadas: Ocultar={}, Segundos={}"
+      "settings_auto_save": "Salvar automaticamente ao alterar",
+      "settings_applied_log": "Configurações aplicadas: Ocultar={}, Segundos={}, AutoSalvar={}"
     },
     "canvas": {
       "tab_flow": "Fluxo",
@@ -62,7 +67,8 @@
       "view_centered": "Visualização centralizada.",
       "auto_layout_complete": "Auto-layout completo!",
       "context_edit": "Editar",
-      "context_delete": "Excluir"
+      "context_delete": "Excluir",
+      "clear": "Limpar"
     },
     "properties": {
       "no_node_selected": "Nenhum nó selecionado.\n\nClique em um nó no painel para visualizar e editar suas configurações.",
@@ -110,6 +116,8 @@
       "val_array": "Valor / Array:",
       "val_array_hint": "Array JSON válido, ex: [1, 2, 3] ou chave do payload anterior como {postgres_1.rows}",
       "select_loop_to_interrupt": "Selecione o Loop para Interromper:",
+      "loop_continue_info": "Este nó avança para o próximo ciclo de iteração do loop atual.",
+      "loop_break_info": "Este nó interrompe completamente a execução do loop atual.",
       "storage_var_name": "Nome da Variável (Armazenamento):",
       "storage_var_value": "Valor da Variável:",
       "storage_var_hint": "Pode usar placeholders como {active_window.title}",
@@ -205,7 +213,15 @@
     },
     "connection": {
       "delete_waypoint": "Excluir Ponto de Intersecção",
-      "delete_waypoint_msg": "Deseja realmente excluir este ponto de intersecção?"
+      "delete_waypoint_msg": "Deseja realmente excluir este ponto de intersecção?",
+      "delete_connection": "Excluir Conexão",
+      "delete_connection_msg": "Deseja realmente excluir esta conexão?",
+      "add_segment": "Adicionar Segmento",
+      "add_node": "Adicionar Nó"
+    },
+    "node": {
+      "add_before": "Adicionar Nó Antes",
+      "add_after": "Adicionar Nó Depois"
     },
     "node_themes": {
       "start": "Início",
@@ -222,6 +238,7 @@
       "api": "Requisição API",
       "loop": "Loop",
       "break_loop": "Interromper Loop",
+      "continue_loop": "Próximo Item Loop",
       "storage_var": "Var. Armazenamento"
     },
     "logs": {
@@ -269,6 +286,8 @@
       "loop_end": " -> Loop '{}' finalizado normalmente.",
       "loop_break_warning": " -> AVISO: Nó de Loop '{}' não encontrado para interrupção.",
       "loop_break_executing": " -> Executando interrupção (break) do loop '{}'...",
+      "loop_continue_executing": " -> Pulando ciclo do loop '{}' (próximo item)...",
+      "loop_continue_warning": " -> AVISO: Nenhum loop ativo encontrado para continuar.",
       "storage_set": " -> Variável de armazenamento '{}' definida como: {}"
     },
     "messages": {
@@ -285,7 +304,8 @@
       "query_error": "Falha ao executar query:\n{}",
       "api_error": "Falha ao enviar requisição:\n{}",
       "invalid_headers": "Headers adicionais inválidos (esperado JSON): {}",
-      "url_connection_error": "Erro de conexão URL: {}"
+      "url_connection_error": "Erro de conexão URL: {}",
+      "loop_unconnected_nodes_warning": "Os seguintes loops possuem nós finais que não estão conectados de volta ao loop:\n\n{}\n\nO loop não funcionará de forma correta se não for corrigido.\n\nDeseja executar o fluxo mesmo assim?"
     }
   }
 }

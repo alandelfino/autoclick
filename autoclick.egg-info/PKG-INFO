@@ -1,0 +1,172 @@
+Metadata-Version: 2.4
+Name: autoclick
+Version: 1.0.0
+Summary: AutoClick Visual Flow Editor - Professional Desktop Automation
+Author: Alan Delfino
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: Microsoft :: Windows
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pystray>=0.19.5
+Requires-Dist: Pillow>=10.0.0
+Requires-Dist: python-i18n>=0.3.1
+Provides-Extra: postgres
+Requires-Dist: psycopg2-binary>=2.9.0; extra == "postgres"
+Provides-Extra: mysql
+Requires-Dist: pymysql>=1.1.0; extra == "mysql"
+Provides-Extra: dev
+Requires-Dist: pyinstaller>=6.0.0; extra == "dev"
+
+# ⚡ AutoClick Visual Flow Editor - Professional Desktop Automation (100% Free)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue.svg)](#)
+[![Price: Free](https://img.shields.io/badge/Price-Free-brightgreen.svg)](#)
+
+**AutoClick Visual Flow Editor** is a powerful, enterprise-ready desktop automation suite that lets you design, run, and manage workflows visually. Built on Python and Tkinter, it provides a high-performance visual canvas where you can build complex automation flows by connecting nodes—without writing a single line of boilerplate code.
+
+Whether you are looking to eliminate repetitive manual tasks or bridge legacy desktop software with modern APIs, AutoClick makes automation fast, reliable, and completely free.
+
+---
+
+## 📸 Interface Preview
+
+![AutoClick Visual Flow Editor Interface](printscreen.png)
+
+---
+
+## 🚀 Why Choose AutoClick? (Enterprise-Grade & 100% Free)
+
+*   **Free Forever**: No subscriptions, no hidden limitations, and no licensing costs. Ideal for personal projects, startups, and enterprise environments alike.
+*   **Intuitive Drag-and-Drop Canvas**: Map out your automation logic visually. Drag nodes, link them with smooth curves, and use custom routing *waypoints* to keep your flows clean.
+*   **Low-Level Windows Precision**: Interacts directly with the Windows API using Python's `ctypes`. This ensures sub-millisecond click accuracy and robust keyboard typing emulation.
+*   **Dynamic Variable Engine (Payload)**: Pass data smoothly from one node to the next. Variables resolved in one step (like an API response or database query result) can be interpolated in any subsequent step using simple `{node_name.property}` syntax.
+*   **Built-in External Connectors**: Seamlessly execute SQL queries on PostgreSQL, MySQL, and SQLite databases, or make secure calls to external REST APIs using Bearer, Basic, or API Key authentication.
+
+---
+
+## 💼 What You Can Automate
+
+### For Businesses & Teams
+*   **Legacy Application Bridging**: Capture data from old desktop systems and push it to modern web databases or SaaS tools via REST APIs.
+*   **Automated Database Pipelines**: Pull customer records or logs from PostgreSQL/MySQL and process them through visual loops.
+*   **Scheduled Reporting & Alerts**: Run recurring queries, check for conditions, and trigger notifications or webhooks if data anomalies are detected.
+
+### For Professionals & Individuals
+*   **Repetitive Data Entry**: Simulate human speed typing, tab navigation, and clicks to populate spreadsheets, web forms, and ERPs.
+*   **Interactive Testing**: Run automated QA sequences on desktop software interfaces.
+*   **Global Hotkey Control**: Pause, resume, and stop executions instantly with system tray integrations and global keybinds (`F9` and `F10`).
+
+---
+
+## 🔮 Available Node Types
+
+| Node Type | Category | Description | Key Properties |
+| :--- | :--- | :--- | :--- |
+| **Start (Início)** | Core | The entry point of the flow. Supports Single, N-times, or Infinite loops. | `loop_mode`, `loop_count` |
+| **Click (Clique)** | Mouse | Simulates a precise left-click at specific coordinate points. | `x`, `y` |
+| **Move Mouse** | Mouse | Moves the mouse cursor without clicking. | `x`, `y` |
+| **Press Key (Tecla)** | Keyboard | Simulates keypress events (e.g., Enter, Tab, Ctrl, Shift). | `key`, `count` |
+| **Type Text** | Keyboard | Types text into the active field, supporting variable placeholder rendering. | `text` |
+| **Delay (Aguardar)** | Timing | Pauses workflow execution for a defined duration. | `seconds` |
+| **Capture Data** | Utility | Gathers active window title, handle (HWND), and cursor type. | `capture_type` |
+| **Condition (Se)** | Logic | Paths execution dynamically based on comparisons (contains, matches, etc.). | `variable`, `operator`, `value` |
+| **Loop** | Logic | Iterates through array elements parsed from payloads or inputs. | `array_data` |
+| **Break Loop** | Logic | Breaks out of the current active loop. | `loop_node_name` |
+| **Storage Var** | Storage | Stores variables in the execution payload for later steps. | `variable_name`, `variable_value` |
+| **PostgreSQL / MySQL / SQLite** | Database | Executes SQL queries directly and appends result sets to the payload. | `connection_name`, `sql` |
+| **API Request** | Network | Sends HTTP requests (GET, POST, PUT, DELETE, PATCH) with full header/body customization. | `connection_name`, `method`, `path`, `headers`, `body` |
+
+---
+
+## 💡 Smart Variable Interpolation (Payload Engine)
+
+Every action executed outputs its return data to a shared payload structure. You can reference this data in subsequent nodes to create context-aware workflows.
+
+### Example Scenario:
+1.  A **Capture Data** node named `capture_window` runs and populates `{capture_window.active_window.title}`.
+2.  An **API Request** node uses this value dynamically in its JSON body:
+    ```json
+    {
+      "event": "window_change",
+      "window_title": "{capture_window.active_window.title}",
+      "timestamp": "{current_time}"
+    }
+    ```
+3.  The engine automatically resolves the placeholder before sending the API request.
+
+---
+
+## 📂 Project Structure
+
+```text
+autoclick/
+│
+├── flow_builder_pro.py        # Main entry point for the Tkinter desktop application.
+│
+├── core/                      # Core automation and helper utilities.
+│   ├── automation.py          # Windows API wrapper (mouse, keyboard, active window).
+│   └── payload.py             # Variable resolution and template interpolation logic.
+│
+├── models/                    # Visual models representing elements on the canvas.
+│   ├── node.py                # Visual node logic, theme styling, and action handlers.
+│   └── connection.py          # Catmull-Rom spline line connection and waypoint editor.
+│
+├── connectors/                # External integration mixins.
+│   ├── api.py                 # REST HTTP Request connector.
+│   └── database.py            # PostgreSQL, MySQL, and SQLite drivers.
+│
+└── ui/                        # Graphical interface mixins.
+    ├── canvas_panel.py        # Central canvas container.
+    ├── canvas_interactions.py  # Dragging, panning, and zoom controls.
+    ├── left_panel.py          # Sidebar listing available nodes.
+    ├── right_panel.py         # Node property editors and configuration.
+    ├── connection_dialogs.py  # Management panels for saved database and API connections.
+    ├── coordinate_capture.py  # Invisible full-screen capture layer for mouse coordinates.
+    └── tray_icon.py           # Tray icon management and global hotkey binding.
+```
+
+---
+
+## 🛠️ Requirements & Installation
+
+### Option 1: Standard Windows Installer (Recommended)
+The easiest way to run AutoClick on your PC is using the official installer:
+1. Run the [AutoClickSetup.exe](Output/AutoClickSetup.exe) installer.
+2. Select your preferred installation language (**Portuguese** or **English**). The app interface will automatically adjust to your choice.
+3. Follow the wizard steps to complete the installation and create shortcuts.
+4. Launch the application from your Desktop or Start Menu!
+
+### Option 2: Run from Python Source (For Developers)
+
+#### Prerequisites
+*   **Operating System**: Windows (due to deep integration with the Windows user32 library via `ctypes`).
+*   **Python**: Version 3.8 or higher.
+
+#### Step 1: Install Python Dependencies
+Open your terminal and run:
+```bash
+pip install pystray Pillow python-i18n
+```
+
+#### Step 2: Install Database Drivers (Optional)
+If your flows require database connections, install the respective packages:
+*   **PostgreSQL**: `pip install psycopg2-binary`
+*   **MySQL**: `pip install pymysql`
+*   **SQLite**: *Included by default in Python's standard library.*
+
+---
+
+## 🚀 Getting Started
+
+Launch the visual editor using:
+```bash
+python flow_builder_pro.py
+```
+
+### Essential Controls & Shortcuts
+*   **`Ctrl + S`**: Save current flow as JSON.
+*   **Double-click a Connection Line**: Insert a waypoint/anchor to route lines around nodes.
+*   **Right-click a Waypoint**: Delete the anchor point.
+*   **`F9`**: Global hotkey to Start/Pause execution.
+*   **`F10`**: Global hotkey to Stop execution immediately.

@@ -11,6 +11,7 @@
     "toolbox": {
       "add_nodes": "ADD NODES",
       "debug_console": "DEBUG CONSOLE",
+      "expand_log": "Expand",
       "nodes": {
         "click": "Click by Coordinate",
         "capture": "Capture Window Data",
@@ -27,7 +28,8 @@
         "storage_var": "Storage Variable",
         "break_loop": "Interrupt Loop",
         "confirm_dialog": "Confirm Action (Windows)",
-        "alert_dialog": "Alert / Notice (Windows)"
+        "alert_dialog": "Alert / Notice (Windows)",
+        "continue_loop": "Continue Loop"
       }
     },
     "menu": {
@@ -42,6 +44,8 @@
       "edit": "Edit",
       "edit_auto_layout": "Auto-Layout",
       "edit_center": "Center View",
+      "edit_undo": "Undo",
+      "edit_redo": "Redo",
       "run": "Run",
       "run_start": "Run Flow",
       "run_stop": "Stop Execution",
@@ -53,7 +57,8 @@
       "settings_apply": "Apply ✔",
       "settings_cancel": "Cancel",
       "settings_error_countdown": "Countdown must be an integer >= 0.",
-      "settings_applied_log": "Settings applied: Hide={}, Seconds={}"
+      "settings_auto_save": "Auto-save on changes",
+      "settings_applied_log": "Settings applied: Hide={}, Seconds={}, AutoSave={}"
     },
     "canvas": {
       "tab_flow": "Flow",
@@ -62,7 +67,8 @@
       "view_centered": "View centered.",
       "auto_layout_complete": "Auto-layout complete!",
       "context_edit": "Edit",
-      "context_delete": "Delete"
+      "context_delete": "Delete",
+      "clear": "Clear"
     },
     "properties": {
       "no_node_selected": "No node selected.\n\nClick a node in the canvas to view and edit its configuration.",
@@ -110,6 +116,8 @@
       "val_array": "Value / Array:",
       "val_array_hint": "Valid JSON array, e.g. [1, 2, 3] or predecessor payload key like {postgres_1.rows}",
       "select_loop_to_interrupt": "Select Loop to Interrupt:",
+      "loop_continue_info": "This node moves to the next iteration cycle of the current loop.",
+      "loop_break_info": "This node interrupts the current loop execution entirely.",
       "storage_var_name": "Variable Name (Storage):",
       "storage_var_value": "Variable Value:",
       "storage_var_hint": "Can use placeholders like {active_window.title}",
@@ -205,7 +213,15 @@
     },
     "connection": {
       "delete_waypoint": "Delete Waypoint",
-      "delete_waypoint_msg": "Are you sure you want to delete this waypoint?"
+      "delete_waypoint_msg": "Are you sure you want to delete this waypoint?",
+      "delete_connection": "Delete Connection",
+      "delete_connection_msg": "Are you sure you want to delete this connection?",
+      "add_segment": "Add Segment",
+      "add_node": "Add Node"
+    },
+    "node": {
+      "add_before": "Add Node Before",
+      "add_after": "Add Node After"
     },
     "node_themes": {
       "start": "Start",
@@ -222,6 +238,7 @@
       "api": "API Request",
       "loop": "Loop",
       "break_loop": "Interrupt Loop",
+      "continue_loop": "Continue Loop",
       "storage_var": "Storage Var"
     },
     "logs": {
@@ -269,6 +286,8 @@
       "loop_end": " -> Loop '{}' finished successfully.",
       "loop_break_warning": " -> WARNING: Loop Node '{}' not found for interruption.",
       "loop_break_executing": " -> Executing interruption (break) of loop '{}'...",
+      "loop_continue_executing": " -> Skipping loop '{}' iteration (next item)...",
+      "loop_continue_warning": " -> WARNING: No active loop found to continue.",
       "storage_set": " -> Storage variable '{}' set to: {}"
     },
     "messages": {
@@ -285,7 +304,8 @@
       "query_error": "Query execution failed:\n{}",
       "api_error": "API request failed:\n{}",
       "invalid_headers": "Invalid additional headers (expected JSON): {}",
-      "url_connection_error": "URL connection error: {}"
+      "url_connection_error": "URL connection error: {}",
+      "loop_unconnected_nodes_warning": "The following loops have end nodes that are not connected back to the loop:\n\n{}\n\nThe loop will not function correctly if not corrected.\n\nDo you want to run the flow anyway?"
     }
   }
 }

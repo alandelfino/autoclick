@@ -27,6 +27,9 @@ class MenuBarMixin:
         
         # Edit Menu (Editar)
         edit_menu = tk.Menu(self.menu_bar, tearoff=0)
+        edit_menu.add_command(label=t("menu.edit_undo"), command=self.undo_action, accelerator="Ctrl+Z")
+        edit_menu.add_command(label=t("menu.edit_redo"), command=self.redo_action, accelerator="Ctrl+Y")
+        edit_menu.add_separator()
         edit_menu.add_command(label=t("menu.edit_auto_layout"), command=self.auto_layout_nodes)
         edit_menu.add_command(label=t("menu.edit_center"), command=self.center_view)
         self.menu_bar.add_cascade(label=t("menu.edit"), menu=edit_menu)

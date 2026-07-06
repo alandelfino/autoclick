@@ -114,7 +114,7 @@ class NodeConfigWindowMixin:
             self.selected_node.update_summary_text()
             self.log_message(t("node_config.applied_log").format(self.selected_node.name))
             if getattr(self, 'current_filepath', None):
-                self.save_flow_to_filepath(self.current_filepath, show_popup=False)
+                self.trigger_auto_save()
         self.close_node_window()
 
     def close_node_window(self):

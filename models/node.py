@@ -20,6 +20,11 @@ class BreakLoopException(Exception):
         self.loop_node_id = loop_node_id
 
 
+class ContinueLoopException(Exception):
+    def __init__(self, loop_node_id):
+        self.loop_node_id = loop_node_id
+
+
 def get_cursor_name(h_cursor):
     if not h_cursor:
         return "Nenhum"
@@ -79,11 +84,15 @@ class VisualNode:
             'api': {'header': '#0284c7', 'title': 'Requisição API'},
             'loop': {'header': '#8b5cf6', 'title': 'Loop'},
             'break_loop': {'header': '#a21caf', 'title': 'Interromper Loop'},
+            'continue_loop': {'header': '#0ea5e9', 'title': t("toolbox.nodes.continue_loop")},
             'storage_var': {'header': '#ec4899', 'title': 'Var. Armazenamento'},
             'confirm_dialog': {'header': '#f43f5e', 'title': t("toolbox.nodes.confirm_dialog")},
             'alert_dialog': {'header': '#e11d48', 'title': t("toolbox.nodes.alert_dialog")}
         }
         self.theme = self.themes.get(self.type, {'header': '#64748b', 'title': 'Nó'})
+
+        self.is_executing = False
+        self.is_hovered = False
 
         # Setup Ports (positions relative to x, y)
         self.ports = {}
@@ -92,6 +101,14 @@ class VisualNode:
         # Canvas UI references
         self.tag = f"node_{self.id}"
         self.draw()
+        
+        # Bind hover events
+        self.canvas.tag_bind(self.tag, "<Enter>", self.on_enter)
+        self.canvas.tag_bind(self.tag, "<Leave>", self.on_leave)
+        
+        # Bind right-click events
+        self.canvas.tag_bind(self.tag, "<Button-3>", self.on_right_click_node)
+        self.canvas.tag_bind(self.tag, "<Button-2>", self.on_right_click_node)
 
     def get_default_properties(self):
         if self.type == 'click':
@@ -116,8 +133,8 @@ class VisualNode:
             return {'connection_name': '', 'method': 'GET', 'path': '', 'headers': '', 'body': '', 'sample_payload': None}
         elif self.type == 'loop':
             return {'array_data': '[]'}
-        elif self.type == 'break_loop':
-            return {'loop_node_name': ''}
+        elif self.type in ['break_loop', 'continue_loop']:
+            return {}
         elif self.type == 'storage_var':
             return {'variable_name': 'var_1', 'variable_value': ''}
         elif self.type == 'confirm_dialog':
@@ -175,7 +192,7 @@ class VisualNode:
                 'type': 'output', 'color': '#64748b', # Slate
                 'label': 'Done', 'tag': f"port_out_done_{self.id}"
             }
-        elif self.type == 'break_loop':
+        elif self.type in ['break_loop', 'continue_loop']:
             # No output ports
             pass
         else:
@@ -274,7 +291,9 @@ class VisualNode:
         elif self.type == 'loop':
             summary = f"Loop: {self.properties.get('array_data', '[]')[:15]}..."
         elif self.type == 'break_loop':
-            summary = f"Parar Loop: {self.properties.get('loop_node_name', '')}"
+            summary = t("toolbox.nodes.break_loop")
+        elif self.type == 'continue_loop':
+            summary = t("toolbox.nodes.continue_loop")
         elif self.type == 'storage_var':
             summary = f"Var: {self.properties.get('variable_name', 'var_1')} = {self.properties.get('variable_value', '')}"
         elif self.type == 'confirm_dialog':
@@ -292,16 +311,16 @@ class VisualNode:
         self.canvas.itemconfig(self.name_text_ui, text=new_name)
 
     def scale_fonts(self, scale):
-        header_sz = max(int(8 * scale), 5)
-        name_sz = max(int(10 * scale), 6)
-        summary_sz = max(int(8 * scale), 5)
-        port_sz = max(int(8 * scale), 5)
+        header_sz = max(int(8 * scale), 4)
+        name_sz = max(int(10 * scale), 5)
+        summary_sz = max(int(8 * scale), 4)
+        port_sz = max(int(8 * scale), 4)
         
         self.canvas.itemconfig(self.header_text_ui, font=("Segoe UI", header_sz, "bold"))
-        self.canvas.itemconfig(self.name_text_ui, font=("Segoe UI", name_sz, "bold"), width=max(int(self.width - 20), 10))
+        self.canvas.itemconfig(self.name_text_ui, font=("Segoe UI", name_sz, "bold"), width=max(int(self.width - 8 * scale), 10))
         
         if hasattr(self, 'summary_text_ui') and self.summary_text_ui:
-            self.canvas.itemconfig(self.summary_text_ui, font=("Segoe UI", summary_sz, "italic"), width=max(int(self.width - 20), 10))
+            self.canvas.itemconfig(self.summary_text_ui, font=("Segoe UI", summary_sz, "italic"), width=max(int(self.width - 8 * scale), 10))
             
         for p in self.ports.values():
             if 'ui_label' in p and p['ui_label']:
@@ -325,14 +344,210 @@ class VisualNode:
         return self.x + p['rel_x'], self.y + p['rel_y']
 
     def select(self, selected):
-        color = "#2563eb" if selected else "#e2e8f0"
-        width = 3 if selected else 2
-        self.canvas.itemconfig(self.body_ui, outline=color, width=width)
+        self.update_outline()
 
     def highlight_execution(self, active):
-        color = "#22c55e" if active else "#e2e8f0"
-        width = 4 if active else 2
+        self.is_executing = active
+        self.update_outline()
+
+    def update_outline(self):
+        app = getattr(self.canvas, 'app', None)
+        is_selected = (app and app.selected_node == self)
+        
+        if self.is_executing:
+            color = "#22c55e"
+            width = 4
+        elif is_selected:
+            color = "#2563eb"
+            width = 3
+        elif getattr(self, 'is_hovered', False):
+            color = "#3b82f6"
+            width = 3
+        else:
+            color = "#e2e8f0"
+            width = 2
+            
         self.canvas.itemconfig(self.body_ui, outline=color, width=width)
+
+    def on_enter(self, event):
+        self.is_hovered = True
+        self.update_outline()
+
+    def on_leave(self, event):
+        cx = self.canvas.canvasx(event.x)
+        cy = self.canvas.canvasy(event.y)
+        margin = 2
+        inside = (self.x - margin <= cx <= self.x + self.width + margin and
+                  self.y - margin <= cy <= self.y + self.height + margin)
+        if inside:
+            return
+        self.is_hovered = False
+        self.update_outline()
+
+    def get_first_output_port(self):
+        if 'out' in self.ports:
+            return 'out'
+        elif 'out_true' in self.ports:
+            return 'out_true'
+        elif 'out_item' in self.ports:
+            return 'out_item'
+        elif self.ports:
+            for p_name, p in self.ports.items():
+                if p['type'] == 'output':
+                    return p_name
+        return None
+
+    def on_right_click_node(self, event):
+        app = getattr(self.canvas, 'app', None)
+        if not app:
+            return
+            
+        menu = tk.Menu(self.canvas, tearoff=0)
+        
+        menu.add_command(
+            label=t("canvas.context_delete"),
+            command=lambda: app.delete_node_by_ref(self)
+        )
+        menu.add_separator()
+        
+        node_groups = [
+            ("INTERAÇÃO E ENTRADA", [
+                (t("toolbox.nodes.click"), "click"),
+                (t("toolbox.nodes.move_mouse"), "move_mouse"),
+                (t("toolbox.nodes.key"), "key"),
+                (t("toolbox.nodes.type_text"), "type_text"),
+                (t("toolbox.nodes.capture"), "capture"),
+            ]),
+            ("CONTROLE E FLUXO", [
+                (t("toolbox.nodes.condition"), "condition"),
+                (t("toolbox.nodes.delay"), "delay"),
+                (t("toolbox.nodes.loop"), "loop"),
+                (t("toolbox.nodes.continue_loop"), "continue_loop"),
+                (t("toolbox.nodes.break_loop"), "break_loop"),
+            ]),
+            ("DADOS E CONEXÕES", [
+                (t("toolbox.nodes.postgres"), "postgres"),
+                (t("toolbox.nodes.mysql"), "mysql"),
+                (t("toolbox.nodes.sqlite"), "sqlite"),
+                (t("toolbox.nodes.api"), "api"),
+                (t("toolbox.nodes.storage_var"), "storage_var"),
+            ]),
+            ("DIÁLOGOS E TELAS", [
+                (t("toolbox.nodes.confirm_dialog"), "confirm_dialog"),
+                (t("toolbox.nodes.alert_dialog"), "alert_dialog"),
+            ])
+        ]
+        
+        # "Adicionar Nó Antes" Submenu
+        before_menu = tk.Menu(menu, tearoff=0)
+        for cat_name, nodes in node_groups:
+            cat_menu = tk.Menu(before_menu, tearoff=0)
+            for label, ntype in nodes:
+                def make_before_cmd(node_type=ntype):
+                    self.insert_node_before(node_type)
+                cat_menu.add_command(label=label, command=make_before_cmd)
+            before_menu.add_cascade(label=cat_name, menu=cat_menu)
+        menu.add_cascade(label=t("node.add_before"), menu=before_menu)
+        
+        # "Adicionar Nó Depois" Submenu
+        after_menu = tk.Menu(menu, tearoff=0)
+        for cat_name, nodes in node_groups:
+            cat_menu = tk.Menu(after_menu, tearoff=0)
+            for label, ntype in nodes:
+                def make_after_cmd(node_type=ntype):
+                    self.insert_node_after(node_type)
+                cat_menu.add_command(label=label, command=make_after_cmd)
+            after_menu.add_cascade(label=cat_name, menu=cat_menu)
+        menu.add_cascade(label=t("node.add_after"), menu=after_menu)
+        
+        menu.post(event.x_root, event.y_root)
+
+    def insert_node_before(self, node_type):
+        app = getattr(self.canvas, 'app', None)
+        if not app:
+            return
+            
+        from models.connection import VisualConnection
+        
+        incoming = [c for c in app.connections if c.target == self and c.target_port == 'in']
+        
+        if incoming:
+            avg_x = sum(c.source.x for c in incoming) / len(incoming)
+            avg_y = sum(c.source.y for c in incoming) / len(incoming)
+            new_x = (avg_x + self.x) / 2
+            new_y = (avg_y + self.y) / 2
+        else:
+            new_x = self.x - 220
+            new_y = self.y
+            
+        new_node = app.create_node(node_type, x=new_x, y=new_y, is_canvas_coords=True)
+        if not new_node:
+            return
+            
+        if incoming:
+            for c in incoming:
+                src = c.source
+                src_port = c.source_port
+                c.delete()
+                app.connections.remove(c)
+                new_conn1 = VisualConnection(self.canvas, src, src_port, new_node, 'in')
+                app.connections.append(new_conn1)
+                
+        new_node_out = new_node.get_first_output_port()
+        if new_node_out:
+            new_conn2 = VisualConnection(self.canvas, new_node, new_node_out, self, 'in')
+            app.connections.append(new_conn2)
+            
+        app.trigger_auto_save()
+
+    def insert_node_after(self, node_type):
+        app = getattr(self.canvas, 'app', None)
+        if not app:
+            return
+            
+        from models.connection import VisualConnection
+        
+        outgoing = [c for c in app.connections if c.source == self]
+        
+        if outgoing:
+            avg_x = sum(c.target.x for c in outgoing) / len(outgoing)
+            avg_y = sum(c.target.y for c in outgoing) / len(outgoing)
+            new_x = (self.x + avg_x) / 2
+            new_y = (self.y + avg_y) / 2
+        else:
+            new_x = self.x + 220
+            new_y = self.y
+            
+        new_node = app.create_node(node_type, x=new_x, y=new_y, is_canvas_coords=True)
+        if not new_node:
+            return
+            
+        if outgoing:
+            created_in_ports = set()
+            for c in outgoing:
+                src_port = c.source_port
+                tgt = c.target
+                tgt_port = c.target_port
+                
+                c.delete()
+                app.connections.remove(c)
+                
+                if src_port not in created_in_ports:
+                    new_conn1 = VisualConnection(self.canvas, self, src_port, new_node, 'in')
+                    app.connections.append(new_conn1)
+                    created_in_ports.add(src_port)
+                    
+                new_node_out = new_node.get_first_output_port()
+                if new_node_out:
+                    new_conn2 = VisualConnection(self.canvas, new_node, new_node_out, tgt, tgt_port)
+                    app.connections.append(new_conn2)
+        else:
+            self_out = self.get_first_output_port()
+            if self_out:
+                new_conn = VisualConnection(self.canvas, self, self_out, new_node, 'in')
+                app.connections.append(new_conn)
+                
+        app.trigger_auto_save()
 
     def execute(self, payload, log_func):
         """Runs the action of the node, writes to log, updates payload, and returns next port path."""
@@ -440,7 +655,7 @@ class VisualNode:
             
         elif self.type == 'condition':
             variable = self.properties.get('variable', '')
-            if variable.startswith('{') and variable.endswith('}'):
+            while variable.startswith('{') and variable.endswith('}'):
                 variable = variable[1:-1]
             operator = self.properties.get('operator', 'equals')
             target_value_raw = self.properties.get('value', '')
@@ -581,6 +796,9 @@ class VisualNode:
                 if payload[var_name].get('status') == 'broken':
                     log_func(t("logs.loop_break_detect").format(self.name))
                     payload[var_name]['status'] = 'done'
+                    # Remove from active loops
+                    if '__active_loops__' in payload and self.id in payload['__active_loops__']:
+                        payload['__active_loops__'].remove(self.id)
                     return 'out_done'
             
             # Load loop items
@@ -634,32 +852,52 @@ class VisualNode:
             if curr_idx < len(items):
                 payload[var_name]['item'] = items[curr_idx]
                 log_func(t("logs.loop_iteration").format(self.name, curr_idx + 1, len(items), items[curr_idx]))
+                # Ensure loop is in active loops stack
+                if '__active_loops__' not in payload:
+                    payload['__active_loops__'] = []
+                if self.id not in payload['__active_loops__']:
+                    payload['__active_loops__'].append(self.id)
                 return 'out_item'
             else:
                 log_func(t("logs.loop_end").format(self.name))
                 payload[var_name]['status'] = 'done'
+                # Remove from active loops
+                if '__active_loops__' in payload and self.id in payload['__active_loops__']:
+                    payload['__active_loops__'].remove(self.id)
                 return 'out_done'
 
         elif self.type == 'break_loop':
-            loop_name = self.properties.get('loop_node_name', '')
-            app = getattr(self.canvas, 'app', None)
-            loop_node = None
-            if app:
-                for n in app.nodes.values():
-                    if n.type == 'loop' and n.name == loop_name:
-                        loop_node = n
-                        break
-            
-            if not loop_node:
-                log_func(t("logs.loop_break_warning").format(loop_name))
+            active_loops = payload.get('__active_loops__', [])
+            if not active_loops:
+                log_func(t("logs.loop_continue_warning"))
                 return 'out'
                 
-            var_name = app.get_var_name(loop_node.name)
-            if var_name in payload and isinstance(payload[var_name], dict):
-                payload[var_name]['status'] = 'broken'
-                
+            loop_node_id = active_loops[-1]
+            app = getattr(self.canvas, 'app', None)
+            loop_node = app.nodes.get(loop_node_id) if app else None
+            loop_name = loop_node.name if loop_node else f"ID {loop_node_id}"
+            
+            if loop_node and app:
+                var_name = app.get_var_name(loop_node.name)
+                if var_name in payload and isinstance(payload[var_name], dict):
+                    payload[var_name]['status'] = 'broken'
+                    
             log_func(t("logs.loop_break_executing").format(loop_name))
-            raise BreakLoopException(loop_node.id)
+            raise BreakLoopException(loop_node_id)
+
+        elif self.type == 'continue_loop':
+            active_loops = payload.get('__active_loops__', [])
+            if not active_loops:
+                log_func(t("logs.loop_continue_warning"))
+                return 'out'
+                
+            loop_node_id = active_loops[-1]
+            app = getattr(self.canvas, 'app', None)
+            loop_node = app.nodes.get(loop_node_id) if app else None
+            loop_name = loop_node.name if loop_node else f"ID {loop_node_id}"
+            
+            log_func(t("logs.loop_continue_executing").format(loop_name))
+            raise ContinueLoopException(loop_node_id)
 
         elif self.type == 'storage_var':
             var_name = self.properties.get('variable_name', 'var_1')

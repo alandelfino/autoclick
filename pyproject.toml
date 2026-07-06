@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autoclick"
+version = "1.0.0"
+description = "AutoClick Visual Flow Editor - Professional Desktop Automation"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Alan Delfino" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: Microsoft :: Windows",
+]
+dependencies = [
+    "pystray>=0.19.5",
+    "Pillow>=10.0.0",
+    "python-i18n>=0.3.1",
+]
+
+[project.optional-dependencies]
+postgres = [
+    "psycopg2-binary>=2.9.0",
+]
+mysql = [
+    "pymysql>=1.1.0",
+]
+dev = [
+    "pyinstaller>=6.0.0",
+]
+
+[tool.setuptools]
+packages = ["core", "models", "connectors", "ui"]
+py-modules = ["flow_builder_pro"]

@@ -14,7 +14,24 @@ if %ERRORLEVEL% neq 0 (
 echo.
 
 echo [2/2] Running Inno Setup Compiler...
-"%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" installer.iss
+set "ISCC_PATH="
+
+where ISCC.exe >nul 2>nul
+if %ERRORLEVEL% equ 0 set "ISCC_PATH=ISCC.exe"
+
+if not defined ISCC_PATH if exist "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" set "ISCC_PATH=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
+if not defined ISCC_PATH if exist "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" set "ISCC_PATH=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
+if not defined ISCC_PATH if exist "%ProgramFiles%\Inno Setup 6\ISCC.exe" set "ISCC_PATH=%ProgramFiles%\Inno Setup 6\ISCC.exe"
+
+if not defined ISCC_PATH (
+    echo.
+    echo [ERROR] Inno Setup Compiler ISCC.exe not found!
+    echo Please install Inno Setup 6 from https://jrsoftware.org/isdl.php
+    exit /b 1
+)
+
+echo Found Inno Setup Compiler at: "%ISCC_PATH%"
+"%ISCC_PATH%" installer.iss
 if %ERRORLEVEL% neq 0 (
     echo.
     echo [ERROR] Inno Setup compilation failed!
