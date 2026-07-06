@@ -53,6 +53,7 @@ class VisualConnection:
         self.target_port = target_port
         self.waypoints = waypoints or [] # List of [x, y] coordinates
         self.waypoint_handles = [] # List of canvas oval element IDs
+        self.is_hovered = False
         
         self.tag = f"conn_{self.source.id}_{self.source_port}_to_{self.target.id}_{self.target_port}"
         
@@ -82,6 +83,23 @@ class VisualConnection:
         x1, y1 = self.source.get_port_center(self.source_port)
         x2, y2 = self.target.get_port_center(self.target_port)
         
+        app = getattr(self.canvas, 'app', None)
+        zoom_scale = getattr(app, 'zoom_scale', 1.0) if app else 1.0
+        
+        base_width = 5 if getattr(self, 'is_hovered', False) else 3
+        scaled_width = max(1, int(round(base_width * zoom_scale)))
+        
+        arrow_d1 = max(2.0, 10.0 * zoom_scale)
+        arrow_d2 = max(2.0, 12.0 * zoom_scale)
+        arrow_d3 = max(1.0, 5.0 * zoom_scale)
+        scaled_arrowshape = (arrow_d1, arrow_d2, arrow_d3)
+        
+        self.canvas.itemconfig(
+            self.line_id,
+            width=scaled_width,
+            arrowshape=scaled_arrowshape
+        )
+        
         if self.waypoints:
             raw_points = [(x1, y1)] + self.waypoints + [(x2, y2)]
             # Draw smooth curve passing exactly through the waypoints
@@ -97,10 +115,10 @@ class VisualConnection:
                 
                 for idx, wp in enumerate(self.waypoints):
                     wx, wy = wp
-                    r = 6 # radius
+                    r = max(2.0, 6.0 * zoom_scale) # radius
                     h_id = self.canvas.create_oval(
                         wx - r, wy - r, wx + r, wy + r,
-                        fill="#3b82f6", outline="#ffffff", width=2,
+                        fill="#3b82f6", outline="#ffffff", width=max(1.0, 2.0 * zoom_scale),
                         tags=(f"wp_{self.tag}_{idx}", "waypoint")
                     )
                     self.waypoint_handles.append(h_id)
@@ -115,8 +133,9 @@ class VisualConnection:
                 # Just update coordinates of existing handles
                 for idx, wp in enumerate(self.waypoints):
                     wx, wy = wp
-                    r = 6
+                    r = max(2.0, 6.0 * zoom_scale)
                     self.canvas.coords(self.waypoint_handles[idx], wx - r, wy - r, wx + r, wy + r)
+                    self.canvas.itemconfig(self.waypoint_handles[idx], width=max(1.0, 2.0 * zoom_scale))
         else:
             # Clear handles if no waypoints
             for h in self.waypoint_handles:
@@ -212,7 +231,8 @@ class VisualConnection:
                 self.save_app_flow()
 
     def on_enter(self, event):
-        self.canvas.itemconfig(self.line_id, width=5)
+        self.is_hovered = True
+        self.update_line()
 
     def on_leave(self, event):
         item = self.canvas.find_withtag("current")
@@ -221,7 +241,8 @@ class VisualConnection:
             # If the cursor moved to a waypoint of this connection, keep the highlight
             if any(t.startswith(f"wp_{self.tag}_") for t in tags):
                 return
-        self.canvas.itemconfig(self.line_id, width=3)
+        self.is_hovered = False
+        self.update_line()
 
     def on_right_click_line(self, event):
         cx = self.canvas.canvasx(event.x)

@@ -70,6 +70,32 @@ class NodeConfigWindowMixin:
         # Column 2: PARAMETERS
         center_col = ttk.LabelFrame(paned, text=t("node_config.parameters"), padding=10)
         
+        # Scrollable container inside Column 2
+        center_canvas = tk.Canvas(center_col, bg="#f8fafc", bd=0, highlightthickness=0)
+        center_scrollbar = ttk.Scrollbar(center_col, orient="vertical", command=center_canvas.yview)
+        center_canvas.configure(yscrollcommand=center_scrollbar.set)
+        
+        center_scrollbar.pack(side="right", fill="y")
+        center_canvas.pack(side="left", fill="both", expand=True)
+        
+        scrollable_properties_frame = tk.Frame(center_canvas, bg="#f8fafc")
+        canvas_window = center_canvas.create_window((0, 0), window=scrollable_properties_frame, anchor="nw")
+        
+        # Resize frame when canvas width changes
+        center_canvas.bind("<Configure>", lambda event, cw=canvas_window: center_canvas.itemconfig(cw, width=event.width))
+        
+        # Configure scrollregion when frame size changes
+        def configure_scrollregion_center(event, cc=center_canvas):
+            cc.configure(scrollregion=cc.bbox("all"))
+        scrollable_properties_frame.bind("<Configure>", configure_scrollregion_center)
+        
+        # Bind MouseWheel to scroll the canvas
+        def _on_mousewheel_center(event, cc=center_canvas):
+            cc.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            
+        center_canvas.bind("<MouseWheel>", _on_mousewheel_center)
+        scrollable_properties_frame.bind("<MouseWheel>", _on_mousewheel_center)
+        
         # Column 3: OUTPUT DATA
         right_col = ttk.LabelFrame(paned, text=t("node_config.output_data"), padding=10)
         
@@ -80,7 +106,7 @@ class NodeConfigWindowMixin:
         
         # Setup references
         self.input_payload_container = left_col
-        self.properties_container = center_col
+        self.properties_container = scrollable_properties_frame
         self.output_payload_container = right_col
         
         # Populate inputs, parameters form and outputs
@@ -98,7 +124,7 @@ class NodeConfigWindowMixin:
         # Make sure it's a node body click and not a port click
         if "port" in tags:
             return
-        node_tag = [t for t in tags if t.startswith("node_")]
+        node_tag = [t for t in tags if t.startswith("node_") and not t.startswith("node_port_")]
         if node_tag:
             node_id = int(node_tag[0].split("_")[1])
             node = self.nodes[node_id]
@@ -112,6 +138,25 @@ class NodeConfigWindowMixin:
             self.selected_node.properties = copy.deepcopy(self.temp_properties)
             self.selected_node.rename(self.temp_node_name)
             self.selected_node.update_summary_text()
+            if self.selected_node.type in ['switch', 'condition']:
+                self.selected_node.redraw()
+                
+                # Clean up any invalid connections
+                valid_ports = set(self.selected_node.ports.keys())
+                to_remove = []
+                for conn in self.connections:
+                    if conn.source.id == self.selected_node.id and conn.source_port not in valid_ports:
+                        to_remove.append(conn)
+                    elif conn.target.id == self.selected_node.id and conn.target_port not in valid_ports:
+                        to_remove.append(conn)
+                for conn in to_remove:
+                    conn.delete()
+                    self.connections.remove(conn)
+                    
+                # Refresh connection lines coordinates
+                for conn in self.connections:
+                    if conn.source.id == self.selected_node.id or conn.target.id == self.selected_node.id:
+                        conn.update_line()
             self.log_message(t("node_config.applied_log").format(self.selected_node.name))
             if getattr(self, 'current_filepath', None):
                 self.trigger_auto_save()

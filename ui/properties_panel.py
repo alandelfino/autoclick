@@ -436,6 +436,336 @@ class PropertiesPanelMixin:
             ent_val.bind("<KeyRelease>", debounce_update)
             update_preview()
             
+            # --- Else If Section ---
+            lbl_else_ifs = tk.Label(self.properties_container, text=t("properties.else_ifs"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_else_ifs.pack(anchor="w", pady=(15, 2))
+            
+            else_ifs_container = tk.Frame(self.properties_container, bg="#f8fafc")
+            else_ifs_container.pack(fill="x", pady=(0, 5))
+            
+            def rebuild_else_ifs_grid():
+                for w in else_ifs_container.winfo_children():
+                    w.destroy()
+                
+                else_ifs_list = self.temp_properties.setdefault('else_ifs', [])
+                if not else_ifs_list:
+                    lbl_empty = tk.Label(else_ifs_container, text=t("properties.else_if_empty"), font=("Segoe UI", 9, "italic"), fg="#64748b", bg="#f8fafc")
+                    lbl_empty.pack(pady=10)
+                    return
+                
+                for idx, cond in enumerate(else_ifs_list):
+                    card = tk.LabelFrame(else_ifs_container, text=f"Else If #{idx+1}", font=("Segoe UI", 9, "bold"), fg="#0f766e", bg="#ffffff", padx=8, pady=8, bd=1, relief="solid")
+                    card.pack(fill="x", pady=5)
+                    
+                    header_btn_frame = tk.Frame(card, bg="#ffffff")
+                    header_btn_frame.pack(fill="x", pady=(0, 5))
+                    
+                    def make_delete_cmd(i=idx):
+                        def cmd():
+                            self.temp_properties['else_ifs'].pop(i)
+                            rebuild_else_ifs_grid()
+                        return cmd
+                        
+                    def make_up_cmd(i=idx):
+                        def cmd():
+                            if i > 0:
+                                lst = self.temp_properties['else_ifs']
+                                lst[i], lst[i-1] = lst[i-1], lst[i]
+                                rebuild_else_ifs_grid()
+                        return cmd
+                        
+                    def make_down_cmd(i=idx):
+                        def cmd():
+                            lst = self.temp_properties['else_ifs']
+                            if i < len(lst) - 1:
+                                lst[i], lst[i+1] = lst[i+1], lst[i]
+                                rebuild_else_ifs_grid()
+                        return cmd
+                        
+                    btn_del = tk.Button(header_btn_frame, text="🗑️", font=("Segoe UI", 8), bg="#ef4444", fg="#ffffff", bd=0, padx=6, pady=2, cursor="hand2", command=make_delete_cmd())
+                    btn_del.pack(side="right", padx=(2, 0))
+                    
+                    btn_down = tk.Button(header_btn_frame, text="▼", font=("Segoe UI", 8), bg="#64748b", fg="#ffffff", bd=0, padx=6, pady=2, cursor="hand2", command=make_down_cmd())
+                    btn_down.pack(side="right", padx=2)
+                    
+                    btn_up = tk.Button(header_btn_frame, text="▲", font=("Segoe UI", 8), bg="#64748b", fg="#ffffff", bd=0, padx=6, pady=2, cursor="hand2", command=make_up_cmd())
+                    btn_up.pack(side="right", padx=2)
+                    
+                    # Título
+                    lbl_t = tk.Label(card, text=t("properties.else_if_title"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#ffffff")
+                    lbl_t.pack(anchor="w", pady=(2, 1))
+                    ent_t = ttk.Entry(card, font=("Segoe UI", 9))
+                    ent_t.insert(0, cond.get('title', ''))
+                    ent_t.pack(fill="x", pady=(0, 6))
+                    
+                    # Variável
+                    lbl_v = tk.Label(card, text=t("properties.payload_var"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#ffffff")
+                    lbl_v.pack(anchor="w", pady=(0, 1))
+                    ent_v = ttk.Entry(card, font=("Segoe UI", 9))
+                    ent_v.is_payload_var_field = True
+                    ent_v.insert(0, cond.get('variable', ''))
+                    ent_v.pack(fill="x", pady=(0, 6))
+                    
+                    # Operator & Value side-by-side
+                    row_op_val = tk.Frame(card, bg="#ffffff")
+                    row_op_val.pack(fill="x")
+                    
+                    col_op = tk.Frame(row_op_val, bg="#ffffff")
+                    col_op.pack(side="left", fill="x", expand=True, padx=(0, 4))
+                    
+                    lbl_o = tk.Label(col_op, text=t("properties.operation"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#ffffff")
+                    lbl_o.pack(anchor="w", pady=(0, 1))
+                    
+                    cb_o = ttk.Combobox(col_op, values=[t("properties.op_equals"), t("properties.op_different"), t("properties.op_contains"), t("properties.op_greater_than")], state="readonly", font=("Segoe UI", 9))
+                    op_val = cond.get('operator', 'equals')
+                    if op_val in ['igual', 'equals']:
+                        cb_o.set(t("properties.op_equals"))
+                    elif op_val in ['diferente', 'different']:
+                        cb_o.set(t("properties.op_different"))
+                    elif op_val in ['contém', 'contains']:
+                        cb_o.set(t("properties.op_contains"))
+                    elif op_val in ['maior que', 'greater than']:
+                        cb_o.set(t("properties.op_greater_than"))
+                    else:
+                        cb_o.set(op_val)
+                    cb_o.pack(fill="x")
+                    
+                    col_val = tk.Frame(row_op_val, bg="#ffffff")
+                    col_val.pack(side="left", fill="x", expand=True, padx=(4, 0))
+                    
+                    lbl_vl = tk.Label(col_val, text=t("properties.comp_value"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#ffffff")
+                    lbl_vl.pack(anchor="w", pady=(0, 1))
+                    
+                    ent_vl = ttk.Entry(col_val, font=("Segoe UI", 9))
+                    ent_vl.insert(0, cond.get('value', ''))
+                    ent_vl.pack(fill="x")
+                    
+                    # Bind FocusIn
+                    ent_t.bind("<FocusIn>", lambda e: self.set_active_widget(e.widget))
+                    ent_v.bind("<FocusIn>", lambda e: self.set_active_widget(e.widget))
+                    ent_vl.bind("<FocusIn>", lambda e: self.set_active_widget(e.widget))
+                    
+                    # Sync events
+                    def make_sync_title(i=idx, e_widget=ent_t):
+                        return lambda event: self.temp_properties['else_ifs'][i].__setitem__('title', e_widget.get())
+                    def make_sync_var(i=idx, e_widget=ent_v):
+                        return lambda event: self.temp_properties['else_ifs'][i].__setitem__('variable', e_widget.get())
+                    def make_sync_val(i=idx, e_widget=ent_vl):
+                        return lambda event: self.temp_properties['else_ifs'][i].__setitem__('value', e_widget.get())
+                    def make_sync_op(i=idx, cb_widget=cb_o):
+                        def on_cb_select(event):
+                            sel = cb_widget.get()
+                            op_name = 'equals'
+                            if sel == t("properties.op_equals"):
+                                op_name = 'equals'
+                            elif sel == t("properties.op_different"):
+                                op_name = 'different'
+                            elif sel == t("properties.op_contains"):
+                                op_name = 'contains'
+                            elif sel == t("properties.op_greater_than"):
+                                op_name = 'greater than'
+                            else:
+                                op_name = sel
+                            self.temp_properties['else_ifs'][i]['operator'] = op_name
+                        return on_cb_select
+                        
+                    ent_t.bind("<KeyRelease>", make_sync_title())
+                    ent_v.bind("<KeyRelease>", make_sync_var())
+                    ent_vl.bind("<KeyRelease>", make_sync_val())
+                    cb_o.bind("<<ComboboxSelected>>", make_sync_op())
+            
+            rebuild_else_ifs_grid()
+            
+            btn_add = tk.Button(
+                self.properties_container, 
+                text=t("properties.add_else_if"), 
+                font=("Segoe UI", 9, "bold"), 
+                bg="#22c55e", fg="#ffffff", bd=0, padx=15, pady=6, cursor="hand2",
+                command=lambda: [self.temp_properties['else_ifs'].append({'title': '', 'variable': '', 'operator': 'equals', 'value': ''}), rebuild_else_ifs_grid()]
+            )
+            btn_add.pack(anchor="w", pady=(10, 0))
+            
+        elif node.type == 'switch':
+            # Fields: Variable, Cases (as Listbox)
+            lbl_var = tk.Label(self.properties_container, text=t("properties.switch_variable"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_var.pack(anchor="w", pady=(0, 2))
+            
+            ent_var = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_var.is_payload_var_field = True
+            ent_var.insert(0, self.temp_properties.get('variable', ''))
+            ent_var.pack(fill="x", pady=(0, 10))
+            ent_var.property_key = 'variable'
+            
+            lbl_cases = tk.Label(self.properties_container, text=t("properties.switch_cases"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_cases.pack(anchor="w", pady=(0, 2))
+            
+            # Listbox with scrollbar for cases
+            cases_frame = tk.Frame(self.properties_container, bg="#f8fafc")
+            cases_frame.pack(fill="x", pady=(0, 5))
+            
+            cases_scrollbar = ttk.Scrollbar(cases_frame, orient="vertical")
+            cases_listbox = tk.Listbox(
+                cases_frame, font=("Segoe UI", 9), height=6, bd=1, relief="solid",
+                selectmode="browse", activestyle="dotbox", bg="#ffffff",
+                yscrollcommand=cases_scrollbar.set
+            )
+            cases_scrollbar.config(command=cases_listbox.yview)
+            cases_listbox.pack(side="left", fill="x", expand=True)
+            cases_scrollbar.pack(side="right", fill="y")
+            
+            # Populate listbox with existing cases
+            cases_list = self.temp_properties.get('cases', [])
+            for case in cases_list:
+                cases_listbox.insert(tk.END, str(case))
+            
+            # Store reference for save_properties_from_widgets
+            cases_listbox.property_key = 'cases'
+            cases_listbox.is_cases_listbox = True
+            
+            # Buttons frame
+            btn_cases_frame = tk.Frame(self.properties_container, bg="#f8fafc")
+            btn_cases_frame.pack(fill="x", pady=(0, 15))
+            
+            def sync_cases_to_temp():
+                """Sync listbox contents to temp_properties."""
+                items = list(cases_listbox.get(0, tk.END))
+                self.temp_properties['cases'] = items
+                update_preview()
+            
+            def add_case():
+                dialog = tk.Toplevel(self.root)
+                dialog.title(t("properties.switch_add_dialog_title"))
+                dialog.transient(self.root)
+                dialog.grab_set()
+                dialog.configure(bg="#f8fafc")
+                dw, dh = 320, 130
+                sx = self.root.winfo_screenwidth()
+                sy = self.root.winfo_screenheight()
+                dialog.geometry(f"{dw}x{dh}+{(sx-dw)//2}+{(sy-dh)//2}")
+                
+                tk.Label(dialog, text=t("properties.switch_case_prompt"), font=("Segoe UI", 9), bg="#f8fafc").pack(anchor="w", padx=15, pady=(15, 5))
+                ent = ttk.Entry(dialog, font=("Segoe UI", 9))
+                ent.pack(fill="x", padx=15, pady=(0, 10))
+                ent.focus_set()
+                
+                def on_ok(event=None):
+                    val = ent.get().strip()
+                    if val:
+                        cases_listbox.insert(tk.END, val)
+                        sync_cases_to_temp()
+                    dialog.destroy()
+                
+                ent.bind("<Return>", on_ok)
+                bf = tk.Frame(dialog, bg="#f8fafc")
+                bf.pack(fill="x", padx=15, pady=(0, 10))
+                tk.Button(bf, text="OK", font=("Segoe UI", 9, "bold"), bg="#22c55e", fg="#fff", bd=0, padx=15, pady=4, cursor="hand2", command=on_ok).pack(side="right", padx=(5, 0))
+                tk.Button(bf, text=t("menu.settings_cancel"), font=("Segoe UI", 9), bg="#94a3b8", fg="#fff", bd=0, padx=15, pady=4, cursor="hand2", command=dialog.destroy).pack(side="right")
+            
+            def edit_case():
+                sel = cases_listbox.curselection()
+                if not sel:
+                    messagebox.showinfo(t("messages.info"), t("properties.switch_select_case"))
+                    return
+                idx = sel[0]
+                old_val = cases_listbox.get(idx)
+                
+                dialog = tk.Toplevel(self.root)
+                dialog.title(t("properties.switch_edit_dialog_title"))
+                dialog.transient(self.root)
+                dialog.grab_set()
+                dialog.configure(bg="#f8fafc")
+                dw, dh = 320, 130
+                sx = self.root.winfo_screenwidth()
+                sy = self.root.winfo_screenheight()
+                dialog.geometry(f"{dw}x{dh}+{(sx-dw)//2}+{(sy-dh)//2}")
+                
+                tk.Label(dialog, text=t("properties.switch_case_prompt"), font=("Segoe UI", 9), bg="#f8fafc").pack(anchor="w", padx=15, pady=(15, 5))
+                ent = ttk.Entry(dialog, font=("Segoe UI", 9))
+                ent.insert(0, old_val)
+                ent.pack(fill="x", padx=15, pady=(0, 10))
+                ent.focus_set()
+                ent.select_range(0, tk.END)
+                
+                def on_ok(event=None):
+                    val = ent.get().strip()
+                    if val:
+                        cases_listbox.delete(idx)
+                        cases_listbox.insert(idx, val)
+                        sync_cases_to_temp()
+                    dialog.destroy()
+                
+                ent.bind("<Return>", on_ok)
+                bf = tk.Frame(dialog, bg="#f8fafc")
+                bf.pack(fill="x", padx=15, pady=(0, 10))
+                tk.Button(bf, text="OK", font=("Segoe UI", 9, "bold"), bg="#22c55e", fg="#fff", bd=0, padx=15, pady=4, cursor="hand2", command=on_ok).pack(side="right", padx=(5, 0))
+                tk.Button(bf, text=t("menu.settings_cancel"), font=("Segoe UI", 9), bg="#94a3b8", fg="#fff", bd=0, padx=15, pady=4, cursor="hand2", command=dialog.destroy).pack(side="right")
+            
+            def remove_case():
+                sel = cases_listbox.curselection()
+                if not sel:
+                    messagebox.showinfo(t("messages.info"), t("properties.switch_select_case"))
+                    return
+                cases_listbox.delete(sel[0])
+                sync_cases_to_temp()
+            
+            btn_add = tk.Button(
+                btn_cases_frame, text=t("properties.switch_add_case"), font=("Segoe UI", 8, "bold"),
+                bg="#22c55e", fg="#ffffff", activebackground="#16a34a", activeforeground="#ffffff",
+                bd=0, padx=10, pady=4, cursor="hand2", command=add_case
+            )
+            btn_add.pack(side="left", padx=(0, 5))
+            
+            btn_edit = tk.Button(
+                btn_cases_frame, text=t("properties.switch_edit_case"), font=("Segoe UI", 8, "bold"),
+                bg="#3b82f6", fg="#ffffff", activebackground="#2563eb", activeforeground="#ffffff",
+                bd=0, padx=10, pady=4, cursor="hand2", command=edit_case
+            )
+            btn_edit.pack(side="left", padx=(0, 5))
+            
+            btn_remove = tk.Button(
+                btn_cases_frame, text=t("properties.switch_remove_case"), font=("Segoe UI", 8, "bold"),
+                bg="#ef4444", fg="#ffffff", activebackground="#dc2626", activeforeground="#ffffff",
+                bd=0, padx=10, pady=4, cursor="hand2", command=remove_case
+            )
+            btn_remove.pack(side="left")
+            
+            # Interactive Variable Value Preview
+            preview_frame = tk.LabelFrame(self.properties_container, text=t("properties.payload_preview"), font=("Segoe UI", 8, "bold"), fg="#1e293b", bg="#f8fafc", padx=5, pady=5)
+            preview_frame.pack(fill="x", pady=(5, 10))
+            
+            preview_lbl = tk.Label(preview_frame, text="", font=("Consolas", 9), fg="#16a34a", bg="#f8fafc", anchor="w", justify="left", wraplength=350)
+            preview_lbl.pack(fill="x", expand=True)
+            
+            def update_preview(event=None):
+                var_name = ent_var.get().strip()
+                if not var_name:
+                    preview_lbl.config(text="[Enter variable name]")
+                    return
+                val = get_payload_value(input_data, var_name)
+                if val is not None:
+                    formatted_val = self.format_preview_value(val)
+                    preview_lbl.config(text=f"{formatted_val} ({type(val).__name__})")
+                else:
+                    preview_lbl.config(text=f"[Not found in payload]")
+            
+            def save_switch_fields(event=None):
+                self.temp_properties['variable'] = ent_var.get().strip()
+                items = list(cases_listbox.get(0, tk.END))
+                self.temp_properties['cases'] = items
+                update_preview()
+                
+            self.preview_timer = None
+            def debounce_update(event=None):
+                if hasattr(self, 'preview_timer') and self.preview_timer:
+                    try:
+                        self.root.after_cancel(self.preview_timer)
+                    except Exception:
+                        pass
+                self.preview_timer = self.root.after(300, save_switch_fields)
+            
+            ent_var.bind("<KeyRelease>", debounce_update)
+            update_preview()
+            
         elif node.type == 'key':
             # Fields: Key, Count
             lbl_key = tk.Label(self.properties_container, text=t("properties.key"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
@@ -1269,21 +1599,12 @@ class PropertiesPanelMixin:
         elif node.type == 'loop':
             var_name = self.get_var_name(node.name)
             item_schema = {}
-            ds = node.properties.get('data_source', 'Manual (JSON)')
-            if ds == 'Manual (JSON)':
-                manual = node.properties.get('manual_data', '[]')
-                try:
-                    data = json.loads(manual)
-                    if isinstance(data, list) and len(data) > 0:
-                        first_item = data[0]
-                        if isinstance(first_item, dict):
-                            item_schema = {k: f"<{type(v).__name__}>" for k, v in first_item.items()}
-                        else:
-                            item_schema = f"<{type(first_item).__name__}>"
-                except Exception:
-                    pass
-            else:
-                p_var = node.properties.get('payload_variable', '')
+            array_data = node.properties.get('array_data', '[]').strip()
+            
+            # Check if it is a payload variable reference, e.g. {{variable}} or {variable}
+            match = re.match(r'^\{\{?([^{}]+)\}\}?$', array_data)
+            if match:
+                p_var = match.group(1).strip()
                 predecessors = self.get_predecessors(node.id)
                 input_schema = {}
                 for pred_id in predecessors:
@@ -1310,6 +1631,20 @@ class PropertiesPanelMixin:
                     else:
                         item_schema = "<Qualquer>"
                 else:
+                    item_schema = "<Qualquer>"
+            else:
+                # Treat as literal JSON array (Manual JSON)
+                try:
+                    data = json.loads(array_data)
+                    if isinstance(data, list) and len(data) > 0:
+                        first_item = data[0]
+                        if isinstance(first_item, dict):
+                            item_schema = {k: f"<{type(v).__name__}>" for k, v in first_item.items()}
+                        else:
+                            item_schema = f"<{type(first_item).__name__}>"
+                    else:
+                        item_schema = "<Qualquer>"
+                except Exception:
                     item_schema = "<Qualquer>"
             
             schema[var_name] = {
@@ -1371,7 +1706,13 @@ class PropertiesPanelMixin:
             for child in parent.winfo_children():
                 prop_key = getattr(child, 'property_key', None)
                 if prop_key is not None:
-                    if isinstance(child, tk.Text):
+                    # Handle Listbox (used for switch cases)
+                    if isinstance(child, tk.Listbox) and getattr(child, 'is_cases_listbox', False):
+                        items = list(child.get(0, tk.END))
+                        self.temp_properties[prop_key] = items
+                        scan_widgets(child)
+                        continue
+                    elif isinstance(child, tk.Text):
                         val = child.get("1.0", "end-1c")
                     elif isinstance(child, (ttk.Combobox, ttk.Entry, tk.Entry, ttk.Spinbox)):
                         val = child.get()

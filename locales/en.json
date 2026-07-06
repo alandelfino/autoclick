@@ -29,7 +29,8 @@
         "break_loop": "Interrupt Loop",
         "confirm_dialog": "Confirm Action (Windows)",
         "alert_dialog": "Alert / Notice (Windows)",
-        "continue_loop": "Continue Loop"
+        "continue_loop": "Continue Loop",
+        "switch": "Switch Case"
       }
     },
     "menu": {
@@ -58,7 +59,10 @@
       "settings_cancel": "Cancel",
       "settings_error_countdown": "Countdown must be an integer >= 0.",
       "settings_auto_save": "Auto-save on changes",
-      "settings_applied_log": "Settings applied: Hide={}, Seconds={}, AutoSave={}"
+      "settings_zoom_min": "Minimum zoom:",
+      "settings_zoom_max": "Maximum zoom:",
+      "settings_error_zoom": "Zoom values must be valid numbers and minimum must be less than maximum.",
+      "settings_applied_log": "Settings applied: Hide={}, Seconds={}, AutoSave={}, ZoomMin={}, ZoomMax={}"
     },
     "canvas": {
       "tab_flow": "Flow",
@@ -85,6 +89,19 @@
       "capture_mouse_only": "Mouse Data Only",
       "payload_var": "Payload Variable:",
       "payload_var_hint": "Ex: active_window.title",
+      "switch_variable": "Expression Variable:",
+      "switch_cases": "Cases:",
+      "switch_add_case": "➕ Add",
+      "switch_edit_case": "✏️ Edit",
+      "switch_remove_case": "🗑️ Remove",
+      "switch_add_dialog_title": "Add Case",
+      "switch_edit_dialog_title": "Edit Case",
+      "switch_case_prompt": "Enter the case value:",
+      "switch_select_case": "Select a case from the list.",
+      "else_ifs": "Else If Conditions:",
+      "add_else_if": "➕ Add Else If",
+      "else_if_title": "Branch Title (output port):",
+      "else_if_empty": "No Else If conditions configured.",
       "operation": "Operation:",
       "op_equals": "equals",
       "op_different": "different",
@@ -239,7 +256,8 @@
       "loop": "Loop",
       "break_loop": "Interrupt Loop",
       "continue_loop": "Continue Loop",
-      "storage_var": "Storage Var"
+      "storage_var": "Storage Var",
+      "switch": "Switch Case"
     },
     "logs": {
       "starting_execution": "Starting flow execution...",

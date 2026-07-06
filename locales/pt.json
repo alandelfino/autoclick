@@ -29,7 +29,8 @@
         "break_loop": "Interromper Loop",
         "confirm_dialog": "Confirmar Ação (Windows)",
         "alert_dialog": "Alerta / Aviso (Windows)",
-        "continue_loop": "Próximo Item Loop"
+        "continue_loop": "Próximo Item Loop",
+        "switch": "Switch Case"
       }
     },
     "menu": {
@@ -58,7 +59,10 @@
       "settings_cancel": "Cancelar",
       "settings_error_countdown": "A contagem regressiva deve ser um número inteiro maior ou igual a 0.",
       "settings_auto_save": "Salvar automaticamente ao alterar",
-      "settings_applied_log": "Configurações aplicadas: Ocultar={}, Segundos={}, AutoSalvar={}"
+      "settings_zoom_min": "Zoom mínimo:",
+      "settings_zoom_max": "Zoom máximo:",
+      "settings_error_zoom": "Os valores de zoom devem ser números válidos e o mínimo deve ser menor que o máximo.",
+      "settings_applied_log": "Configurações aplicadas: Ocultar={}, Segundos={}, AutoSalvar={}, ZoomMin={}, ZoomMax={}"
     },
     "canvas": {
       "tab_flow": "Fluxo",
@@ -85,6 +89,19 @@
       "capture_mouse_only": "Dados do Mouse somente",
       "payload_var": "Variável do Payload:",
       "payload_var_hint": "Ex: active_window.title",
+      "switch_variable": "Variável de Expressão:",
+      "switch_cases": "Casos:",
+      "switch_add_case": "➕ Adicionar",
+      "switch_edit_case": "✏️ Editar",
+      "switch_remove_case": "🗑️ Remover",
+      "switch_add_dialog_title": "Adicionar Caso",
+      "switch_edit_dialog_title": "Editar Caso",
+      "switch_case_prompt": "Digite o valor do caso:",
+      "switch_select_case": "Selecione um caso na lista.",
+      "else_ifs": "Condições Else If:",
+      "add_else_if": "➕ Adicionar Else If",
+      "else_if_title": "Título do ramo (porta de saída):",
+      "else_if_empty": "Nenhuma condição Else If configurada.",
       "operation": "Operação:",
       "op_equals": "igual",
       "op_different": "diferente",
@@ -239,7 +256,8 @@
       "loop": "Loop",
       "break_loop": "Interromper Loop",
       "continue_loop": "Próximo Item Loop",
-      "storage_var": "Var. Armazenamento"
+      "storage_var": "Var. Armazenamento",
+      "switch": "Switch Case"
     },
     "logs": {
       "starting_execution": "Iniciando execução do fluxo...",

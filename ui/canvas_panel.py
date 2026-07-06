@@ -143,8 +143,12 @@ class CanvasPanelMixin:
 
     def apply_zoom(self, factor, ref_x, ref_y):
         new_scale = self.zoom_scale * factor
-        # Constrain zoom bounds between 0.4x and 2.2x
-        if new_scale < 0.4 or new_scale > 2.2:
+        # Constrain zoom bounds using configurable limits
+        zoom_min = getattr(self, 'zoom_min_var', None)
+        zoom_max = getattr(self, 'zoom_max_var', None)
+        min_val = zoom_min.get() if zoom_min else 0.2
+        max_val = zoom_max.get() if zoom_max else 3.0
+        if new_scale < min_val or new_scale > max_val:
             return
             
         self.zoom_scale = new_scale
@@ -185,7 +189,7 @@ class CanvasPanelMixin:
         item = self.canvas.find_withtag("current")
         if item:
             tags = self.canvas.gettags(item[0])
-            node_tag = [t for t in tags if t.startswith("node_")]
+            node_tag = [t for t in tags if t.startswith("node_") and not t.startswith("node_port_")]
             if node_tag:
                 node_id = int(node_tag[0].split("_")[1])
                 node = self.nodes.get(node_id)

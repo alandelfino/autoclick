@@ -43,6 +43,7 @@ class LeftPanelMixin:
                 (t("toolbox.nodes.loop"), "loop", "#8b5cf6"),
                 (t("toolbox.nodes.continue_loop"), "continue_loop", "#0284c7"),
                 (t("toolbox.nodes.break_loop"), "break_loop", "#a21caf"),
+                (t("toolbox.nodes.switch"), "switch", "#4f46e5"),
             ]),
             ("DADOS E CONEXÕES", [
                 (t("toolbox.nodes.postgres"), "postgres", "#336791"),
@@ -147,6 +148,8 @@ class LeftPanelMixin:
         self.hide_window_var = tk.BooleanVar(value=True)
         self.countdown_seconds_var = tk.IntVar(value=3)
         self.auto_save_var = tk.BooleanVar(value=False)
+        self.zoom_min_var = tk.DoubleVar(value=0.2)
+        self.zoom_max_var = tk.DoubleVar(value=3.0)
         
         # 2. DEBUG LOG WINDOW (at the bottom)
         lower_sidebar_frame = tk.Frame(self.left_panel, bg="#0f172a")

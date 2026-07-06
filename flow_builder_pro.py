@@ -73,6 +73,7 @@ class FlowBuilderProApp(
         self.connections = []
         self.node_counter = 0
         self.selected_node = None
+        self.selected_nodes = set()
         self.is_running = False
         self.is_paused = False
         self.tray_icon = None
@@ -92,6 +93,8 @@ class FlowBuilderProApp(
         self.drag_data = {'x': 0, 'y': 0}
         self.active_port_drag = None  # (source_node, source_port_name)
         self.temp_line_id = None
+        self.marquee_data = None  # For marquee/lasso selection
+        self.marquee_rect_id = None
         self.load_connections()
         
         self.setup_ui()
@@ -177,6 +180,11 @@ class FlowBuilderProApp(
 
     def log_message(self, message):
         """Append thread-safe logs into the side text panel."""
+        # Prevent UI freezing/lag from extremely large messages (e.g. massive DB rows or API responses)
+        max_log_len = 2000
+        if len(message) > max_log_len:
+            message = message[:max_log_len] + "... (truncated due to size)"
+
         def append():
             self.log_text.config(state="normal")
             self.log_text.insert(tk.END, message + "\n")
@@ -662,6 +670,13 @@ class FlowBuilderProApp(
         old_selected = self.selected_node
         self.selected_node = node
         
+        # Clear multi-selection when selecting a single node normally
+        if hasattr(self, 'selected_nodes') and self.selected_nodes:
+            old_multi = list(self.selected_nodes)
+            self.selected_nodes.clear()  # Clear first, so update_outline sees them as not multi-selected
+            for n in old_multi:
+                n.update_outline()
+        
         if old_selected:
             old_selected.select(False)
             
@@ -678,6 +693,28 @@ class FlowBuilderProApp(
                 self.input_payload_container = None
                 self.output_payload_container = None
             self.show_no_node_selected_message()
+
+    def clear_multi_selection(self):
+        """Clear all multi-selected nodes and refresh their outlines."""
+        if hasattr(self, 'selected_nodes') and self.selected_nodes:
+            old_multi = list(self.selected_nodes)
+            self.selected_nodes.clear()  # Clear first
+            for n in old_multi:
+                n.update_outline()
+
+    def toggle_node_multi_select(self, node):
+        """Toggle a node in/out of the multi-selection set (Ctrl+Click)."""
+        if node in self.selected_nodes:
+            self.selected_nodes.discard(node)
+        else:
+            self.selected_nodes.add(node)
+        # Also add current single-selected node to the set if it exists
+        if self.selected_node and self.selected_node not in self.selected_nodes:
+            self.selected_nodes.add(self.selected_node)
+        self.selected_node = None
+        # Refresh all outlines
+        for n in self.nodes.values():
+            n.update_outline()
 
     def delete_node_by_ref(self, node):
         if node.type == 'start':
@@ -941,7 +978,10 @@ class FlowBuilderProApp(
                         self.execution_history[current_node.id]["output"] = copy.deepcopy(payload)
                         self.last_run_payload = copy.deepcopy(payload)
                         
-                        self.log_message(f"Payload updated: {json.dumps(payload, ensure_ascii=False)}")
+                        payload_str = json.dumps(payload, ensure_ascii=False)
+                        if len(payload_str) > 1000:
+                            payload_str = payload_str[:1000] + "... (truncated due to size)"
+                        self.log_message(f"Payload updated: {payload_str}")
                         
                         # Pause brief moment (1.2s) to show visual highlights
                         time.sleep(1.2)
@@ -1017,7 +1057,10 @@ class FlowBuilderProApp(
             self.root.after(0, lambda: self.root.state('zoomed'))
             
             self.log_message("=== FLOW EXECUTION FINISHED ===")
-            self.log_message(f"Final Payload: {json.dumps(payload, ensure_ascii=False, indent=2)}")
+            final_payload_str = json.dumps(payload, ensure_ascii=False, indent=2)
+            if len(final_payload_str) > 1500:
+                final_payload_str = final_payload_str[:1500] + "\n... (truncated due to size)"
+            self.log_message(f"Final Payload: {final_payload_str}")
             if self.selected_node and self.properties_container:
                 self.build_properties_panel(self.selected_node)
             
@@ -1103,7 +1146,7 @@ class FlowBuilderProApp(
         
         # Center settings window
         win_w = 360
-        win_h = 280
+        win_h = 380
         scr_w = self.root.winfo_screenwidth()
         scr_h = self.root.winfo_screenheight()
         x = (scr_w - win_w) // 2
@@ -1138,7 +1181,31 @@ class FlowBuilderProApp(
         
         ent_countdown = ttk.Spinbox(main_frame, from_=0, to=60, width=10)
         ent_countdown.set(str(self.countdown_seconds_var.get()))
-        ent_countdown.pack(anchor="w", pady=(0, 20))
+        ent_countdown.pack(anchor="w", pady=(0, 15))
+        
+        # --- Zoom Limits ---
+        zoom_frame = tk.Frame(main_frame, bg="#f8fafc")
+        zoom_frame.pack(fill="x", pady=(0, 15))
+        
+        lbl_zoom_min = tk.Label(
+            zoom_frame, text=t("menu.settings_zoom_min"),
+            font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc"
+        )
+        lbl_zoom_min.grid(row=0, column=0, sticky="w", pady=(0, 5))
+        
+        ent_zoom_min = ttk.Spinbox(zoom_frame, from_=0.1, to=1.0, increment=0.1, width=8, format="%.1f")
+        ent_zoom_min.set(f"{self.zoom_min_var.get():.1f}")
+        ent_zoom_min.grid(row=0, column=1, padx=(10, 0), pady=(0, 5))
+        
+        lbl_zoom_max = tk.Label(
+            zoom_frame, text=t("menu.settings_zoom_max"),
+            font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc"
+        )
+        lbl_zoom_max.grid(row=1, column=0, sticky="w", pady=(0, 5))
+        
+        ent_zoom_max = ttk.Spinbox(zoom_frame, from_=1.0, to=5.0, increment=0.1, width=8, format="%.1f")
+        ent_zoom_max.set(f"{self.zoom_max_var.get():.1f}")
+        ent_zoom_max.grid(row=1, column=1, padx=(10, 0), pady=(0, 5))
         
         btn_frame = ttk.Frame(main_frame)
         btn_frame.pack(fill="x", side="bottom")
@@ -1151,11 +1218,22 @@ class FlowBuilderProApp(
             except ValueError:
                 messagebox.showerror(t("messages.error"), t("menu.settings_error_countdown"))
                 return
+            
+            try:
+                z_min = float(ent_zoom_min.get())
+                z_max = float(ent_zoom_max.get())
+                if z_min <= 0 or z_max <= 0 or z_min >= z_max:
+                    raise ValueError()
+            except ValueError:
+                messagebox.showerror(t("messages.error"), t("menu.settings_error_zoom"))
+                return
                 
             self.hide_window_var.set(temp_hide_var.get())
             self.auto_save_var.set(temp_auto_save_var.get())
             self.countdown_seconds_var.set(sec)
-            self.log_message(t("menu.settings_applied_log").format(temp_hide_var.get(), sec, temp_auto_save_var.get()))
+            self.zoom_min_var.set(z_min)
+            self.zoom_max_var.set(z_max)
+            self.log_message(t("menu.settings_applied_log").format(temp_hide_var.get(), sec, temp_auto_save_var.get(), z_min, z_max))
             settings_win.destroy()
             
         btn_apply = tk.Button(

@@ -68,6 +68,13 @@ class VisualNode:
         # Load default properties if none provided
         self.properties = properties if properties is not None else self.get_default_properties()
         
+        if self.type == 'switch':
+            cases = self.properties.get('cases', [])
+            self.height = max(100, 45 + 30 * (len(cases) + 1))
+        elif self.type == 'condition':
+            else_ifs = self.properties.get('else_ifs', [])
+            self.height = max(100, 45 + 30 * (len(else_ifs) + 2))
+        
         # Define visual themes per node type
         self.themes = {
             'start': {'header': '#6366f1', 'title': 'Início'},
@@ -87,7 +94,8 @@ class VisualNode:
             'continue_loop': {'header': '#0ea5e9', 'title': t("toolbox.nodes.continue_loop")},
             'storage_var': {'header': '#ec4899', 'title': 'Var. Armazenamento'},
             'confirm_dialog': {'header': '#f43f5e', 'title': t("toolbox.nodes.confirm_dialog")},
-            'alert_dialog': {'header': '#e11d48', 'title': t("toolbox.nodes.alert_dialog")}
+            'alert_dialog': {'header': '#e11d48', 'title': t("toolbox.nodes.alert_dialog")},
+            'switch': {'header': '#4f46e5', 'title': t("toolbox.nodes.switch")}
         }
         self.theme = self.themes.get(self.type, {'header': '#64748b', 'title': 'Nó'})
 
@@ -116,7 +124,7 @@ class VisualNode:
         elif self.type == 'capture':
             return {'capture_type': 'Dados da Janela Ativa'}
         elif self.type == 'condition':
-            return {'variable': 'active_window.title', 'operator': 'contém', 'value': ''}
+            return {'variable': 'active_window.title', 'operator': 'contém', 'value': '', 'else_ifs': []}
         elif self.type == 'key':
             return {'key': 'enter', 'count': 1}
         elif self.type == 'type_text':
@@ -151,6 +159,11 @@ class VisualNode:
                 'message': 'Fluxo interrompido!',
                 'btn_ok_text': 'OK'
             }
+        elif self.type == 'switch':
+            return {
+                'variable': 'active_window.title',
+                'cases': ['Opção A', 'Opção B']
+            }
         return {}
 
     def setup_ports(self):
@@ -163,17 +176,39 @@ class VisualNode:
             }
         
         if self.type == 'condition':
-            # Conditional node has 2 outputs (True/False)
-            self.ports['out_true'] = {
-                'rel_x': self.width, 'rel_y': 30,
-                'type': 'output', 'color': '#22c55e', # Green
-                'label': 'True', 'tag': f"port_out_true_{self.id}"
-            }
-            self.ports['out_false'] = {
-                'rel_x': self.width, 'rel_y': 70,
-                'type': 'output', 'color': '#ef4444', # Red
-                'label': 'False', 'tag': f"port_out_false_{self.id}"
-            }
+            else_ifs = self.properties.get('else_ifs', [])
+            if not else_ifs:
+                # Conditional node has 2 outputs (True/False)
+                self.ports['out_true'] = {
+                    'rel_x': self.width, 'rel_y': 30,
+                    'type': 'output', 'color': '#22c55e', # Green
+                    'label': 'True', 'tag': f"port_out_true_{self.id}"
+                }
+                self.ports['out_false'] = {
+                    'rel_x': self.width, 'rel_y': 70,
+                    'type': 'output', 'color': '#ef4444', # Red
+                    'label': 'False', 'tag': f"port_out_false_{self.id}"
+                }
+            else:
+                self.ports['out_true'] = {
+                    'rel_x': self.width, 'rel_y': 35,
+                    'type': 'output', 'color': '#22c55e', # Green
+                    'label': 'If', 'tag': f"port_out_true_{self.id}"
+                }
+                for i, else_if in enumerate(else_ifs):
+                    rel_y = 35 + 30 * (i + 1)
+                    label_text = else_if.get('title', '').strip() or f'Else If {i+1}'
+                    self.ports[f'out_else_if_{i}'] = {
+                        'rel_x': self.width, 'rel_y': rel_y,
+                        'type': 'output', 'color': '#0ea5e9', # Sky blue
+                        'label': label_text, 'tag': f"port_out_else_if_{i}_{self.id}"
+                    }
+                rel_y_else = 35 + 30 * (len(else_ifs) + 1)
+                self.ports['out_false'] = {
+                    'rel_x': self.width, 'rel_y': rel_y_else,
+                    'type': 'output', 'color': '#ef4444', # Red
+                    'label': 'Else', 'tag': f"port_out_false_{self.id}"
+                }
         elif self.type == 'start':
             # Start node has 1 output on the right center (colored Indigo)
             self.ports['out'] = {
@@ -195,6 +230,21 @@ class VisualNode:
         elif self.type in ['break_loop', 'continue_loop']:
             # No output ports
             pass
+        elif self.type == 'switch':
+            cases = self.properties.get('cases', [])
+            for i, case in enumerate(cases):
+                rel_y = 35 + 30 * i
+                self.ports[f'out_case_{i}'] = {
+                    'rel_x': self.width, 'rel_y': rel_y,
+                    'type': 'output', 'color': '#3b82f6',
+                    'label': str(case), 'tag': f"port_out_case_{i}_{self.id}"
+                }
+            rel_y_default = 35 + 30 * len(cases)
+            self.ports['out_default'] = {
+                'rel_x': self.width, 'rel_y': rel_y_default,
+                'type': 'output', 'color': '#64748b',
+                'label': 'Default', 'tag': f"port_out_default_{self.id}"
+            }
         else:
             # Standard nodes have 1 output on the right center
             self.ports['out'] = {
@@ -300,6 +350,8 @@ class VisualNode:
             summary = f"Título: {self.properties.get('title', '')}"
         elif self.type == 'alert_dialog':
             summary = f"Título: {self.properties.get('title', '')}"
+        elif self.type == 'switch':
+            summary = f"Switch: {self.properties.get('variable', '')[:15]}..."
             
         self.summary_text_ui = self.canvas.create_text(
             self.x + 10, self.y + 75, text=summary, anchor="w",
@@ -311,16 +363,16 @@ class VisualNode:
         self.canvas.itemconfig(self.name_text_ui, text=new_name)
 
     def scale_fonts(self, scale):
-        header_sz = max(int(8 * scale), 4)
-        name_sz = max(int(10 * scale), 5)
-        summary_sz = max(int(8 * scale), 4)
-        port_sz = max(int(8 * scale), 4)
+        header_sz = max(int(8 * scale), 1)
+        name_sz = max(int(10 * scale), 1)
+        summary_sz = max(int(8 * scale), 1)
+        port_sz = max(int(8 * scale), 1)
         
         self.canvas.itemconfig(self.header_text_ui, font=("Segoe UI", header_sz, "bold"))
-        self.canvas.itemconfig(self.name_text_ui, font=("Segoe UI", name_sz, "bold"), width=max(int(self.width - 8 * scale), 10))
+        self.canvas.itemconfig(self.name_text_ui, font=("Segoe UI", name_sz, "bold"), width=max(int(self.width - 8 * scale), 5))
         
         if hasattr(self, 'summary_text_ui') and self.summary_text_ui:
-            self.canvas.itemconfig(self.summary_text_ui, font=("Segoe UI", summary_sz, "italic"), width=max(int(self.width - 8 * scale), 10))
+            self.canvas.itemconfig(self.summary_text_ui, font=("Segoe UI", summary_sz, "italic"), width=max(int(self.width - 8 * scale), 5))
             
         for p in self.ports.values():
             if 'ui_label' in p and p['ui_label']:
@@ -353,12 +405,16 @@ class VisualNode:
     def update_outline(self):
         app = getattr(self.canvas, 'app', None)
         is_selected = (app and app.selected_node == self)
+        is_multi_selected = (app and hasattr(app, 'selected_nodes') and self in app.selected_nodes)
         
         if self.is_executing:
             color = "#22c55e"
             width = 4
         elif is_selected:
             color = "#2563eb"
+            width = 3
+        elif is_multi_selected:
+            color = "#3b82f6"
             width = 3
         elif getattr(self, 'is_hovered', False):
             color = "#3b82f6"
@@ -367,7 +423,9 @@ class VisualNode:
             color = "#e2e8f0"
             width = 2
             
-        self.canvas.itemconfig(self.body_ui, outline=color, width=width)
+        zoom_scale = getattr(app, 'zoom_scale', 1.0) if app else 1.0
+        scaled_width = max(1, int(round(width * zoom_scale)))
+        self.canvas.itemconfig(self.body_ui, outline=color, width=scaled_width)
 
     def on_enter(self, event):
         self.is_hovered = True
@@ -670,25 +728,52 @@ class VisualNode:
             log_func(t("logs.condition_current_val").format(variable, actual_value))
             log_func(t("logs.condition_comparing").format(actual_value, operator, target_value))
             
-            # Perform evaluation
-            result = False
-            str_actual = str(actual_value).lower()
-            str_target = str(target_value).lower()
-            
-            if operator in ['igual', 'equals']:
-                result = str_actual == str_target
-            elif operator in ['diferente', 'different']:
-                result = str_actual != str_target
-            elif operator in ['contém', 'contains']:
-                result = str_target in str_actual
-            elif operator in ['maior que', 'greater than']:
-                try:
-                    result = float(actual_value) > float(target_value)
-                except ValueError:
-                    result = False
-                    
+            def evaluate(act_val, op, tgt_val):
+                res = False
+                str_act = str(act_val).lower()
+                str_tgt = str(tgt_val).lower()
+                if op in ['igual', 'equals']:
+                    res = str_act == str_tgt
+                elif op in ['diferente', 'different']:
+                    res = str_act != str_tgt
+                elif op in ['contém', 'contains']:
+                    res = str_tgt in str_act
+                elif op in ['maior que', 'greater than']:
+                    try:
+                        res = float(act_val) > float(tgt_val)
+                    except ValueError:
+                        res = False
+                return res
+
+            result = evaluate(actual_value, operator, target_value)
             log_func(t("logs.condition_result").format(result))
-            return 'out_true' if result else 'out_false'
+            if result:
+                return 'out_true'
+                
+            # If main condition is False, evaluate else_ifs sequentially
+            else_ifs = self.properties.get('else_ifs', [])
+            for i, else_if in enumerate(else_ifs):
+                var_else_if = else_if.get('variable', '')
+                while var_else_if.startswith('{') and var_else_if.endswith('}'):
+                    var_else_if = var_else_if[1:-1]
+                op_else_if = else_if.get('operator', 'equals')
+                tgt_val_else_if_raw = else_if.get('value', '')
+                
+                act_val_else_if = get_payload_value(payload, var_else_if)
+                if act_val_else_if is None:
+                    act_val_else_if = ""
+                tgt_val_else_if = resolve_value(str(tgt_val_else_if_raw), payload)
+                
+                log_func(f" -> Else If {i+1}: valor atual de '{var_else_if}' = '{act_val_else_if}'")
+                log_func(f" -> Comparando Else If {i+1}: '{act_val_else_if}' {op_else_if} '{tgt_val_else_if}'")
+                
+                res_else_if = evaluate(act_val_else_if, op_else_if, tgt_val_else_if)
+                log_func(f" -> Resultado do Else If {i+1}: {res_else_if}")
+                if res_else_if:
+                    return f'out_else_if_{i}'
+                    
+            # If all conditions are False, follow out_false
+            return 'out_false'
             
         elif self.type == 'sqlite':
             conn_name = self.properties.get('connection_name', '')
@@ -1047,9 +1132,60 @@ class VisualNode:
             log_func("Caixa de alerta fechada.")
             return 'out'
             
+        elif self.type == 'switch':
+            variable = self.properties.get('variable', '')
+            while variable.startswith('{') and variable.endswith('}'):
+                variable = variable[1:-1]
+            
+            actual_value = get_payload_value(payload, variable)
+            if actual_value is None:
+                actual_value = ""
+                
+            cases = self.properties.get('cases', [])
+            str_actual = str(actual_value).strip().lower()
+            
+            log_func(f" -> Switch: valor atual de '{variable}' = '{actual_value}'")
+            
+            matched_port = 'out_default'
+            for i, case in enumerate(cases):
+                if str(case).strip().lower() == str_actual:
+                    matched_port = f'out_case_{i}'
+                    log_func(f" -> Switch correspondência encontrada: '{case}' (Porta: {matched_port})")
+                    break
+            
+            if matched_port == 'out_default':
+                log_func(f" -> Switch nenhuma correspondência encontrada. Indo pelo caminho Default.")
+            
+            return matched_port
+            
         return None
 
     def delete(self):
         self.canvas.delete(self.tag)
         for p in self.ports.values():
             self.canvas.delete(p['tag'])
+            if 'ui_label' in p:
+                self.canvas.delete(p['ui_label'])
+
+    def redraw(self):
+        self.canvas.delete(self.tag)
+        for p in self.ports.values():
+            self.canvas.delete(p['tag'])
+            if 'ui_label' in p:
+                self.canvas.delete(p['ui_label'])
+        
+        if self.type == 'switch':
+            cases = self.properties.get('cases', [])
+            self.height = max(100, 45 + 30 * (len(cases) + 1))
+        elif self.type == 'condition':
+            else_ifs = self.properties.get('else_ifs', [])
+            self.height = max(100, 45 + 30 * (len(else_ifs) + 2))
+            
+        self.ports = {}
+        self.setup_ports()
+        self.draw()
+        
+        self.canvas.tag_bind(self.tag, "<Enter>", self.on_enter)
+        self.canvas.tag_bind(self.tag, "<Leave>", self.on_leave)
+        self.canvas.tag_bind(self.tag, "<Button-3>", self.on_right_click_node)
+        self.canvas.tag_bind(self.tag, "<Button-2>", self.on_right_click_node)
