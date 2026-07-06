@@ -74,6 +74,7 @@
       "auto_layout_complete": "Auto-layout completo!",
       "context_edit": "Editar",
       "context_delete": "Excluir",
+      "context_delete_selected": "Excluir selecionados",
       "clear": "Limpar"
     },
     "properties": {
@@ -129,6 +130,17 @@
       "db_tables_preview": "Tabelas e Campos Disponíveis (Preview):",
       "db_schema_not_loaded": "Esquema não carregado. Conecte no menu Conexões.",
       "run_test": "⚡ Executar Teste",
+      "step_test": "Step Test",
+      "step_test_running": "Executando...",
+      "step_test_while_running": "Pare a execução do fluxo antes de executar um Step Test.",
+      "step_test_side_effect_warning": "O Step Test executa a ação real deste nó no desktop ou serviço conectado. Deseja continuar?",
+      "step_test_start_log": ">> Step Test iniciado para o nó '{}'.",
+      "step_test_success_log": ">> Step Test concluído para o nó '{}' pela porta '{}'.",
+      "step_test_error_log": ">> Step Test falhou no nó '{}': {}",
+      "step_test_error_msg": "Falha ao executar Step Test:\n{}",
+      "step_test_last_success": "Último Step Test: {} | Porta: {}",
+      "step_test_stale": "Step Test antigo: {} | Configuração alterada",
+      "step_test_last_error": "Último Step Test falhou: {}",
       "api_conn": "Conexão de API (Opcional):",
       "http_method": "Método HTTP:",
       "endpoint_url": "Endpoint / URL:",
@@ -317,6 +329,7 @@
     },
     "messages": {
       "warning": "Aviso",
+      "confirm_delete_nodes": "Deseja realmente excluir os {} nós selecionados?",
       "error": "Erro",
       "success": "Sucesso",
       "info": "Informação",

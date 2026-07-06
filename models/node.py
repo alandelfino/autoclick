@@ -468,11 +468,27 @@ class VisualNode:
             
         menu = tk.Menu(self.canvas, tearoff=0)
         
-        menu.add_command(
-            label=t("canvas.context_delete"),
-            command=lambda: app.delete_node_by_ref(self)
-        )
-        menu.add_separator()
+        is_multi = (app and hasattr(app, 'selected_nodes') and len(app.selected_nodes) > 1 and self in app.selected_nodes)
+        
+        if is_multi:
+            menu.add_command(
+                label=t("canvas.context_delete_selected"),
+                command=lambda: app.delete_multiple_nodes(list(app.selected_nodes))
+            )
+        else:
+            if app and hasattr(app, 'selected_nodes') and self not in app.selected_nodes:
+                app._clear_multi_selection_visuals()
+                app.selected_nodes.clear()
+            if app:
+                app.selected_node = self
+                for n in app.nodes.values():
+                    n.update_outline()
+            
+            menu.add_command(
+                label=t("canvas.context_delete"),
+                command=lambda: app.delete_node_by_ref(self)
+            )
+            menu.add_separator()
         
         node_groups = [
             ("INTERAÇÃO E ENTRADA", [

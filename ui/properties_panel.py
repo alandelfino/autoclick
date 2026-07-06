@@ -5,11 +5,14 @@ payload tree display, and related helpers.
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+import copy
+import datetime
+import hashlib
 import re
 import threading
 import json
 
-from core.payload import get_payload_value, resolve_value
+from core.payload import get_payload_value, infer_payload_schema, resolve_value
 from core.i18n_helper import t
 
 
@@ -181,6 +184,178 @@ class SQLAutocomplete:
 class PropertiesPanelMixin:
     """Mixin providing the properties panel, payload trees, and payload helpers."""
 
+    def get_node_input_schema(self, node):
+        input_schema = {}
+        predecessors = self.get_predecessors(node.id)
+        for pred_id in predecessors:
+            pred_node = self.nodes[pred_id]
+            pred_schema = self.get_node_output_schema(pred_node, visited={node.id})
+            self.deep_merge_dict(input_schema, pred_schema)
+        return input_schema
+
+    def get_node_test_signature(self, node, properties=None):
+        props = copy.deepcopy(properties if properties is not None else node.properties)
+        props.pop('step_test', None)
+        props.pop('sample_payload', None)
+        raw = json.dumps(props, ensure_ascii=False, sort_keys=True, default=str)
+        return hashlib.sha256(raw.encode('utf-8')).hexdigest()
+
+    def is_step_test_current(self, node, step_test=None):
+        step_test = step_test if step_test is not None else node.properties.get('step_test')
+        if not isinstance(step_test, dict):
+            return False
+        signature = step_test.get('properties_signature')
+        if not signature:
+            return True
+        return signature == self.get_node_test_signature(node)
+
+    def get_predecessor_test_payload(self, node_id):
+        payload = {}
+        has_payload = False
+        predecessors = sorted(self.get_predecessors(node_id))
+        for pred_id in predecessors:
+            pred_node = self.nodes.get(pred_id)
+            if not pred_node:
+                continue
+            step_test = pred_node.properties.get('step_test')
+            if (
+                isinstance(step_test, dict) and
+                step_test.get('status') == 'success' and
+                self.is_step_test_current(pred_node, step_test)
+            ):
+                output_payload = step_test.get('output_payload')
+                if isinstance(output_payload, dict):
+                    self.deep_merge_dict(payload, copy.deepcopy(output_payload))
+                    has_payload = True
+                    continue
+            if pred_id in self.execution_history:
+                output_payload = self.execution_history[pred_id].get("output")
+                if isinstance(output_payload, dict):
+                    self.deep_merge_dict(payload, copy.deepcopy(output_payload))
+                    has_payload = True
+        return payload if has_payload else None
+
+    def get_node_input_payload(self, node, input_schema=None):
+        if input_schema is None:
+            input_schema = self.get_node_input_schema(node)
+
+        real_input = None
+        if node.id in self.execution_history:
+            real_input = self.execution_history[node.id].get("input")
+
+        if not real_input:
+            real_input = self.get_predecessor_test_payload(node.id)
+
+        if not real_input and self.last_run_payload:
+            real_input = copy.deepcopy(self.last_run_payload)
+
+        if real_input:
+            return self.get_resolved_payload(input_schema, real_input), True
+
+        mock_payload = self.get_mock_payload()
+        if input_schema:
+            return self.get_resolved_payload(input_schema, mock_payload), False
+        return {}, False
+
+    def save_step_test_result(self, node, input_payload, output_payload, next_port):
+        step_test = {
+            'status': 'success',
+            'tested_at': datetime.datetime.now().isoformat(timespec='seconds'),
+            'properties_signature': self.get_node_test_signature(node),
+            'input_payload': copy.deepcopy(input_payload),
+            'output_payload': copy.deepcopy(output_payload),
+            'output_schema': infer_payload_schema(output_payload),
+            'next_port': next_port
+        }
+        node.properties['step_test'] = step_test
+        self.temp_properties = copy.deepcopy(node.properties)
+        self.execution_history[node.id] = {
+            "input": copy.deepcopy(input_payload),
+            "output": copy.deepcopy(output_payload)
+        }
+        self.last_run_payload = copy.deepcopy(output_payload)
+
+    def run_step_test_for_node(self, node, button=None):
+        if not node:
+            return
+        if getattr(self, 'is_running', False):
+            messagebox.showwarning(t("messages.warning"), t("properties.step_test_while_running"))
+            return
+
+        if hasattr(self, 'save_properties_from_widgets'):
+            self.save_properties_from_widgets()
+
+        side_effect_nodes = {
+            'click', 'key', 'type_text', 'move_mouse',
+            'confirm_dialog', 'alert_dialog',
+            'postgres', 'mysql', 'sqlite', 'api',
+            'js', 'python'
+        }
+        if node.type in side_effect_nodes:
+            if not messagebox.askyesno(
+                t("messages.warning"),
+                t("properties.step_test_side_effect_warning")
+            ):
+                return
+
+        node.properties = copy.deepcopy(self.temp_properties)
+        node.rename(self.temp_node_name)
+        node.update_summary_text()
+
+        input_schema = self.get_node_input_schema(node)
+        input_payload, _has_real_input = self.get_node_input_payload(node, input_schema)
+        test_payload = copy.deepcopy(input_payload)
+
+        if button:
+            try:
+                button.config(state="disabled", text=t("properties.step_test_running"))
+            except Exception:
+                pass
+
+        self.log_message(t("properties.step_test_start_log").format(node.name))
+
+        def thread_target():
+            try:
+                next_port = node.execute(test_payload, self.log_message)
+                output_payload = copy.deepcopy(test_payload)
+
+                def update_ui():
+                    self.save_step_test_result(node, input_payload, output_payload, next_port)
+                    self.build_payload_tree(
+                        self.output_payload_container,
+                        output_payload,
+                        t("properties.no_output_params"),
+                        is_mock=False
+                    )
+                    self.log_message(t("properties.step_test_success_log").format(node.name, next_port))
+                    if button:
+                        button.config(state="normal", text=t("properties.step_test"))
+                    if getattr(self, 'current_filepath', None):
+                        self.trigger_auto_save()
+
+                self.root.after(0, update_ui)
+
+            except Exception as e:
+                err_msg = str(e)
+
+                def update_error():
+                    node.properties.setdefault('step_test', {})
+                    node.properties['step_test'].update({
+                        'status': 'error',
+                        'tested_at': datetime.datetime.now().isoformat(timespec='seconds'),
+                        'input_payload': copy.deepcopy(input_payload),
+                        'error': err_msg
+                    })
+                    self.temp_properties = copy.deepcopy(node.properties)
+                    self.log_message(t("properties.step_test_error_log").format(node.name, err_msg))
+                    messagebox.showerror(t("messages.error"), t("properties.step_test_error_msg").format(err_msg))
+                    if button:
+                        button.config(state="normal", text=t("properties.step_test"))
+
+                self.root.after(0, update_error)
+
+        threading.Thread(target=thread_target, daemon=True).start()
+
     def show_no_node_selected_message(self):
         if not hasattr(self, 'properties_container') or not self.properties_container:
             return
@@ -230,31 +405,26 @@ class PropertiesPanelMixin:
         if not hasattr(self, 'temp_node_name') or self.temp_node_name is None:
             self.temp_node_name = node.name
             
-        # Determine predecessors and merge their output schemas
-        predecessors = self.get_predecessors(node.id)
-        input_schema = {}
-        for pred_id in predecessors:
-            pred_node = self.nodes[pred_id]
-            pred_schema = self.get_node_output_schema(pred_node, visited={node.id})
-            self.deep_merge_dict(input_schema, pred_schema)
-            
-        # Get real payloads
-        real_input = None
+        input_schema = self.get_node_input_schema(node)
+        input_data, has_real_input = self.get_node_input_payload(node, input_schema)
         real_output = None
         if node.id in self.execution_history:
-            real_input = self.execution_history[node.id].get("input")
             real_output = self.execution_history[node.id].get("output")
-            
-        if not real_input and self.last_run_payload:
-            real_input = self.last_run_payload
-            
-        # Resolve payloads (Schema + Real)
-        input_data = self.get_resolved_payload(input_schema, real_input)
+
+        step_test = node.properties.get('step_test')
+        step_test_is_current = self.is_step_test_current(node, step_test)
+        if (
+            not real_output and
+            isinstance(step_test, dict) and
+            step_test.get('status') == 'success' and
+            step_test_is_current
+        ):
+            real_output = step_test.get('output_payload')
         
         output_schema = self.get_node_output_schema(node)
         output_data = self.get_resolved_payload(output_schema, real_output) if (real_output or output_schema) else {}
         
-        is_mock_input = (real_input is None or not real_input)
+        is_mock_input = not has_real_input
         is_mock_output = (real_output is None or not real_output)
         
         self.build_payload_tree(
@@ -281,6 +451,41 @@ class PropertiesPanelMixin:
             self.temp_node_name = ent_name.get()
             
         ent_name.bind("<KeyRelease>", update_name)
+
+        btn_step_test = tk.Button(
+            self.properties_container, text=t("properties.step_test"), font=("Segoe UI", 9, "bold"),
+            bg="#16a34a", fg="#ffffff", activebackground="#15803d", activeforeground="#ffffff",
+            bd=0, pady=8, cursor="hand2"
+        )
+        btn_step_test.config(command=lambda b=btn_step_test: self.run_step_test_for_node(node, b))
+        btn_step_test.pack(fill="x", pady=(0, 8))
+
+        if isinstance(step_test, dict):
+            status = step_test.get('status')
+            tested_at = step_test.get('tested_at', '')
+            next_port = step_test.get('next_port', '')
+            if status == 'success' and step_test_is_current:
+                text = t("properties.step_test_last_success").format(tested_at, next_port)
+                fg = "#15803d"
+                bg = "#dcfce7"
+            elif status == 'success':
+                text = t("properties.step_test_stale").format(tested_at)
+                fg = "#b45309"
+                bg = "#fef3c7"
+            elif status == 'error':
+                text = t("properties.step_test_last_error").format(tested_at)
+                fg = "#b91c1c"
+                bg = "#fee2e2"
+            else:
+                text = ""
+                fg = "#64748b"
+                bg = "#f8fafc"
+            if text:
+                lbl_step = tk.Label(
+                    self.properties_container, text=text, font=("Segoe UI", 8, "bold"),
+                    fg=fg, bg=bg, pady=4, padx=8, bd=1, relief="solid", wraplength=280
+                )
+                lbl_step.pack(fill="x", pady=(0, 15))
         
         # 2. Node Specific Properties
         if node.type == 'click':
@@ -1016,6 +1221,8 @@ class PropertiesPanelMixin:
                 autocomplete.schema = self.saved_connections.get(conn_name, {}).get('schema', {})
             
             def run_capture_db():
+                save_db_fields()
+                node.properties = copy.deepcopy(self.temp_properties)
                 conn_name = cb_conn.get()
                 query = sql_text.get("1.0", "end-1c")
                 if not conn_name:
@@ -1032,16 +1239,24 @@ class PropertiesPanelMixin:
                         result = self.run_db_query(db_type, conn_config, resolved_sql)
                         
                         self.temp_properties['sample_payload'] = result
+                        node.properties['sample_payload'] = result
                         self.log_message(f">> Test executed successfully for node '{node.name}'.")
                         
                         def update_ui():
+                            output_payload = copy.deepcopy(input_data)
+                            var_name = self.get_var_name(node.name)
+                            output_payload[var_name] = result
+                            output_payload['last_db_result'] = result
+                            self.save_step_test_result(node, input_data, output_payload, 'out')
                             self.build_payload_tree(
                                 self.output_payload_container,
-                                result,
+                                output_payload,
                                 t("properties.no_output_params"),
                                 is_mock=False
                             )
                             btn_run_db.config(state="normal", text=t("properties.run_test"))
+                            if getattr(self, 'current_filepath', None):
+                                self.trigger_auto_save()
                         self.root.after(0, update_ui)
                         
                     except Exception as e:
@@ -1117,6 +1332,8 @@ class PropertiesPanelMixin:
             body_text.bind("<KeyRelease>", save_api_fields)
             
             def run_capture_api():
+                save_api_fields()
+                node.properties = copy.deepcopy(self.temp_properties)
                 conn_name = cb_conn.get()
                 method = cb_method.get()
                 path = ent_path.get()
@@ -1135,16 +1352,24 @@ class PropertiesPanelMixin:
                         
                         result = self.run_api_request(conn_config, method, resolved_path, resolved_headers, resolved_body)
                         self.temp_properties['sample_payload'] = result
+                        node.properties['sample_payload'] = result
                         self.log_message(f">> API test completed successfully (HTTP {result['status_code']}).")
                         
                         def update_ui():
+                            output_payload = copy.deepcopy(input_data)
+                            var_name = self.get_var_name(node.name)
+                            output_payload[var_name] = result
+                            output_payload['last_api_result'] = result
+                            self.save_step_test_result(node, input_data, output_payload, 'out')
                             self.build_payload_tree(
                                 self.output_payload_container,
-                                result,
+                                output_payload,
                                 t("properties.no_output_params"),
                                 is_mock=False
                             )
                             btn_run_api.config(state="normal", text=t("properties.run_test"))
+                            if getattr(self, 'current_filepath', None):
+                                self.trigger_auto_save()
                         self.root.after(0, update_ui)
                         
                     except Exception as e:
@@ -1596,6 +1821,15 @@ class PropertiesPanelMixin:
         if node.id in visited:
             return {}
         visited.add(node.id)
+        step_test = node.properties.get('step_test')
+        if (
+            isinstance(step_test, dict) and
+            step_test.get('status') == 'success' and
+            self.is_step_test_current(node, step_test)
+        ):
+            output_schema = step_test.get('output_schema')
+            if isinstance(output_schema, dict) and output_schema:
+                return copy.deepcopy(output_schema)
         schema = {}
         if node.type == 'click':
             schema['last_click'] = {'x': '<Número>', 'y': '<Número>'}
@@ -1615,7 +1849,7 @@ class PropertiesPanelMixin:
             var_name = self.get_var_name(node.name)
             sample = node.properties.get('sample_payload')
             if sample:
-                schema[var_name] = sample
+                schema[var_name] = infer_payload_schema(sample)
             else:
                 if node.type == 'api':
                     schema[var_name] = {
@@ -1805,4 +2039,3 @@ class PropertiesPanelMixin:
                     self.temp_node_name = self.name_entry_widget.get()
             except Exception:
                 pass
-

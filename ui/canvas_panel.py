@@ -171,6 +171,7 @@ class CanvasPanelMixin:
             n.width *= factor
             n.height *= factor
             n.scale_fonts(self.zoom_scale)
+            n.update_outline()
             
         # Re-render lines to align cleanly
         for c in self.connections:
@@ -200,9 +201,26 @@ class CanvasPanelMixin:
 
     def show_node_context_menu(self, event, node):
         menu = tk.Menu(self.root, tearoff=0)
-        menu.add_command(label=t("canvas.context_edit"), command=lambda: self.open_node_config_window(node))
-        if node.type != 'start':
-            menu.add_command(label=t("canvas.context_delete"), command=lambda: self.delete_node_by_ref(node))
+        
+        is_multi = (hasattr(self, 'selected_nodes') and len(self.selected_nodes) > 1 and node in self.selected_nodes)
+        
+        if is_multi:
+            menu.add_command(
+                label=t("canvas.context_delete_selected"),
+                command=lambda: self.delete_multiple_nodes(list(self.selected_nodes))
+            )
+        else:
+            if hasattr(self, 'selected_nodes') and node not in self.selected_nodes:
+                self._clear_multi_selection_visuals()
+                self.selected_nodes.clear()
+            self.selected_node = node
+            for n in self.nodes.values():
+                n.update_outline()
+                
+            menu.add_command(label=t("canvas.context_edit"), command=lambda: self.open_node_config_window(node))
+            if node.type != 'start':
+                menu.add_command(label=t("canvas.context_delete"), command=lambda: self.delete_node_by_ref(node))
+                
         menu.post(event.x_root, event.y_root)
 
     def on_pan_drag(self, event):

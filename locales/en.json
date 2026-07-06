@@ -74,6 +74,7 @@
       "auto_layout_complete": "Auto-layout complete!",
       "context_edit": "Edit",
       "context_delete": "Delete",
+      "context_delete_selected": "Delete selected",
       "clear": "Clear"
     },
     "properties": {
@@ -129,6 +130,17 @@
       "db_tables_preview": "Available Tables and Fields (Preview):",
       "db_schema_not_loaded": "Schema not loaded. Connect in the Connections menu.",
       "run_test": "⚡ Run Test",
+      "step_test": "Step Test",
+      "step_test_running": "Running...",
+      "step_test_while_running": "Stop the flow execution before running a Step Test.",
+      "step_test_side_effect_warning": "Step Test runs this node's real action on the desktop or connected service. Do you want to continue?",
+      "step_test_start_log": ">> Step Test started for node '{}'.",
+      "step_test_success_log": ">> Step Test completed for node '{}' through port '{}'.",
+      "step_test_error_log": ">> Step Test failed on node '{}': {}",
+      "step_test_error_msg": "Step Test failed:\n{}",
+      "step_test_last_success": "Last Step Test: {} | Port: {}",
+      "step_test_stale": "Old Step Test: {} | Configuration changed",
+      "step_test_last_error": "Last Step Test failed: {}",
       "api_conn": "API Connection (Optional):",
       "http_method": "HTTP Method:",
       "endpoint_url": "Endpoint / URL:",
@@ -317,6 +329,7 @@
     },
     "messages": {
       "warning": "Warning",
+      "confirm_delete_nodes": "Do you really want to delete the {} selected nodes?",
       "error": "Error",
       "success": "Success",
       "info": "Information",

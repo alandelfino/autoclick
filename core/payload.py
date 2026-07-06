@@ -7,6 +7,53 @@ interpolating placeholder variables in strings.
 import re
 
 
+def infer_payload_schema(value, max_list_items=5):
+    """Builds a lightweight schema from a real payload value."""
+    if isinstance(value, dict):
+        return {k: infer_payload_schema(v, max_list_items=max_list_items) for k, v in value.items()}
+    if isinstance(value, list):
+        if not value:
+            return []
+        item_schema = None
+        for item in value[:max_list_items]:
+            current_schema = infer_payload_schema(item, max_list_items=max_list_items)
+            if item_schema is None:
+                item_schema = current_schema
+            else:
+                item_schema = merge_payload_schemas(item_schema, current_schema)
+        return [item_schema]
+    if isinstance(value, bool):
+        return "<Boolean>"
+    if isinstance(value, int) or isinstance(value, float):
+        return "<Número>"
+    if value is None:
+        return "<Nulo>"
+    if isinstance(value, str):
+        return "<Texto>"
+    return f"<{type(value).__name__}>"
+
+
+def merge_payload_schemas(target, source):
+    """Returns a merged schema without mutating the inputs."""
+    if isinstance(target, dict) and isinstance(source, dict):
+        merged = dict(target)
+        for key, value in source.items():
+            if key in merged:
+                merged[key] = merge_payload_schemas(merged[key], value)
+            else:
+                merged[key] = value
+        return merged
+    if isinstance(target, list) and isinstance(source, list):
+        if not target:
+            return source
+        if not source:
+            return target
+        return [merge_payload_schemas(target[0], source[0])]
+    if target == source:
+        return target
+    return "<Valor>"
+
+
 def get_payload_value(payload, path):
     """Resolves nested path in dict. E.g. 'active_window.title' from payload."""
     if path == "payload":

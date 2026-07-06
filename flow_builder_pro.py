@@ -745,6 +745,40 @@ class FlowBuilderProApp(
             self.log_message(f"Node {node_id} ('{node.name}') removed.")
             self.trigger_auto_save()
 
+    def delete_multiple_nodes(self, nodes_to_delete):
+        # Filter out the start node as it cannot be deleted
+        nodes_to_delete = [n for n in nodes_to_delete if n.type != 'start']
+        if not nodes_to_delete:
+            return
+            
+        title = t("messages.warning") or "Aviso"
+        msg = (t("messages.confirm_delete_nodes") or "Deseja realmente excluir os {} nós selecionados?").format(len(nodes_to_delete))
+        if messagebox.askyesno(title, msg):
+            if self.selected_node in nodes_to_delete:
+                self.close_node_window()
+                self.selected_node = None
+                
+            node_ids = {n.id for n in nodes_to_delete}
+            
+            # Find and remove connections linked to any of these nodes
+            conns_to_remove = [c for c in self.connections if c.source.id in node_ids or c.target.id in node_ids]
+            for conn in conns_to_remove:
+                conn.delete()
+                if conn in self.connections:
+                    self.connections.remove(conn)
+            
+            # Delete nodes
+            for node in nodes_to_delete:
+                node.delete()
+                if node.id in self.nodes:
+                    del self.nodes[node.id]
+                if hasattr(self, 'selected_nodes') and node in self.selected_nodes:
+                    self.selected_nodes.discard(node)
+            
+            self.select_node(None)
+            self.log_message(f"{len(nodes_to_delete)} nós removidos.")
+            self.trigger_auto_save()
+
     def delete_node_from_config(self):
         if not self.selected_node:
             return
