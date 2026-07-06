@@ -52,6 +52,10 @@ class LeftPanelMixin:
                 (t("toolbox.nodes.api"), "api", "#0284c7"),
                 (t("toolbox.nodes.storage_var"), "storage_var", "#ec4899"),
             ]),
+            ("CÓDIGO E SCRIPTS", [
+                (t("toolbox.nodes.js"), "js", "#ca8a04"),
+                (t("toolbox.nodes.python"), "python", "#2b5b84"),
+            ]),
             ("DIÁLOGOS E TELAS", [
                 (t("toolbox.nodes.confirm_dialog"), "confirm_dialog", "#f43f5e"),
                 (t("toolbox.nodes.alert_dialog"), "alert_dialog", "#e11d48"),

@@ -30,7 +30,9 @@
         "confirm_dialog": "Confirm Action (Windows)",
         "alert_dialog": "Alert / Notice (Windows)",
         "continue_loop": "Continue Loop",
-        "switch": "Switch Case"
+        "switch": "Switch Case",
+        "js": "Execute JavaScript",
+        "python": "Execute Python"
       }
     },
     "menu": {
@@ -93,6 +95,9 @@
       "switch_cases": "Cases:",
       "switch_add_case": "➕ Add",
       "switch_edit_case": "✏️ Edit",
+      "js_code": "JavaScript Code:",
+      "python_code": "Python Code:",
+      "code_hint": "Tip: Use {{payload.variable}} or double-click payload variables on the right to insert.",
       "switch_remove_case": "🗑️ Remove",
       "switch_add_dialog_title": "Add Case",
       "switch_edit_dialog_title": "Edit Case",
@@ -306,7 +311,9 @@
       "loop_break_executing": " -> Executing interruption (break) of loop '{}'...",
       "loop_continue_executing": " -> Skipping loop '{}' iteration (next item)...",
       "loop_continue_warning": " -> WARNING: No active loop found to continue.",
-      "storage_set": " -> Storage variable '{}' set to: {}"
+      "storage_set": " -> Storage variable '{}' set to: {}",
+      "js_executing": " -> Executing JavaScript code in node '{}'...",
+      "python_executing": " -> Executing Python code in node '{}'..."
     },
     "messages": {
       "warning": "Warning",

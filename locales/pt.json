@@ -30,7 +30,9 @@
         "confirm_dialog": "Confirmar Ação (Windows)",
         "alert_dialog": "Alerta / Aviso (Windows)",
         "continue_loop": "Próximo Item Loop",
-        "switch": "Switch Case"
+        "switch": "Switch Case",
+        "js": "Executar JavaScript",
+        "python": "Executar Python"
       }
     },
     "menu": {
@@ -93,6 +95,9 @@
       "switch_cases": "Casos:",
       "switch_add_case": "➕ Adicionar",
       "switch_edit_case": "✏️ Editar",
+      "js_code": "Código JavaScript:",
+      "python_code": "Código Python:",
+      "code_hint": "Dica: Use {{payload.variavel}} ou dê um duplo-clique nas variáveis do payload à direita para inserir.",
       "switch_remove_case": "🗑️ Remover",
       "switch_add_dialog_title": "Adicionar Caso",
       "switch_edit_dialog_title": "Editar Caso",
@@ -306,7 +311,9 @@
       "loop_break_executing": " -> Executando interrupção (break) do loop '{}'...",
       "loop_continue_executing": " -> Pulando ciclo do loop '{}' (próximo item)...",
       "loop_continue_warning": " -> AVISO: Nenhum loop ativo encontrado para continuar.",
-      "storage_set": " -> Variável de armazenamento '{}' definida como: {}"
+      "storage_set": " -> Variável de armazenamento '{}' definida como: {}",
+      "js_executing": " -> Executando código JavaScript no nó '{}'...",
+      "python_executing": " -> Executando código Python no nó '{}'..."
     },
     "messages": {
       "warning": "Aviso",

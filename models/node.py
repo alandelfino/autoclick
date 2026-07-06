@@ -95,7 +95,9 @@ class VisualNode:
             'storage_var': {'header': '#ec4899', 'title': 'Var. Armazenamento'},
             'confirm_dialog': {'header': '#f43f5e', 'title': t("toolbox.nodes.confirm_dialog")},
             'alert_dialog': {'header': '#e11d48', 'title': t("toolbox.nodes.alert_dialog")},
-            'switch': {'header': '#4f46e5', 'title': t("toolbox.nodes.switch")}
+            'switch': {'header': '#4f46e5', 'title': t("toolbox.nodes.switch")},
+            'js': {'header': '#ca8a04', 'title': 'JavaScript'},
+            'python': {'header': '#2b5b84', 'title': 'Python'}
         }
         self.theme = self.themes.get(self.type, {'header': '#64748b', 'title': 'Nó'})
 
@@ -164,6 +166,10 @@ class VisualNode:
                 'variable': 'active_window.title',
                 'cases': ['Opção A', 'Opção B']
             }
+        elif self.type == 'js':
+            return {'code': '// JavaScript\npayload.resultado = "sucesso JS";\nlog("Executou JS: " + payload.resultado);'}
+        elif self.type == 'python':
+            return {'code': '# Python\npayload[\'resultado\'] = "sucesso Python"\nprint("Executou Python:", payload[\'resultado\'])'}
         return {}
 
     def setup_ports(self):
@@ -867,6 +873,173 @@ class VisualNode:
                 except Exception as e:
                     log_func(t("logs.api_error").format(str(e)))
                     raise e
+            return 'out'
+
+        elif self.type == 'js':
+            code_raw = self.properties.get('code', '')
+            code_resolved = resolve_value(code_raw, payload)
+            
+            log_func(t("logs.js_executing").format(self.name))
+            
+            import subprocess
+            import tempfile
+            import os
+            
+            # Check if Node.js is available
+            use_node = False
+            try:
+                res = subprocess.run(["node", "-v"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=1)
+                if res.returncode == 0:
+                    use_node = True
+            except Exception:
+                pass
+                
+            payload_json = json.dumps(payload, ensure_ascii=False)
+            
+            wrapper = f"""
+var payload = {payload_json};
+function log(msg) {{
+    if (typeof console !== 'undefined') {{
+        console.log("LOG:" + msg);
+    }} else {{
+        WScript.Echo("LOG:" + msg);
+    }}
+}}
+var __result = (function() {{
+    try {{
+        {code_resolved}
+    }} catch(e) {{
+        if (typeof console !== 'undefined') {{
+            console.log("ERROR:" + (e.stack || e.message || e));
+        }} else {{
+            WScript.Echo("ERROR:" + (e.message || e));
+        }}
+    }}
+}})();
+
+if (typeof JSON !== 'undefined') {{
+    var out = "PAYLOAD_RESULT:" + JSON.stringify({{ payload: payload, result: __result }});
+    if (typeof console !== 'undefined') {{
+        console.log(out);
+    }} else {{
+        WScript.Echo(out);
+    }}
+}} else {{
+    var parts = [];
+    for (var k in payload) {{
+        if (payload.hasOwnProperty(k)) {{
+            var v = payload[k];
+            var vStr = "";
+            if (typeof v === "string") vStr = '"' + v.replace(/"/g, '\\\\"') + '"';
+            else if (typeof v === "object") vStr = "null";
+            else vStr = String(v);
+            parts.push('"' + k + '":' + vStr);
+        }}
+    }}
+    var out = "PAYLOAD_RESULT:{{\\"payload\\":{{" + parts.join(",") + "}},\\"result\\":null}}";
+    if (typeof console !== 'undefined') {{
+        console.log(out);
+    }} else {{
+        WScript.Echo(out);
+    }}
+}}
+"""
+            temp_dir = tempfile.gettempdir()
+            temp_file_path = os.path.join(temp_dir, f"autoclick_js_{self.id}_{int(time.time())}.js")
+            
+            with open(temp_file_path, "w", encoding="utf-8") as f:
+                f.write(wrapper)
+                
+            try:
+                if use_node:
+                    cmd = ["node", temp_file_path]
+                else:
+                    cmd = ["cscript", "//Nologo", temp_file_path]
+                    
+                process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=10)
+                stdout = process.stdout
+                stderr = process.stderr
+                
+                for line in stdout.splitlines():
+                    if line.startswith("LOG:"):
+                        log_func(f"[JS] {line[4:]}")
+                    elif line.startswith("ERROR:"):
+                        log_func(f"[JS Error] {line[6:]}")
+                    elif line.startswith("PAYLOAD_RESULT:"):
+                        try:
+                            output_data = json.loads(line[15:])
+                            new_payload = output_data.get("payload", {})
+                            js_result = output_data.get("result")
+                            
+                            payload.clear()
+                            payload.update(new_payload)
+                            
+                            app = getattr(self.canvas, 'app', None)
+                            var_name = app.get_var_name(self.name) if app and hasattr(app, 'get_var_name') else f"js_result_{self.id}"
+                            
+                            payload[var_name] = js_result
+                            payload['last_js_result'] = js_result
+                            
+                            if isinstance(js_result, dict):
+                                payload.update(js_result)
+                        except Exception as ex:
+                            log_func(f"[JS] Error parsing updated payload: {ex}")
+                            
+                if stderr:
+                    log_func(f"[JS StdErr] {stderr.strip()}")
+            except Exception as e:
+                log_func(f"[JS] Execution failed: {e}")
+                raise e
+            finally:
+                try:
+                    os.remove(temp_file_path)
+                except Exception:
+                    pass
+            return 'out'
+
+        elif self.type == 'python':
+            code_raw = self.properties.get('code', '')
+            code_resolved = resolve_value(code_raw, payload)
+            
+            log_func(t("logs.python_executing").format(self.name))
+            
+            local_scope = {
+                'payload': payload,
+                'log': log_func,
+                'print': lambda *args: log_func("[Python] " + " ".join(str(a) for a in args))
+            }
+            
+            # Wrap in function to support return statements safely
+            if not code_resolved.strip():
+                indented_code = "    pass"
+            else:
+                indented_lines = []
+                for line in code_resolved.splitlines():
+                    indented_lines.append("    " + line)
+                indented_code = "\n".join(indented_lines)
+            
+            wrapper_code = f"""
+def __user_function():
+{indented_code}
+
+__result = __user_function()
+"""
+            try:
+                exec(wrapper_code, {}, local_scope)
+                py_result = local_scope.get('__result')
+                
+                app = getattr(self.canvas, 'app', None)
+                var_name = app.get_var_name(self.name) if app and hasattr(app, 'get_var_name') else f"python_result_{self.id}"
+                
+                payload[var_name] = py_result
+                payload['last_python_result'] = py_result
+                
+                if isinstance(py_result, dict):
+                    payload.update(py_result)
+                    
+            except Exception as e:
+                log_func(f"[Python Error] {e}")
+                raise e
             return 'out'
 
         elif self.type == 'loop':

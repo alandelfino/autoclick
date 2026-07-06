@@ -63,7 +63,8 @@ class VisualConnection:
         self.line_id = self.canvas.create_line(
             0, 0, 0, 0,
             fill=line_color, width=3, smooth=True, arrow=tk.LAST,
-            arrowshape=(10, 12, 5), tags=(self.tag, "connection")
+            arrowshape=(10, 12, 5), tags=(self.tag, "connection"),
+            capstyle="round", joinstyle="round", splinesteps=36
         )
         
         # Bind double click on connection line to add waypoints
@@ -102,8 +103,8 @@ class VisualConnection:
         
         if self.waypoints:
             raw_points = [(x1, y1)] + self.waypoints + [(x2, y2)]
-            # Draw smooth curve passing exactly through the waypoints
-            points = compute_catmull_rom_chain(raw_points, steps=15)
+            # Draw smooth curve passing exactly through the waypoints (increased to 36 steps for AA look)
+            points = compute_catmull_rom_chain(raw_points, steps=36)
             self.canvas.itemconfig(self.line_id, smooth=False)
             self.canvas.coords(self.line_id, *points)
             

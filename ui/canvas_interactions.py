@@ -69,7 +69,8 @@ class CanvasInteractionsMixin:
                 scaled_dash = (dash_len, dash_len)
                 self.temp_line_id = self.canvas.create_line(
                     px, py, cx, cy,
-                    fill="#3b82f6", width=scaled_width, dash=scaled_dash, tags="temp_conn"
+                    fill="#3b82f6", width=scaled_width, dash=scaled_dash, tags="temp_conn",
+                    capstyle="round", joinstyle="round"
                 )
             return
             

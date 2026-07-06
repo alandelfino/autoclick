@@ -6,6 +6,16 @@ Main application entry point. The FlowBuilderProApp class composes
 functionality from multiple UI mixins and connector mixins.
 """
 
+# Enable High-DPI awareness on Windows before importing tkinter
+try:
+    import ctypes
+    ctypes.windll.shcore.SetProcessDpiAwareness(2) # PROCESS_PER_MONITOR_DPI_AWARE
+except Exception:
+    try:
+        ctypes.windll.user32.SetProcessDPIAware()
+    except Exception:
+        pass
+
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import json
@@ -638,7 +648,9 @@ class FlowBuilderProApp(
                 'sqlite': f"SQLite {node_id}",
                 'api': f"API Requisição {node_id}",
                 'confirm_dialog': f"Confirmar {node_id}",
-                'alert_dialog': f"Alerta {node_id}"
+                'alert_dialog': f"Alerta {node_id}",
+                'js': f"JS Código {node_id}",
+                'python': f"Python Código {node_id}"
             }
             name = default_names.get(node_type, f"Nó {node_id}")
             

@@ -1375,6 +1375,40 @@ class PropertiesPanelMixin:
             ent_msg.bind("<KeyRelease>", save_alert_fields)
             ent_btn.bind("<KeyRelease>", save_alert_fields)
 
+        elif node.type == 'js':
+            lbl_code = tk.Label(self.properties_container, text=t("properties.js_code"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_code.pack(anchor="w", pady=(0, 2))
+            
+            code_text = tk.Text(self.properties_container, font=("Consolas", 10), height=15, bd=1, relief="solid", width=40)
+            code_text.insert("1.0", self.temp_properties.get('code', ''))
+            code_text.pack(fill="both", expand=True, pady=(0, 5))
+            code_text.property_key = 'code'
+            
+            lbl_hint = tk.Label(self.properties_container, text=t("properties.code_hint"), font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f8fafc", justify="left", wraplength=280)
+            lbl_hint.pack(anchor="w", pady=(0, 10))
+            
+            def save_js_fields(event=None):
+                self.temp_properties['code'] = code_text.get("1.0", "end-1c")
+                
+            code_text.bind("<KeyRelease>", save_js_fields)
+            
+        elif node.type == 'python':
+            lbl_code = tk.Label(self.properties_container, text=t("properties.python_code"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_code.pack(anchor="w", pady=(0, 2))
+            
+            code_text = tk.Text(self.properties_container, font=("Consolas", 10), height=15, bd=1, relief="solid", width=40)
+            code_text.insert("1.0", self.temp_properties.get('code', ''))
+            code_text.pack(fill="both", expand=True, pady=(0, 5))
+            code_text.property_key = 'code'
+            
+            lbl_hint = tk.Label(self.properties_container, text=t("properties.code_hint"), font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f8fafc", justify="left", wraplength=280)
+            lbl_hint.pack(anchor="w", pady=(0, 10))
+            
+            def save_python_fields(event=None):
+                self.temp_properties['code'] = code_text.get("1.0", "end-1c")
+                
+            code_text.bind("<KeyRelease>", save_python_fields)
+
         # Recursively bind FocusIn to all input fields
         def bind_focus_in(widget):
             if isinstance(widget, (tk.Entry, ttk.Entry, tk.Text, ttk.Spinbox)):
@@ -1596,6 +1630,24 @@ class PropertiesPanelMixin:
                         "rows_affected": 0,
                         "rows": []
                     }
+        elif node.type in ['js', 'python']:
+            var_name = self.get_var_name(node.name)
+            schema[var_name] = '<Qualquer>'
+            schema[f"last_{node.type}_result"] = '<Qualquer>'
+            
+            # Try to parse return dictionary literal to extract specific sub-keys
+            code = node.properties.get('code', '')
+            ret_match = re.search(r'return\s+\{([^}]+)\}', code)
+            if ret_match:
+                inner = ret_match.group(1)
+                keys = re.findall(r'[\'"](\w+)[\'"]\s*:', inner)
+                if node.type == 'js':
+                    keys.extend(re.findall(r'(?<![\'"])\b(\w+)\b\s*:', inner))
+                
+                # Deduplicate and add to schema
+                for k in set(keys):
+                    schema[k] = '<Valor>'
+                    
         elif node.type == 'loop':
             var_name = self.get_var_name(node.name)
             item_schema = {}

@@ -9,6 +9,13 @@ import re
 
 def get_payload_value(payload, path):
     """Resolves nested path in dict. E.g. 'active_window.title' from payload."""
+    if path == "payload":
+        return payload
+    if path.startswith("payload."):
+        path = path[8:]
+        if not path:
+            return payload
+            
     parts = path.split('.')
     val = payload
     for part in parts:
