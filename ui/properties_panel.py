@@ -954,6 +954,96 @@ class PropertiesPanelMixin:
             ent_var_name.bind("<KeyRelease>", save_storage_var)
             ent_var_val.bind("<KeyRelease>", save_storage_var)
 
+        elif node.type == 'confirm_dialog':
+            lbl_title = tk.Label(self.properties_container, text=t("properties.dialog_title"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_title.pack(anchor="w", pady=(0, 2))
+            ent_title = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_title.insert(0, self.temp_properties.get('title', 'Confirmação'))
+            ent_title.pack(fill="x", pady=(0, 10))
+            ent_title.property_key = 'title'
+            
+            lbl_msg = tk.Label(self.properties_container, text=t("properties.dialog_message"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_msg.pack(anchor="w", pady=(0, 2))
+            ent_msg = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_msg.insert(0, self.temp_properties.get('message', 'Você deseja continuar?'))
+            ent_msg.pack(fill="x", pady=(0, 10))
+            ent_msg.property_key = 'message'
+            
+            lbl_true = tk.Label(self.properties_container, text=t("properties.btn_true_text"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_true.pack(anchor="w", pady=(0, 2))
+            ent_true = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_true.insert(0, self.temp_properties.get('btn_true_text', 'Sim'))
+            ent_true.pack(fill="x", pady=(0, 10))
+            ent_true.property_key = 'btn_true_text'
+            
+            lbl_false = tk.Label(self.properties_container, text=t("properties.btn_false_text"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_false.pack(anchor="w", pady=(0, 2))
+            ent_false = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_false.insert(0, self.temp_properties.get('btn_false_text', 'Não'))
+            ent_false.pack(fill="x", pady=(0, 10))
+            ent_false.property_key = 'btn_false_text'
+            
+            lbl_var = tk.Label(self.properties_container, text=t("properties.payload_var_dest"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_var.pack(anchor="w", pady=(0, 2))
+            ent_var = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_var.insert(0, self.temp_properties.get('payload_var', 'confirm_result'))
+            ent_var.pack(fill="x", pady=(0, 15))
+            ent_var.property_key = 'payload_var'
+            
+            ent_title.is_payload_var_field = False
+            ent_msg.is_payload_var_field = False
+            ent_true.is_payload_var_field = False
+            ent_false.is_payload_var_field = False
+            ent_var.is_payload_var_field = True
+            
+            def save_confirm_fields(event=None):
+                self.temp_properties['title'] = ent_title.get()
+                self.temp_properties['message'] = ent_msg.get()
+                self.temp_properties['btn_true_text'] = ent_true.get()
+                self.temp_properties['btn_false_text'] = ent_false.get()
+                self.temp_properties['payload_var'] = ent_var.get().strip()
+                
+            ent_title.bind("<KeyRelease>", save_confirm_fields)
+            ent_msg.bind("<KeyRelease>", save_confirm_fields)
+            ent_true.bind("<KeyRelease>", save_confirm_fields)
+            ent_false.bind("<KeyRelease>", save_confirm_fields)
+            ent_var.bind("<KeyRelease>", save_confirm_fields)
+            
+        elif node.type == 'alert_dialog':
+            lbl_title = tk.Label(self.properties_container, text=t("properties.dialog_title"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_title.pack(anchor="w", pady=(0, 2))
+            ent_title = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_title.insert(0, self.temp_properties.get('title', 'Alerta'))
+            ent_title.pack(fill="x", pady=(0, 10))
+            ent_title.property_key = 'title'
+            
+            lbl_msg = tk.Label(self.properties_container, text=t("properties.dialog_message"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_msg.pack(anchor="w", pady=(0, 2))
+            ent_msg = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_msg.insert(0, self.temp_properties.get('message', 'Fluxo interrompido!'))
+            ent_msg.pack(fill="x", pady=(0, 10))
+            ent_msg.property_key = 'message'
+            
+            lbl_btn = tk.Label(self.properties_container, text=t("properties.btn_ok_text"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_btn.pack(anchor="w", pady=(0, 2))
+            ent_btn = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_btn.insert(0, self.temp_properties.get('btn_ok_text', 'OK'))
+            ent_btn.pack(fill="x", pady=(0, 15))
+            ent_btn.property_key = 'btn_ok_text'
+            
+            ent_title.is_payload_var_field = False
+            ent_msg.is_payload_var_field = False
+            ent_btn.is_payload_var_field = False
+            
+            def save_alert_fields(event=None):
+                self.temp_properties['title'] = ent_title.get()
+                self.temp_properties['message'] = ent_msg.get()
+                self.temp_properties['btn_ok_text'] = ent_btn.get()
+                
+            ent_title.bind("<KeyRelease>", save_alert_fields)
+            ent_msg.bind("<KeyRelease>", save_alert_fields)
+            ent_btn.bind("<KeyRelease>", save_alert_fields)
+
         # Recursively bind FocusIn to all input fields
         def bind_focus_in(widget):
             if isinstance(widget, (tk.Entry, ttk.Entry, tk.Text, ttk.Spinbox)):
@@ -1230,6 +1320,9 @@ class PropertiesPanelMixin:
             var_name = node.properties.get('variable_name', 'var_1')
             var_val = node.properties.get('variable_value', '')
             schema[var_name] = var_val or '<Valor>'
+        elif node.type == 'confirm_dialog':
+            payload_var = node.properties.get('payload_var', 'confirm_result')
+            schema[payload_var] = '<Boolean>'
         elif node.type == 'break_loop':
             pass
             

@@ -379,7 +379,9 @@ class FlowBuilderProApp(
                 'postgres': f"PostgreSQL {node_id}",
                 'mysql': f"MySQL {node_id}",
                 'sqlite': f"SQLite {node_id}",
-                'api': f"API Requisição {node_id}"
+                'api': f"API Requisição {node_id}",
+                'confirm_dialog': f"Confirmar {node_id}",
+                'alert_dialog': f"Alerta {node_id}"
             }
             name = default_names.get(node_type, f"Nó {node_id}")
             

@@ -63,7 +63,7 @@
  [],
  False,
  False,
- 1783298659,
+ 1783302307,
  [('runw.exe',
    'C:\\Users\\Alan '
    'Delfino\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',

@@ -25,7 +25,9 @@
         "api": "Requisição API",
         "loop": "Loop",
         "storage_var": "Variável de Armazenamento",
-        "break_loop": "Interromper Loop"
+        "break_loop": "Interromper Loop",
+        "confirm_dialog": "Confirmar Ação (Windows)",
+        "alert_dialog": "Alerta / Aviso (Windows)"
       }
     },
     "menu": {
@@ -115,7 +117,13 @@
       "schema_viewer": "VISUALIZADOR DE ESQUEMA (CAMINHO DAS VARIÁVEIS)",
       "variables_viewer": "VISUALIZADOR DE ÁRVORE DE VARIÁVEIS",
       "active_variables_value": "VALOR DAS VARIÁVEIS ATIVAS",
-      "no_active_execution": "Nenhuma variável de execução ativa encontrada.\nExecute o fluxo para popular os valores."
+      "no_active_execution": "Nenhuma variável de execução ativa encontrada.\nExecute o fluxo para popular os valores.",
+      "dialog_title": "Título da Caixa:",
+      "dialog_message": "Mensagem/Conteúdo:",
+      "btn_true_text": "Botão 'Verdadeiro' (True):",
+      "btn_false_text": "Botão 'Falso' (False):",
+      "btn_ok_text": "Texto do Botão:",
+      "payload_var_dest": "Salvar resultado em:"
     },
     "node_config": {
       "title": "Configuração do Nó: {}",

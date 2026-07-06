@@ -2,6 +2,7 @@
 Left panel — Toolbox for adding nodes and debug console.
 """
 import tkinter as tk
+from tkinter import ttk
 from core.i18n_helper import t
 
 
@@ -31,16 +32,48 @@ class LeftPanelMixin:
             (t("toolbox.nodes.api"), "api", "#0284c7"),
             (t("toolbox.nodes.loop"), "loop", "#8b5cf6"),
             (t("toolbox.nodes.storage_var"), "storage_var", "#ec4899"),
-            (t("toolbox.nodes.break_loop"), "break_loop", "#a21caf")
+            (t("toolbox.nodes.break_loop"), "break_loop", "#a21caf"),
+            (t("toolbox.nodes.confirm_dialog"), "confirm_dialog", "#f43f5e"),
+            (t("toolbox.nodes.alert_dialog"), "alert_dialog", "#e11d48")
         ]
+        
+        # Create container frame for buttons to support scroll y
+        buttons_container = tk.Frame(self.left_panel, bg="#0f172a")
+        buttons_container.pack(fill="both", expand=True, padx=5)
+        
+        canvas = tk.Canvas(buttons_container, bg="#0f172a", bd=0, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(buttons_container, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        
+        scrollable_frame = tk.Frame(canvas, bg="#0f172a")
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        
+        # Resize frame when canvas width changes
+        canvas.bind("<Configure>", lambda event: canvas.itemconfig(canvas_window, width=event.width))
+        
+        # Configure scrollregion when frame size changes
+        def configure_scrollregion(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        scrollable_frame.bind("<Configure>", configure_scrollregion)
+        
+        # Bind MouseWheel to scroll the canvas
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+        scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
         
         for name, type_key, color in nodes_to_add:
             btn = tk.Button(
-                self.left_panel, text=f"+ {name}", font=("Segoe UI", 9, "bold"),
+                scrollable_frame, text=f"+ {name}", font=("Segoe UI", 9, "bold"),
                 bg=color, fg="#ffffff", activebackground=color, activeforeground="#ffffff",
                 bd=0, pady=6, cursor="hand2"
             )
             btn.pack(pady=3, padx=15, fill="x")
+            btn.bind("<MouseWheel>", _on_mousewheel)
             
             def make_drag_handlers(button_widget, tk_type):
                 def on_press(event):

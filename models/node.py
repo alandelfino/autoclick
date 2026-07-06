@@ -7,6 +7,8 @@ and visual state (selection, highlight).
 import ctypes
 import time
 import json
+import threading
+import tkinter as tk
 
 from core.automation import click_mouse, simulate_keypress, get_active_window_info, simulate_type_text
 from core.payload import get_payload_value, resolve_value
@@ -77,7 +79,9 @@ class VisualNode:
             'api': {'header': '#0284c7', 'title': 'Requisição API'},
             'loop': {'header': '#8b5cf6', 'title': 'Loop'},
             'break_loop': {'header': '#a21caf', 'title': 'Interromper Loop'},
-            'storage_var': {'header': '#ec4899', 'title': 'Var. Armazenamento'}
+            'storage_var': {'header': '#ec4899', 'title': 'Var. Armazenamento'},
+            'confirm_dialog': {'header': '#f43f5e', 'title': t("toolbox.nodes.confirm_dialog")},
+            'alert_dialog': {'header': '#e11d48', 'title': t("toolbox.nodes.alert_dialog")}
         }
         self.theme = self.themes.get(self.type, {'header': '#64748b', 'title': 'Nó'})
 
@@ -116,6 +120,20 @@ class VisualNode:
             return {'loop_node_name': ''}
         elif self.type == 'storage_var':
             return {'variable_name': 'var_1', 'variable_value': ''}
+        elif self.type == 'confirm_dialog':
+            return {
+                'title': 'Confirmação',
+                'message': 'Você deseja continuar?',
+                'btn_true_text': 'Sim',
+                'btn_false_text': 'Não',
+                'payload_var': 'confirm_result'
+            }
+        elif self.type == 'alert_dialog':
+            return {
+                'title': 'Alerta',
+                'message': 'Fluxo interrompido!',
+                'btn_ok_text': 'OK'
+            }
         return {}
 
     def setup_ports(self):
@@ -259,6 +277,10 @@ class VisualNode:
             summary = f"Parar Loop: {self.properties.get('loop_node_name', '')}"
         elif self.type == 'storage_var':
             summary = f"Var: {self.properties.get('variable_name', 'var_1')} = {self.properties.get('variable_value', '')}"
+        elif self.type == 'confirm_dialog':
+            summary = f"Título: {self.properties.get('title', '')}"
+        elif self.type == 'alert_dialog':
+            summary = f"Título: {self.properties.get('title', '')}"
             
         self.summary_text_ui = self.canvas.create_text(
             self.x + 10, self.y + 75, text=summary, anchor="w",
@@ -646,6 +668,145 @@ class VisualNode:
             
             payload[var_name] = resolved_value
             log_func(t("logs.storage_set").format(var_name, resolved_value))
+            return 'out'
+            
+        elif self.type == 'confirm_dialog':
+            title_raw = self.properties.get('title', 'Confirmação')
+            message_raw = self.properties.get('message', 'Você deseja continuar?')
+            btn_true_raw = self.properties.get('btn_true_text', 'Sim')
+            btn_false_raw = self.properties.get('btn_false_text', 'Não')
+            payload_var = self.properties.get('payload_var', 'confirm_result')
+            
+            title = str(resolve_value(title_raw, payload))
+            message = str(resolve_value(message_raw, payload))
+            btn_true = str(resolve_value(btn_true_raw, payload))
+            btn_false = str(resolve_value(btn_false_raw, payload))
+            
+            log_func(f"Aguardando resposta da caixa de confirmação: '{title}'...")
+            
+            result_container = []
+            event = threading.Event()
+            
+            def show_dialog():
+                dialog = tk.Toplevel()
+                dialog.title(title)
+                dialog.configure(bg="#1e293b")
+                dialog.resizable(False, False)
+                dialog.attributes("-topmost", True)
+                dialog.grab_set()
+                
+                dialog_width = 380
+                dialog_height = 160
+                screen_w = dialog.winfo_screenwidth()
+                screen_h = dialog.winfo_screenheight()
+                rx = (screen_w - dialog_width) // 2
+                ry = (screen_h - dialog_height) // 2
+                dialog.geometry(f"{dialog_width}x{dialog_height}+{rx}+{ry}")
+                dialog.lift()
+                dialog.focus_force()
+                
+                msg_lbl = tk.Label(
+                    dialog, text=message, font=("Segoe UI", 10), fg="#f8fafc", bg="#1e293b",
+                    wraplength=340, justify="center"
+                )
+                msg_lbl.pack(pady=(25, 20), padx=20, fill="both", expand=True)
+                
+                btn_frame = tk.Frame(dialog, bg="#1e293b")
+                btn_frame.pack(fill="x", side="bottom", pady=(0, 20))
+                
+                def on_click(val):
+                    result_container.append(val)
+                    try:
+                        dialog.grab_release()
+                    except Exception:
+                        pass
+                    dialog.destroy()
+                    event.set()
+                
+                btn_yes = tk.Button(
+                    btn_frame, text=btn_true, font=("Segoe UI", 9, "bold"),
+                    bg="#10b981", fg="#ffffff", activebackground="#059669", activeforeground="#ffffff",
+                    bd=0, width=12, pady=6, cursor="hand2", command=lambda: on_click(True)
+                )
+                btn_yes.pack(side="left", padx=(50, 10), expand=True)
+                
+                btn_no = tk.Button(
+                    btn_frame, text=btn_false, font=("Segoe UI", 9, "bold"),
+                    bg="#64748b", fg="#ffffff", activebackground="#475569", activeforeground="#ffffff",
+                    bd=0, width=12, pady=6, cursor="hand2", command=lambda: on_click(False)
+                )
+                btn_no.pack(side="right", padx=(10, 50), expand=True)
+                
+                dialog.protocol("WM_DELETE_WINDOW", lambda: on_click(False))
+                
+            self.canvas.after(0, show_dialog)
+            event.wait()
+            
+            val = result_container[0] if result_container else False
+            payload[payload_var] = val
+            log_func(f"Caixa de confirmação respondida: {val}")
+            return 'out'
+            
+        elif self.type == 'alert_dialog':
+            title_raw = self.properties.get('title', 'Alerta')
+            message_raw = self.properties.get('message', 'Fluxo interrompido!')
+            btn_ok_raw = self.properties.get('btn_ok_text', 'OK')
+            
+            title = str(resolve_value(title_raw, payload))
+            message = str(resolve_value(message_raw, payload))
+            btn_ok = str(resolve_value(btn_ok_raw, payload))
+            
+            log_func(f"Aguardando fechamento da caixa de alerta: '{title}'...")
+            
+            event = threading.Event()
+            
+            def show_dialog():
+                dialog = tk.Toplevel()
+                dialog.title(title)
+                dialog.configure(bg="#1e293b")
+                dialog.resizable(False, False)
+                dialog.attributes("-topmost", True)
+                dialog.grab_set()
+                
+                dialog_width = 380
+                dialog_height = 160
+                screen_w = dialog.winfo_screenwidth()
+                screen_h = dialog.winfo_screenheight()
+                rx = (screen_w - dialog_width) // 2
+                ry = (screen_h - dialog_height) // 2
+                dialog.geometry(f"{dialog_width}x{dialog_height}+{rx}+{ry}")
+                dialog.lift()
+                dialog.focus_force()
+                
+                msg_lbl = tk.Label(
+                    dialog, text=message, font=("Segoe UI", 10), fg="#f8fafc", bg="#1e293b",
+                    wraplength=340, justify="center"
+                )
+                msg_lbl.pack(pady=(25, 20), padx=20, fill="both", expand=True)
+                
+                btn_frame = tk.Frame(dialog, bg="#1e293b")
+                btn_frame.pack(fill="x", side="bottom", pady=(0, 20))
+                
+                def on_click():
+                    try:
+                        dialog.grab_release()
+                    except Exception:
+                        pass
+                    dialog.destroy()
+                    event.set()
+                
+                btn_btn = tk.Button(
+                    btn_frame, text=btn_ok, font=("Segoe UI", 9, "bold"),
+                    bg="#3b82f6", fg="#ffffff", activebackground="#2563eb", activeforeground="#ffffff",
+                    bd=0, width=12, pady=6, cursor="hand2", command=on_click
+                )
+                btn_btn.pack(pady=5)
+                
+                dialog.protocol("WM_DELETE_WINDOW", on_click)
+                
+            self.canvas.after(0, show_dialog)
+            event.wait()
+            log_func("Caixa de alerta fechada.")
             return 'out'
             
         return None

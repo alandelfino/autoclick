@@ -25,7 +25,9 @@
         "api": "API Request",
         "loop": "Loop",
         "storage_var": "Storage Variable",
-        "break_loop": "Interrupt Loop"
+        "break_loop": "Interrupt Loop",
+        "confirm_dialog": "Confirm Action (Windows)",
+        "alert_dialog": "Alert / Notice (Windows)"
       }
     },
     "menu": {
@@ -115,7 +117,13 @@
       "schema_viewer": "SCHEMA VIEWER (VARIABLES PATH)",
       "variables_viewer": "VARIABLES TREE VIEWER",
       "active_variables_value": "ACTIVE VARIABLES VALUE",
-      "no_active_execution": "No active execution variables found yet.\nRun the flow to populate values."
+      "no_active_execution": "No active execution variables found yet.\nRun the flow to populate values.",
+      "dialog_title": "Dialog Title:",
+      "dialog_message": "Message/Content:",
+      "btn_true_text": "Button 'True':",
+      "btn_false_text": "Button 'False':",
+      "btn_ok_text": "Button Text:",
+      "payload_var_dest": "Save result variable to:"
     },
     "node_config": {
       "title": "Node Config: {}",
