@@ -111,17 +111,26 @@ autoclick/
 
 ## 🛠️ Requirements & Installation
 
-### Prerequisites
+### Option 1: Standard Windows Installer (Recommended)
+The easiest way to run AutoClick on your PC is using the official installer:
+1. Run the [AutoClickSetup.exe](Output/AutoClickSetup.exe) installer.
+2. Select your preferred installation language (**Portuguese** or **English**). The app interface will automatically adjust to your choice.
+3. Follow the wizard steps to complete the installation and create shortcuts.
+4. Launch the application from your Desktop or Start Menu!
+
+### Option 2: Run from Python Source (For Developers)
+
+#### Prerequisites
 *   **Operating System**: Windows (due to deep integration with the Windows user32 library via `ctypes`).
 *   **Python**: Version 3.8 or higher.
 
-### Step 1: Install Python Dependencies
+#### Step 1: Install Python Dependencies
 Open your terminal and run:
 ```bash
-pip install pystray Pillow
+pip install pystray Pillow python-i18n
 ```
 
-### Step 2: Install Database Drivers (Optional)
+#### Step 2: Install Database Drivers (Optional)
 If your flows require database connections, install the respective packages:
 *   **PostgreSQL**: `pip install psycopg2-binary`
 *   **MySQL**: `pip install pymysql`

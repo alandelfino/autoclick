@@ -2,6 +2,7 @@
 Coordinate capture — Full-screen overlay to grab mouse coordinates.
 """
 import tkinter as tk
+from core.i18n_helper import t
 
 
 class CoordinateCaptureMixin:

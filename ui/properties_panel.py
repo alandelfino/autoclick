@@ -10,6 +10,7 @@ import threading
 import json
 
 from core.payload import get_payload_value, resolve_value
+from core.i18n_helper import t
 
 
 class SQLAutocomplete:
