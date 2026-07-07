@@ -147,6 +147,8 @@ class VisualConnection:
         self.canvas.tag_bind(self.tag, "<Button-2>", self.on_right_click_line)
         
         self.update_line()
+        if self.source:
+            self.source.update_plus_handles()
 
     def update_line(self):
         x1, y1 = self.source.get_port_center(self.source_port)
@@ -301,6 +303,14 @@ class VisualConnection:
         cy = self.canvas.canvasy(event.y)
         overlapping = self.canvas.find_overlapping(cx - 1, cy - 1, cx + 1, cy + 1)
         
+        # If the mouse is over a port, we've left the connection
+        for item_id in overlapping:
+            if "port" in self.canvas.gettags(item_id):
+                self.is_hovered = False
+                self.canvas.config(cursor="")
+                self.update_line()
+                return
+                
         # If the mouse moved to one of our own handles or the line itself, do nothing!
         if self.line_id in overlapping or (hasattr(self, 'handle_ids') and any(h in overlapping for h in self.handle_ids)):
             if self.line_id in overlapping:
@@ -391,6 +401,8 @@ class VisualConnection:
             for h in self.handle_ids:
                 self.canvas.delete(h)
             self.handle_ids.clear()
+        if self.source:
+            self.canvas.after(10, self.source.update_plus_handles)
 
     def on_handle_click(self, event, idx):
         self.dragged_segment = idx

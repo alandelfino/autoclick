@@ -450,6 +450,9 @@ class VisualNode:
                     px + tx_offset, py, text=p['label'], anchor=text_anchor,
                     fill="#64748b", font=("Segoe UI", 8, "bold"), tags=self.tag
                 )
+                
+        # 5. Draw plus handles for unconnected output ports
+        self.update_plus_handles()
 
     def update_summary_text(self):
         pass
@@ -477,6 +480,9 @@ class VisualNode:
         for p in self.ports.values():
             if 'ui_label' in p and p['ui_label']:
                 self.canvas.itemconfig(p['ui_label'], font=("Segoe UI", port_sz, "bold"))
+                
+        # Recreate plus handles for correct zoom scale positioning and styling
+        self.update_plus_handles()
 
     def move_by(self, dx, dy):
         self.x += dx
@@ -534,13 +540,89 @@ class VisualNode:
     def on_leave(self, event):
         cx = self.canvas.canvasx(event.x)
         cy = self.canvas.canvasy(event.y)
-        margin = 2
-        inside = (self.x - margin <= cx <= self.x + self.width + margin and
-                  self.y - margin <= cy <= self.y + self.height + margin)
-        if inside:
+        
+        overlapping = self.canvas.find_overlapping(cx - 1, cy - 1, cx + 1, cy + 1)
+        node_items = self.canvas.find_withtag(self.tag)
+        is_still_over_node = any(item in overlapping for item in node_items)
+        is_over_port = any("port" in self.canvas.gettags(item) for item in overlapping)
+        
+        if is_still_over_node and not is_over_port:
             return
+            
         self.is_hovered = False
         self.update_outline()
+
+    def update_plus_handles(self):
+        # 1. Clean up existing plus handles
+        if hasattr(self, 'plus_handles'):
+            for item_ids in list(self.plus_handles.values()):
+                for iid in item_ids:
+                    try:
+                        self.canvas.delete(iid)
+                    except Exception:
+                        pass
+            self.plus_handles.clear()
+        else:
+            self.plus_handles = {}
+
+        app = getattr(self.canvas, 'app', None)
+        if not app:
+            return
+
+        zoom_scale = getattr(app, 'zoom_scale', 1.0)
+        
+        # 2. Iterate output ports
+        for port_name, p in self.ports.items():
+            if p.get('type') == 'output':
+                # Check if this port is connected
+                connected = False
+                for conn in app.connections:
+                    if conn.source == self and conn.source_port == port_name:
+                        connected = True
+                        break
+                
+                if not connected:
+                    px, py = self.get_port_center(port_name)
+                    
+                    line_len = 20 * zoom_scale
+                    box_sz = 16 * zoom_scale
+                    r_corner = 4 * zoom_scale
+                    
+                    # Connection line segment
+                    line_id = self.canvas.create_line(
+                        px, py, px + line_len, py,
+                        fill="#cbd5e1", width=max(1, int(round(2 * zoom_scale))), tags=(self.tag, "plus_handle")
+                    )
+                    
+                    # Rounded box (16x16)
+                    bx1, by1 = px + line_len, py - box_sz / 2
+                    
+                    points = get_rounded_rect_points(bx1, by1, box_sz, box_sz, r=r_corner)
+                    box_id = self.canvas.create_polygon(
+                        points, fill="#e2e8f0", outline="#cbd5e1", width=max(1, int(round(1 * zoom_scale))),
+                        tags=(self.tag, f"plus_btn_{self.id}_{port_name}", "plus_handle")
+                    )
+                    
+                    # Plus text
+                    plus_font_sz = max(1, int(round(10 * zoom_scale)))
+                    text_id = self.canvas.create_text(
+                        bx1 + box_sz / 2, py, text="+", fill="#475569",
+                        font=("Segoe UI", plus_font_sz, "bold"),
+                        tags=(self.tag, f"plus_btn_{self.id}_{port_name}", "plus_handle")
+                    )
+                    
+                    self.plus_handles[port_name] = [line_id, box_id, text_id]
+                    
+                    # Bind click and hover events to the box and text
+                    tag_name = f"plus_btn_{self.id}_{port_name}"
+                    self.canvas.tag_bind(tag_name, "<Button-1>", lambda event, pn=port_name: self.on_click_plus_handle(pn))
+                    self.canvas.tag_bind(tag_name, "<Enter>", lambda event, tn=tag_name: self.canvas.config(cursor="hand2"))
+                    self.canvas.tag_bind(tag_name, "<Leave>", lambda event: self.canvas.config(cursor=""))
+
+    def on_click_plus_handle(self, port_name):
+        app = getattr(self.canvas, 'app', None)
+        if app and hasattr(app, 'slide_panel_in'):
+            app.slide_panel_in(self, port_name)
 
     def get_first_output_port(self):
         if 'out' in self.ports:

@@ -5,7 +5,7 @@ a = Analysis(
     ['flow_builder_pro.py'],
     pathex=[],
     binaries=[],
-    datas=[('locales', 'locales')],
+    datas=[('locales', 'locales'), ('assets', 'assets')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

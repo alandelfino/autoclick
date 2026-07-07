@@ -5,7 +5,7 @@ echo ===================================================
 echo.
 
 echo [1/2] Running PyInstaller...
-python -m PyInstaller --noconfirm --noconsole --icon=logo.ico --add-data "locales;locales" --name "AutoClick" flow_builder_pro.py
+python -m PyInstaller --noconfirm --noconsole --icon=logo.ico --add-data "locales;locales" --add-data "assets;assets" --name "AutoClick" flow_builder_pro.py
 if %ERRORLEVEL% neq 0 (
     echo.
     echo [ERROR] PyInstaller compilation failed!

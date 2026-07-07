@@ -180,6 +180,11 @@ class FlowBuilderProApp(
         # Pack the canvas to fill the remaining space of the flow tab
         self.canvas.pack(side="right", fill="both", expand=True)
         
+        # Initialize slide panel (collapsible nodes sidebar)
+        self.slide_panel = tk.Frame(self.tab_flow, width=280, bg="#0f172a", bd=1, relief="solid")
+        self.slide_panel.place(relx=1.0, x=0, y=0, relheight=1.0, anchor="nw")
+        self.setup_slide_panel()
+        
         # Setup top menu (not configured on root yet)
         self.setup_menu_bar()
         
@@ -1374,6 +1379,199 @@ class FlowBuilderProApp(
             bd=0, padx=15, pady=6, cursor="hand2", command=settings_win.destroy
         )
         btn_cancel.pack(side="right")
+
+    def setup_slide_panel(self):
+        # Title area
+        title_frame = tk.Frame(self.slide_panel, bg="#1e293b", height=50)
+        title_frame.pack(fill="x", side="top", ipady=5)
+        
+        lbl_title = tk.Label(
+            title_frame, text="Adicionar Nó", font=("Segoe UI", 11, "bold"),
+            fg="#f8fafc", bg="#1e293b"
+        )
+        lbl_title.pack(side="left", padx=15, pady=10)
+        
+        # Close button (X)
+        btn_close = tk.Button(
+            title_frame, text="✕", font=("Segoe UI", 10, "bold"),
+            fg="#94a3b8", bg="#1e293b", activeforeground="#f8fafc", activebackground="#1e293b",
+            bd=0, cursor="hand2", command=self.slide_panel_out
+        )
+        btn_close.pack(side="right", padx=15, pady=10)
+        
+        # Scrollable container
+        container = tk.Frame(self.slide_panel, bg="#0f172a")
+        container.pack(fill="both", expand=True)
+        
+        canvas = tk.Canvas(container, bg="#0f172a", bd=0, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        
+        scrollable_frame = tk.Frame(canvas, bg="#0f172a")
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        
+        canvas.bind("<Configure>", lambda event: canvas.itemconfig(canvas_window, width=event.width))
+        
+        def configure_scrollregion(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        scrollable_frame.bind("<Configure>", configure_scrollregion)
+        
+        # Bind MouseWheel to scroll the canvas
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+        scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
+        
+        # Group list
+        from core.i18n_helper import t
+        from models.node import get_recolored_icon
+        
+        node_groups = [
+            ("INTERAÇÃO E ENTRADA", [
+                (t("toolbox.nodes.click"), "click", "#a855f7"),
+                (t("toolbox.nodes.move_mouse"), "move_mouse", "#06b6d4"),
+                (t("toolbox.nodes.key"), "key", "#db2777"),
+                (t("toolbox.nodes.type_text"), "type_text", "#10b981"),
+                (t("toolbox.nodes.capture"), "capture", "#f97316"),
+            ]),
+            ("CONTROLE E FLUXO", [
+                (t("toolbox.nodes.condition"), "condition", "#0d9488"),
+                (t("toolbox.nodes.delay"), "delay", "#f59e0b"),
+                (t("toolbox.nodes.loop"), "loop", "#8b5cf6"),
+                (t("toolbox.nodes.continue_loop"), "continue_loop", "#0284c7"),
+                (t("toolbox.nodes.break_loop"), "break_loop", "#a21caf"),
+                (t("toolbox.nodes.switch"), "switch", "#4f46e5"),
+            ]),
+            ("DADOS E CONEXÕES", [
+                (t("toolbox.nodes.postgres"), "postgres", "#336791"),
+                (t("toolbox.nodes.mysql"), "mysql", "#00758f"),
+                (t("toolbox.nodes.sqlite"), "sqlite", "#003b57"),
+                (t("toolbox.nodes.api"), "api", "#0284c7"),
+                (t("toolbox.nodes.storage_var"), "storage_var", "#ec4899"),
+            ]),
+            ("CÓDIGO E SCRIPTS", [
+                (t("toolbox.nodes.js"), "js", "#ca8a04"),
+                (t("toolbox.nodes.python"), "python", "#2b5b84"),
+            ]),
+            ("DIÁLOGOS E TELAS", [
+                (t("toolbox.nodes.confirm_dialog"), "confirm_dialog", "#f43f5e"),
+                (t("toolbox.nodes.alert_dialog"), "alert_dialog", "#e11d48"),
+            ])
+        ]
+        
+        # Keep photo images in list to prevent garbage collection
+        self._slide_icons = []
+        
+        icon_mapping = {
+            'start': 'play', 'click': 'mouse-pointer', 'capture': 'camera',
+            'condition': 'question', 'key': 'keyboard-o', 'type_text': 'font',
+            'delay': 'clock-o', 'move_mouse': 'arrows', 'postgres': 'database',
+            'mysql': 'database', 'sqlite': 'database', 'api': 'globe',
+            'loop': 'refresh', 'break_loop': 'ban', 'continue_loop': 'arrow-right',
+            'storage_var': 'cube', 'confirm_dialog': 'comments-o',
+            'alert_dialog': 'exclamation-triangle', 'switch': 'random',
+            'js': 'code', 'python': 'terminal'
+        }
+        
+        for group_title, nodes in node_groups:
+            # Section Header
+            lbl_sec = tk.Label(
+                scrollable_frame, text=group_title, font=("Segoe UI", 8, "bold"),
+                fg="#64748b", bg="#0f172a"
+            )
+            lbl_sec.pack(anchor="w", pady=(15, 5), padx=15)
+            
+            for name, n_type, color in nodes:
+                # Add node button
+                btn_frame = tk.Frame(scrollable_frame, bg="#0f172a")
+                btn_frame.pack(fill="x", padx=10, pady=2)
+                
+                # Retrieve and recolor icon for list
+                icon_file = icon_mapping.get(n_type, 'question')
+                photo = get_recolored_icon(icon_file, color, size=18)
+                self._slide_icons.append(photo) # keep ref
+                
+                # Node item as a hoverable button
+                btn_item = tk.Button(
+                    btn_frame, text=f"  {name}", image=photo, compound="left",
+                    font=("Segoe UI", 9, "bold"), fg="#e2e8f0", bg="#1e293b",
+                    activeforeground="#ffffff", activebackground="#334155",
+                    bd=0, padx=10, pady=8, cursor="hand2", anchor="w",
+                    command=lambda nt=n_type, nm=name: self.on_select_slide_node(nt, nm)
+                )
+                btn_item.pack(fill="x", expand=True)
+                
+                # Bind hover effects
+                def on_enter(e, widget=btn_item):
+                    widget.config(bg="#334155")
+                def on_leave(e, widget=btn_item):
+                    widget.config(bg="#1e293b")
+                    
+                btn_item.bind("<Enter>", on_enter)
+                btn_item.bind("<Leave>", on_leave)
+
+    def slide_panel_in(self, source_node, source_port):
+        self.plus_btn_source_node = source_node
+        self.plus_btn_source_port = source_port
+        
+        self.slide_panel.lift()
+        self.animate_slide(-280, 0, step=30)
+        
+    def slide_panel_out(self):
+        self.animate_slide(0, -280, step=30)
+        
+    def animate_slide(self, target_x, current_x, step=30):
+        if target_x < current_x:
+            new_x = max(target_x, current_x - step)
+            self.slide_panel.place(relx=1.0, x=new_x, y=0, relheight=1.0, anchor="nw")
+            self.root.after(8, lambda: self.animate_slide(target_x, new_x, step))
+        elif target_x > current_x:
+            new_x = min(target_x, current_x + step)
+            self.slide_panel.place(relx=1.0, x=new_x, y=0, relheight=1.0, anchor="nw")
+            self.root.after(8, lambda: self.animate_slide(target_x, new_x, step))
+
+    def on_select_slide_node(self, node_type, name):
+        self.slide_panel_out()
+        
+        src_node = getattr(self, 'plus_btn_source_node', None)
+        src_port = getattr(self, 'plus_btn_source_port', None)
+        if not src_node or not src_port:
+            return
+            
+        port_info = src_node.ports.get(src_port)
+        rel_y = port_info['rel_y'] if port_info else (src_node.height // 2)
+        
+        # Position of the new node: 180px to the right of the source node
+        # We align the vertical center of the new node with the source port center!
+        new_x = src_node.x + 180
+        new_y = src_node.y + rel_y - 34 # 34 is 68 / 2
+        
+        new_node = self.create_node(node_type, x=new_x, y=new_y, is_canvas_coords=True)
+        
+        # Find the target input port
+        target_port = 'in' if 'in' in new_node.ports else None
+        if target_port is None:
+            for p_name, p in new_node.ports.items():
+                if p['type'] == 'input':
+                    target_port = p_name
+                    break
+                    
+        if target_port:
+            from models.connection import VisualConnection
+            new_conn = VisualConnection(self.canvas, src_node, src_port, new_node, target_port)
+            self.connections.append(new_conn)
+            new_conn.update_line()
+            
+        # Refresh the source node's plus handles
+        src_node.update_plus_handles()
+        
+        # Clear references
+        self.plus_btn_source_node = None
+        self.plus_btn_source_port = None
 
 
 if __name__ == "__main__":

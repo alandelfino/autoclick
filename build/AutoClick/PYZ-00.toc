@@ -1973,6 +1973,10 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\tkinter\\__init__.py',
    'PYMODULE'),
+  ('tkinter.colorchooser',
+   'C:\\Users\\ALAN '
+   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\tkinter\\colorchooser.py',
+   'PYMODULE'),
   ('tkinter.commondialog',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\tkinter\\commondialog.py',
