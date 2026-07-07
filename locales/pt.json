@@ -64,7 +64,10 @@
       "settings_zoom_min": "Zoom mínimo:",
       "settings_zoom_max": "Zoom máximo:",
       "settings_error_zoom": "Os valores de zoom devem ser números válidos e o mínimo deve ser menor que o máximo.",
-      "settings_applied_log": "Configurações aplicadas: Ocultar={}, Segundos={}, AutoSalvar={}, ZoomMin={}, ZoomMax={}"
+      "settings_applied_log": "Configurações aplicadas: Ocultar={}, Segundos={}, AutoSalvar={}, ZoomMin={}, ZoomMax={}",
+      "settings_connection_width": "Largura das conexões:",
+      "settings_connection_color": "Cor das conexões:",
+      "settings_error_connection_width": "A largura da conexão deve ser um número inteiro entre 1 e 10."
     },
     "canvas": {
       "tab_flow": "Fluxo",
@@ -78,6 +81,8 @@
       "clear": "Limpar"
     },
     "properties": {
+      "loop_next_item": "Próximo Item",
+      "loop_done": "Concluído",
       "no_node_selected": "Nenhum nó selecionado.\n\nClique em um nó no painel para visualizar e editar suas configurações.",
       "select_node_input": "Selecione um nó para visualizar o payload de entrada.",
       "select_node_output": "Selecione um nó para visualizar o payload de saída.",

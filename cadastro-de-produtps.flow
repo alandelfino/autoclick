@@ -4,8 +4,8 @@
             "id": 1,
             "type": "start",
             "name": "Início do Fluxo",
-            "x": 90.63757154878112,
-            "y": 292.1026021233514,
+            "x": 198.34870617017486,
+            "y": 377.6795127757844,
             "properties": {
                 "loop_mode": "Loop Infinito",
                 "loop_count": 5,
@@ -36,8 +36,8 @@
             "id": 2,
             "type": "sqlite",
             "name": "Lista de produtos",
-            "x": 552.4518590611679,
-            "y": 429.6201535264273,
+            "x": 405.86931469006447,
+            "y": 377.62899625062187,
             "properties": {
                 "connection_name": "Banco de produtos",
                 "sql": "SELECT * FROM produtos as p INNER JOIN produto_categorias as pc ON pc.produto_id = p.id WHERE pc.categoria_id = \"{{category_id}}\" LIMIT 5;",
@@ -211,8 +211,8 @@
             "id": 3,
             "type": "loop",
             "name": "Loop de produtos",
-            "x": 755.7369949429802,
-            "y": 422.49621544273845,
+            "x": 526.4227971409681,
+            "y": 378.97160481280093,
             "properties": {
                 "array_data": "{{lista_de_produtos.rows}}",
                 "alias": "loop_de_produtos"
@@ -222,8 +222,8 @@
             "id": 4,
             "type": "storage_var",
             "name": "ID da categoria",
-            "x": 373.6077403679049,
-            "y": 430.78697302447256,
+            "x": 300.46936726594595,
+            "y": 377.97410582361454,
             "properties": {
                 "variable_name": "categoria_id",
                 "variable_value": "113",
@@ -255,8 +255,8 @@
             "id": 5,
             "type": "click",
             "name": "Clique ( Novo )",
-            "x": 368.3793812967781,
-            "y": 613.8169013489133,
+            "x": 309.064872545302,
+            "y": 580.7944361426538,
             "properties": {
                 "x": 114,
                 "y": 994,
@@ -267,8 +267,8 @@
             "id": 6,
             "type": "capture",
             "name": "Captura Janela Ativa",
-            "x": 727.6184224355103,
-            "y": 613.180348818629,
+            "x": 496.76071491743187,
+            "y": 580.1229414041537,
             "properties": {
                 "capture_type": "Dados da Janela Ativa",
                 "step_test": {
@@ -468,8 +468,8 @@
             "id": 7,
             "type": "condition",
             "name": "Verifica se abrir modal ( Modelo )",
-            "x": 927.2958664805382,
-            "y": 611.171415672648,
+            "x": 602.8026119333271,
+            "y": 579.4769211122234,
             "properties": {
                 "variable": "active_window.title",
                 "operator": "igual",
@@ -491,8 +491,8 @@
             "id": 8,
             "type": "click",
             "name": "Clique ( Botão Incluir )",
-            "x": 162.6805856375151,
-            "y": 614.0308380819546,
+            "x": 226.82805976434315,
+            "y": 581.0201164813126,
             "properties": {
                 "x": 103,
                 "y": 1022,
@@ -503,8 +503,8 @@
             "id": 9,
             "type": "confirm_dialog",
             "name": "Confirmar 11",
-            "x": 1114.4826827068623,
-            "y": 648.8179185004548,
+            "x": 738.8886507733467,
+            "y": 625.9334230084992,
             "properties": {
                 "title": "Confirmação",
                 "message": "Tivemos um erro ao abrir a janela do cadastro, deseja ir para o proximo item ou parar?",
@@ -518,8 +518,8 @@
             "id": 10,
             "type": "condition",
             "name": "Verifica ação do usuário",
-            "x": 1274.3962509539613,
-            "y": 649.6854119757297,
+            "x": 835.2200879390729,
+            "y": 626.1755969548866,
             "properties": {
                 "variable": "confirm_result",
                 "operator": "igual",
@@ -531,8 +531,8 @@
             "id": 11,
             "type": "break_loop",
             "name": "Parar o loop",
-            "x": 1589.2334006709318,
-            "y": 679.5214199417022,
+            "x": 969.5129049782203,
+            "y": 636.795241092516,
             "properties": {
                 "alias": "break_11"
             }
@@ -541,8 +541,8 @@
             "id": 12,
             "type": "type_text",
             "name": "Digita código do produto",
-            "x": 843.4370863111094,
-            "y": 86.28570299583316,
+            "x": 626.6318846223002,
+            "y": 117.64089106525438,
             "properties": {
                 "text": "{{loop_de_produtos.item.codigo}}",
                 "alias": "digitar_12"
@@ -552,8 +552,8 @@
             "id": 13,
             "type": "key",
             "name": "Press Tecla ( Tab )",
-            "x": 997.9314785271615,
-            "y": 84.70544077501239,
+            "x": 712.4845113334729,
+            "y": 117.28919524939278,
             "properties": {
                 "key": "enter",
                 "count": 1,
@@ -564,8 +564,8 @@
             "id": 14,
             "type": "capture",
             "name": "Capturar Janela Ativa",
-            "x": 1151.7912781065554,
-            "y": 83.51600858907852,
+            "x": 801.1640384596834,
+            "y": 117.29801512277129,
             "properties": {
                 "capture_type": "Dados da Janela Ativa",
                 "step_test": {
@@ -765,8 +765,8 @@
             "id": 15,
             "type": "condition",
             "name": "O produto já existe?",
-            "x": 1331.4190060798296,
-            "y": 82.87336861991093,
+            "x": 923.6700956203365,
+            "y": 116.56826308864288,
             "properties": {
                 "variable": "active_window.title",
                 "operator": "contém",
@@ -788,8 +788,8 @@
             "id": 16,
             "type": "click",
             "name": "Clique Botão OK",
-            "x": 1518.7157804671942,
-            "y": 44.71283847233434,
+            "x": 1052.503460128874,
+            "y": 46.045955387510844,
             "properties": {
                 "x": 955,
                 "y": 599,
@@ -990,8 +990,8 @@
             "id": 17,
             "type": "click",
             "name": "Clica Campo Descrição",
-            "x": 1521.5770529184565,
-            "y": 163.34862171894736,
+            "x": 1055.5217960949253,
+            "y": 171.1939996696027,
             "properties": {
                 "x": 598,
                 "y": 296,
@@ -1002,8 +1002,8 @@
             "id": 18,
             "type": "type_text",
             "name": "Digita a descrição",
-            "x": 1689.7516503009963,
-            "y": 161.2517931252052,
+            "x": 1152.549334261435,
+            "y": 170.9425249461171,
             "properties": {
                 "text": "{{loop_de_produtos.item.nome}}",
                 "alias": "digitar_18"
@@ -1013,8 +1013,8 @@
             "id": 19,
             "type": "sqlite",
             "name": "Marca como cadastrado no banco",
-            "x": 1685.564068269344,
-            "y": 45.68633143042234,
+            "x": 1154.0132483053885,
+            "y": 46.09265876164113,
             "properties": {
                 "connection_name": "Banco de produtos",
                 "sql": "UPDATE produtos as p\nSET cadastrado = 1 WHERE p.codigo = {{loop_de_produtos.item.codigo}}\n",
@@ -1152,8 +1152,8 @@
             "id": 20,
             "type": "click",
             "name": "Clique no campo Grupo",
-            "x": 1872.842129623852,
-            "y": 161.43891476769107,
+            "x": 1261.3906205348828,
+            "y": 172.12014566251304,
             "properties": {
                 "x": 620,
                 "y": 456,
@@ -1164,8 +1164,8 @@
             "id": 21,
             "type": "python",
             "name": "Verifica o código do grupo",
-            "x": 1530.5118474761266,
-            "y": 263.5032450255371,
+            "x": 1064.9470473501058,
+            "y": 276.84639972645533,
             "properties": {
                 "code": "nome = \"{{loop_de_produtos.item.nome}}\"\n\nif \"vestidos\" in nome or \"vestido\" in nome:\n    return 2\nelif \"saia\" in nome:\n    return 3\nelif \"blusa\" in nome:\n    return 4\nelif \"salopete\" in nome:\n    return 5\nelif \"chemise\" in nome:\n    return 6\nelif \"calça\" in nome or \"calca\" in nome:\n    return 7\nelif \"bermuda\" in nome:\n    return 8\nelif \"regata\" in nome:\n    return 9\nelif \"shorts\" in nome or \"short\" in nome:\n    return 10\nelif \"jaqueta\" in nome:\n    return 11\nelif \"macacão\" in nome or \"macacao\" in nome:\n    return 12\nelif \"blazer\" in nome:\n    return 13\nelif \"cropped\" in nome:\n    return 14\nelif \"colete\" in nome:\n    return 15\nelif \"t-shirt\" in nome:\n    return 16\nelif \"cardigan\" in nome:\n    return 17\nelif \"top\" in nome:\n    return 18\nelif \"kimono\" in nome:\n    return 19\nelif \"conjunto\" in nome:\n    return 20\nelif \"lenço\" in nome or \"lenco\" in nome:\n    return 21\nelif \"jardineira\" in nome:\n    return 22\nelif \"parka\" in nome:\n    return 23\nelif \"sobretudo\" in nome:\n    return 25\nelif \"casaqueto\" in nome:\n    return 26\nelif \"cinto\" in nome:\n    return 30\nelif \"bomber\" in nome:\n    return 31\nelif \"body\" in nome:\n    return 32\nelif \"camisa\" in nome:\n    return 1\nelse:\n    return 0 ",
                 "step_test": {
@@ -1248,8 +1248,8 @@
             "id": 22,
             "type": "type_text",
             "name": "Digitar id do grupo",
-            "x": 1695.501233872763,
-            "y": 262.27246018186645,
+            "x": 1157.2716811656032,
+            "y": 276.1925689895239,
             "properties": {
                 "text": "{{python_cdigo_60}}",
                 "step_test": {
@@ -1332,8 +1332,8 @@
             "id": 23,
             "type": "key",
             "name": "Press TeclaTAB",
-            "x": 1875.669306542556,
-            "y": 257.8713801252619,
+            "x": 1268.2938990705009,
+            "y": 275.7796140948095,
             "properties": {
                 "key": "tab",
                 "count": 1,
@@ -1417,8 +1417,8 @@
             "id": 24,
             "type": "capture",
             "name": "Capturar Dados 64",
-            "x": 1537.9865051140218,
-            "y": 366.9660297981919,
+            "x": 1073.8122379758654,
+            "y": 404.612876890026,
             "properties": {
                 "capture_type": "Dados da Janela Ativa",
                 "step_test": {
@@ -1501,8 +1501,8 @@
             "id": 25,
             "type": "condition",
             "name": "Se erro no codigo do Grupo",
-            "x": 1707.3713938986434,
-            "y": 368.40338392621504,
+            "x": 1162.546670527918,
+            "y": 406.303837426275,
             "properties": {
                 "variable": "active_window.title",
                 "operator": "contém",
@@ -1524,8 +1524,8 @@
             "id": 26,
             "type": "confirm_dialog",
             "name": "Confirmar 67",
-            "x": 1895.8970530676347,
-            "y": 385.65822705980725,
+            "x": 1333.8928277107284,
+            "y": 413.3044180004306,
             "properties": {
                 "title": "Confirmação",
                 "message": "Erro no código do grupo, deseja continuar?",
@@ -1539,8 +1539,8 @@
             "id": 27,
             "type": "condition",
             "name": "Deseja continuar?",
-            "x": 2054.038507461428,
-            "y": 384.1415402750091,
+            "x": 1443.311063349895,
+            "y": 415.0811853215473,
             "properties": {
                 "variable": "confirm_result",
                 "operator": "igual",
@@ -1562,8 +1562,8 @@
             "id": 28,
             "type": "break_loop",
             "name": "Finaliza LOOP",
-            "x": 2234.200353799274,
-            "y": 426.1480230138673,
+            "x": 1572.5817444652716,
+            "y": 461.0818800229122,
             "properties": {
                 "step_test": {
                     "status": "success",
@@ -1646,8 +1646,8 @@
             "id": 30,
             "type": "condition",
             "name": "Janela de cadastro esta aberta?",
-            "x": 1110.6958673452477,
-            "y": 421.22345609773515,
+            "x": 749.6985417102136,
+            "y": 341.7701372026534,
             "properties": {
                 "variable": "active_window.title",
                 "operator": "igual",
@@ -1660,8 +1660,8 @@
             "id": 31,
             "type": "capture",
             "name": "Captura Janela Aberta",
-            "x": 940.2460370504908,
-            "y": 391.0734474379009,
+            "x": 659.863732427568,
+            "y": 341.64905558729095,
             "properties": {
                 "capture_type": "Dados da Janela Ativa",
                 "step_test": {
@@ -1822,8 +1822,8 @@
             "id": 32,
             "type": "delay",
             "name": "Delay 75",
-            "x": 545.1287052541402,
-            "y": 612.9987826220379,
+            "x": 400.7544204045296,
+            "y": 580.8007851871757,
             "properties": {
                 "seconds": 1.0,
                 "alias": "delay_32"
@@ -1833,8 +1833,8 @@
             "id": 34,
             "type": "click",
             "name": "Clique no campo Marca",
-            "x": 187.66238768395175,
-            "y": 824.4651733928503,
+            "x": 226.51332185227056,
+            "y": 762.6175259602232,
             "properties": {
                 "x": 621,
                 "y": 508,
@@ -1845,8 +1845,8 @@
             "id": 35,
             "type": "type_text",
             "name": "Digita o ID da Marca",
-            "x": 538.4926483141159,
-            "y": 823.0923216892855,
+            "x": 461.1821601525222,
+            "y": 762.3572048915073,
             "properties": {
                 "text": "{{loop_de_produtos.item.marca}}",
                 "alias": "digitar_35"
@@ -1856,8 +1856,8 @@
             "id": 36,
             "type": "python",
             "name": "Gera o id da Marca",
-            "x": 361.25878550680363,
-            "y": 822.1018735382534,
+            "x": 340.7412825941724,
+            "y": 762.5002786115881,
             "properties": {
                 "code": "idAtual = {{loop_de_produtos.item.marca}}\n\nif idAtual == \"1\":\n    return 2\nelif idAtual == \"2\":\n    return 3\nelif idAtual == \"3\":\n    return 1\nelse:\n    return idAtual\n\n",
                 "step_test": {
@@ -2069,8 +2069,8 @@
             "id": 37,
             "type": "key",
             "name": "Press Tecla TAB",
-            "x": 717.3068140526042,
-            "y": 822.7074493181856,
+            "x": 585.6658689031232,
+            "y": 763.1390961963766,
             "properties": {
                 "key": "tab",
                 "count": 1,
@@ -2081,8 +2081,8 @@
             "id": 38,
             "type": "capture",
             "name": "Capturar Dados 38",
-            "x": 895.356097634068,
-            "y": 821.8788406693357,
+            "x": 714.0942706356165,
+            "y": 762.2650028238602,
             "properties": {
                 "capture_type": "Dados da Janela Ativa",
                 "step_test": {
@@ -2294,8 +2294,8 @@
             "id": 39,
             "type": "condition",
             "name": "Condicional 39",
-            "x": 1071.4371909984916,
-            "y": 819.5771270305863,
+            "x": 838.0706616357705,
+            "y": 762.2127223364689,
             "properties": {
                 "variable": "active_window.title",
                 "operator": "contém",
@@ -2308,8 +2308,8 @@
             "id": 40,
             "type": "alert_dialog",
             "name": "Alerta 40",
-            "x": 938.8751903260593,
-            "y": 477.8548737240352,
+            "x": 660.0195977656532,
+            "y": 436.14205502443406,
             "properties": {
                 "title": "Alerta",
                 "message": "Tarefa completa com sucesso!",
@@ -2438,7 +2438,7 @@
             "is_auto_loop": false,
             "offset_source_override": null,
             "offset_target_override": null,
-            "mid_y_override": 161.51263230783624
+            "mid_y_override": 190.9913138898727
         },
         {
             "source_id": 30,
@@ -2515,7 +2515,7 @@
             "is_auto_loop": false,
             "offset_source_override": null,
             "offset_target_override": null,
-            "mid_y_override": -120.96528183785281
+            "mid_y_override": -77.285676271838
         },
         {
             "source_id": 17,
@@ -2546,9 +2546,9 @@
             "target_port": "in",
             "waypoints": [],
             "is_auto_loop": false,
-            "offset_source_override": null,
+            "offset_source_override": 75.74158689477896,
             "offset_target_override": null,
-            "mid_y_override": null
+            "mid_y_override": 83.3437055111787
         },
         {
             "source_id": 21,
@@ -2581,7 +2581,7 @@
             "is_auto_loop": false,
             "offset_source_override": null,
             "offset_target_override": null,
-            "mid_y_override": 72.65544827601232
+            "mid_y_override": 105.85517554495277
         },
         {
             "source_id": 24,
@@ -2645,7 +2645,7 @@
             "target_port": "in",
             "waypoints": [],
             "is_auto_loop": false,
-            "offset_source_override": 407.4216300486784,
+            "offset_source_override": 308.0472485218638,
             "offset_target_override": 51.54625981256666,
             "mid_y_override": -521.7615101971429
         },
@@ -2669,7 +2669,7 @@
             "is_auto_loop": false,
             "offset_source_override": null,
             "offset_target_override": null,
-            "mid_y_override": 522.4607068258177
+            "mid_y_override": 400.2655207989495
         },
         {
             "source_id": 34,
@@ -2796,7 +2796,7 @@
             }
         }
     },
-    "zoom_scale": 0.6793192010922974,
-    "scroll_x": 161.0,
-    "scroll_y": 62.0
+    "zoom_scale": 0.7166089954769239,
+    "scroll_x": 110.0,
+    "scroll_y": 4.0
 }

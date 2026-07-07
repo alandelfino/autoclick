@@ -3,6 +3,8 @@
     "hide_window": true,
     "auto_save": true,
     "countdown_seconds": 3,
-    "zoom_min": 0.01,
-    "zoom_max": 3.0
+    "zoom_min": 0.1,
+    "zoom_max": 3.0,
+    "connection_width": 2,
+    "connection_color": "#94a3b8"
 }

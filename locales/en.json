@@ -64,7 +64,10 @@
       "settings_zoom_min": "Minimum zoom:",
       "settings_zoom_max": "Maximum zoom:",
       "settings_error_zoom": "Zoom values must be valid numbers and minimum must be less than maximum.",
-      "settings_applied_log": "Settings applied: Hide={}, Seconds={}, AutoSave={}, ZoomMin={}, ZoomMax={}"
+      "settings_applied_log": "Settings applied: Hide={}, Seconds={}, AutoSave={}, ZoomMin={}, ZoomMax={}",
+      "settings_connection_width": "Connection line width:",
+      "settings_connection_color": "Connection line color:",
+      "settings_error_connection_width": "Connection width must be an integer between 1 and 10."
     },
     "canvas": {
       "tab_flow": "Flow",
@@ -78,6 +81,8 @@
       "clear": "Clear"
     },
     "properties": {
+      "loop_next_item": "Next Item",
+      "loop_done": "Done",
       "no_node_selected": "No node selected.\n\nClick a node in the canvas to view and edit its configuration.",
       "select_node_input": "Select a node to view its input payload.",
       "select_node_output": "Select a node to view its output payload.",

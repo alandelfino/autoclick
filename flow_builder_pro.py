@@ -1209,7 +1209,7 @@ class FlowBuilderProApp(
         
         # Center settings window
         win_w = 360
-        win_h = 380
+        win_h = 490
         scr_w = self.root.winfo_screenwidth()
         scr_h = self.root.winfo_screenheight()
         x = (scr_w - win_w) // 2
@@ -1270,6 +1270,41 @@ class FlowBuilderProApp(
         ent_zoom_max.set(f"{self.zoom_max_var.get():.1f}")
         ent_zoom_max.grid(row=1, column=1, padx=(10, 0), pady=(0, 5))
         
+        # --- Connection Style ---
+        conn_frame = tk.Frame(main_frame, bg="#f8fafc")
+        conn_frame.pack(fill="x", pady=(0, 15))
+        
+        lbl_conn_width = tk.Label(
+            conn_frame, text=t("menu.settings_connection_width"),
+            font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc"
+        )
+        lbl_conn_width.grid(row=0, column=0, sticky="w", pady=(0, 5))
+        
+        ent_conn_width = ttk.Spinbox(conn_frame, from_=1, to=10, width=8)
+        ent_conn_width.set(str(self.connection_width_var.get()))
+        ent_conn_width.grid(row=0, column=1, padx=(10, 0), pady=(0, 5))
+        
+        lbl_conn_color = tk.Label(
+            conn_frame, text=t("menu.settings_connection_color"),
+            font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc"
+        )
+        lbl_conn_color.grid(row=1, column=0, sticky="w", pady=(0, 5))
+        
+        temp_conn_color_var = tk.StringVar(value=self.connection_color_var.get())
+        
+        def choose_connection_color():
+            from tkinter import colorchooser
+            color_code = colorchooser.askcolor(initialcolor=temp_conn_color_var.get(), title="Cor da Conexão")[1]
+            if color_code:
+                temp_conn_color_var.set(color_code)
+                btn_color_indicator.config(bg=color_code)
+                
+        btn_color_indicator = tk.Button(
+            conn_frame, width=8, bg=temp_conn_color_var.get(), bd=1, relief="solid",
+            cursor="hand2", command=choose_connection_color
+        )
+        btn_color_indicator.grid(row=1, column=1, padx=(10, 0), pady=(0, 5))
+        
         btn_frame = ttk.Frame(main_frame)
         btn_frame.pack(fill="x", side="bottom")
         
@@ -1291,11 +1326,21 @@ class FlowBuilderProApp(
                 messagebox.showerror(t("messages.error"), t("menu.settings_error_zoom"))
                 return
                 
+            try:
+                c_width = int(ent_conn_width.get())
+                if not (1 <= c_width <= 10):
+                    raise ValueError()
+            except ValueError:
+                messagebox.showerror(t("messages.error"), t("menu.settings_error_connection_width"))
+                return
+                
             self.hide_window_var.set(temp_hide_var.get())
             self.auto_save_var.set(temp_auto_save_var.get())
             self.countdown_seconds_var.set(sec)
             self.zoom_min_var.set(z_min)
             self.zoom_max_var.set(z_max)
+            self.connection_width_var.set(c_width)
+            self.connection_color_var.set(temp_conn_color_var.get())
             
             # Save configuration to file
             from core.i18n_helper import save_app_settings
@@ -1304,8 +1349,14 @@ class FlowBuilderProApp(
                 'auto_save': temp_auto_save_var.get(),
                 'countdown_seconds': sec,
                 'zoom_min': z_min,
-                'zoom_max': z_max
+                'zoom_max': z_max,
+                'connection_width': c_width,
+                'connection_color': temp_conn_color_var.get()
             })
+            
+            # Update all active connection lines
+            for conn in self.connections:
+                conn.update_line()
             
             self.log_message(t("menu.settings_applied_log").format(temp_hide_var.get(), sec, temp_auto_save_var.get(), z_min, z_max))
             settings_win.destroy()

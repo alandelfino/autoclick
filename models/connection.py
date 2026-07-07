@@ -124,12 +124,13 @@ class VisualConnection:
         
         self.tag = f"conn_{self.source.id}_{self.source_port}_to_{self.target.id}_{self.target_port}"
         
-        # Color matches the output port color
-        line_color = self.source.ports[self.source_port]['color']
+        app = getattr(self.canvas, 'app', None)
+        line_color = app.connection_color_var.get() if (app and hasattr(app, 'connection_color_var')) else "#94a3b8"
+        line_width = app.connection_width_var.get() if (app and hasattr(app, 'connection_width_var')) else 3
         
         self.line_id = self.canvas.create_line(
             0, 0, 0, 0,
-            fill=line_color, width=3, smooth=True, arrow=tk.LAST,
+            fill=line_color, width=line_width, smooth=True, arrow=tk.LAST,
             arrowshape=(10, 12, 5), tags=(self.tag, "connection"),
             capstyle="round", joinstyle="round", splinesteps=36
         )
@@ -154,7 +155,11 @@ class VisualConnection:
         app = getattr(self.canvas, 'app', None)
         zoom_scale = getattr(app, 'zoom_scale', 1.0) if app else 1.0
         
-        base_width = 5 if getattr(self, 'is_hovered', False) else 3
+        # Load dynamic width and color from settings
+        config_width = app.connection_width_var.get() if (app and hasattr(app, 'connection_width_var')) else 3
+        line_color = app.connection_color_var.get() if (app and hasattr(app, 'connection_color_var')) else "#94a3b8"
+        
+        base_width = config_width + 2 if getattr(self, 'is_hovered', False) else config_width
         scaled_width = max(1, int(round(base_width * zoom_scale)))
         
         arrow_d1 = max(2.0, 10.0 * zoom_scale)
@@ -164,6 +169,7 @@ class VisualConnection:
         
         self.canvas.itemconfig(
             self.line_id,
+            fill=line_color,
             width=scaled_width,
             arrowshape=scaled_arrowshape
         )

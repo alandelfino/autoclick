@@ -9,6 +9,8 @@ import time
 import json
 import threading
 import tkinter as tk
+import os
+from PIL import Image, ImageTk
 
 from core.automation import click_mouse, simulate_keypress, get_active_window_info, simulate_type_text, get_active_window_details
 from core.payload import get_payload_value, resolve_value, truncate_payload_data
@@ -93,7 +95,64 @@ def get_rounded_rect_points(x, y, w, h, r=12, corners=(True, True, True, True), 
     return points
 
 
+def get_recolored_icon(icon_name, color_hex, size=32):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_dir = os.path.dirname(current_dir)
+    icon_path = os.path.join(project_dir, "assets", "icons", f"{icon_name}.png")
+    
+    if not os.path.exists(icon_path):
+        print(f"Icon path not found: {icon_path}")
+        return None
+        
+    try:
+        img = Image.open(icon_path).convert("RGBA")
+        
+        resample_filter = getattr(Image, 'LANCEZOS', getattr(Image, 'ANTIALIAS', 1))
+        img = img.resize((size, size), resample_filter)
+        
+        hex_clean = color_hex.lstrip('#')
+        r_target, g_target, b_target = tuple(int(hex_clean[i:i+2], 16) for i in (0, 2, 4))
+        
+        data = img.getdata()
+        new_data = []
+        for item in data:
+            if item[3] > 0:
+                new_data.append((r_target, g_target, b_target, item[3]))
+            else:
+                new_data.append(item)
+                
+        img.putdata(new_data)
+        return ImageTk.PhotoImage(img)
+    except Exception as e:
+        print(f"Error loading and recoloring icon {icon_name}: {e}")
+        return None
+
+
 class VisualNode:
+    ICON_MAPPING = {
+        'start': 'play',
+        'click': 'mouse-pointer',
+        'capture': 'camera',
+        'condition': 'question',
+        'key': 'keyboard-o',
+        'type_text': 'font',
+        'delay': 'clock-o',
+        'move_mouse': 'arrows',
+        'postgres': 'database',
+        'mysql': 'database',
+        'sqlite': 'database',
+        'api': 'globe',
+        'loop': 'refresh',
+        'break_loop': 'ban',
+        'continue_loop': 'arrow-right',
+        'storage_var': 'cube',
+        'confirm_dialog': 'comments-o',
+        'alert_dialog': 'exclamation-triangle',
+        'switch': 'random',
+        'js': 'code',
+        'python': 'terminal'
+    }
+
     def __init__(self, canvas, node_id, node_type, name, x, y, properties=None):
         self.canvas = canvas
         self.id = node_id
@@ -101,8 +160,8 @@ class VisualNode:
         self.name = name
         self.x = x
         self.y = y
-        self.width = 180
-        self.height = 100
+        self.width = 68
+        self.height = 68
         
         # Load default properties if none provided
         self.properties = properties if properties is not None else self.get_default_properties()
@@ -122,10 +181,10 @@ class VisualNode:
         
         if self.type == 'switch':
             cases = self.properties.get('cases', [])
-            self.height = max(100, 45 + 30 * (len(cases) + 1))
+            self.height = max(68, 30 * (len(cases) + 1))
         elif self.type == 'condition':
             else_ifs = self.properties.get('else_ifs', [])
-            self.height = max(100, 45 + 30 * (len(else_ifs) + 2))
+            self.height = max(68, 30 * (len(else_ifs) + 2))
         
         # Define visual themes per node type
         self.themes = {
@@ -254,66 +313,67 @@ class VisualNode:
             if not else_ifs:
                 # Conditional node has 2 outputs (True/False)
                 self.ports['out_true'] = {
-                    'rel_x': self.width, 'rel_y': 30,
+                    'rel_x': self.width, 'rel_y': 20,
                     'type': 'output', 'color': '#22c55e', # Green
                     'label': t('properties.out_true'), 'tag': f"port_out_true_{self.id}"
                 }
                 self.ports['out_false'] = {
-                    'rel_x': self.width, 'rel_y': 70,
+                    'rel_x': self.width, 'rel_y': 48,
                     'type': 'output', 'color': '#ef4444', # Red
                     'label': t('properties.out_false'), 'tag': f"port_out_false_{self.id}"
                 }
             else:
+                num_ports = len(else_ifs) + 2
                 self.ports['out_true'] = {
-                    'rel_x': self.width, 'rel_y': 35,
-                    'type': 'output', 'color': '#22c55e', # Green
+                    'rel_x': self.width, 'rel_y': 20,
+                    'type': 'output', 'color': '#22c55e',
                     'label': 'If', 'tag': f"port_out_true_{self.id}"
                 }
                 for i, else_if in enumerate(else_ifs):
-                    rel_y = 35 + 30 * (i + 1)
+                    rel_y = 20 + (self.height - 40) * (i + 1) // (num_ports - 1)
                     label_text = else_if.get('title', '').strip() or f'Else If {i+1}'
                     self.ports[f'out_else_if_{i}'] = {
                         'rel_x': self.width, 'rel_y': rel_y,
-                        'type': 'output', 'color': '#0ea5e9', # Sky blue
+                        'type': 'output', 'color': '#0ea5e9',
                         'label': label_text, 'tag': f"port_out_else_if_{i}_{self.id}"
                     }
-                rel_y_else = 35 + 30 * (len(else_ifs) + 1)
                 self.ports['out_false'] = {
-                    'rel_x': self.width, 'rel_y': rel_y_else,
-                    'type': 'output', 'color': '#ef4444', # Red
+                    'rel_x': self.width, 'rel_y': self.height - 20,
+                    'type': 'output', 'color': '#ef4444',
                     'label': 'Else', 'tag': f"port_out_false_{self.id}"
                 }
         elif self.type == 'start':
-            # Start node has 1 output on the right center (colored Indigo)
+            # Start node has 1 output on the right center
             self.ports['out'] = {
                 'rel_x': self.width, 'rel_y': self.height // 2,
-                'type': 'output', 'color': '#6366f1', # Indigo
+                'type': 'output', 'color': '#6366f1',
                 'tag': f"port_out_{self.id}"
             }
         elif self.type == 'loop':
             self.ports['out_item'] = {
-                'rel_x': self.width, 'rel_y': 30,
-                'type': 'output', 'color': '#2563eb', # Blue
-                'label': 'Next Item', 'tag': f"port_out_item_{self.id}"
+                'rel_x': self.width, 'rel_y': 20,
+                'type': 'output', 'color': '#2563eb',
+                'label': t('properties.loop_next_item'), 'tag': f"port_out_item_{self.id}"
             }
             self.ports['out_done'] = {
-                'rel_x': self.width, 'rel_y': 70,
-                'type': 'output', 'color': '#64748b', # Slate
-                'label': 'Done', 'tag': f"port_out_done_{self.id}"
+                'rel_x': self.width, 'rel_y': 48,
+                'type': 'output', 'color': '#64748b',
+                'label': t('properties.loop_done'), 'tag': f"port_out_done_{self.id}"
             }
         elif self.type in ['break_loop', 'continue_loop']:
             # No output ports
             pass
         elif self.type == 'switch':
             cases = self.properties.get('cases', [])
+            num_ports = len(cases) + 1
             for i, case in enumerate(cases):
-                rel_y = 35 + 30 * i
+                rel_y = 20 + (self.height - 40) * i // (num_ports - 1) if num_ports > 1 else self.height // 2
                 self.ports[f'out_case_{i}'] = {
                     'rel_x': self.width, 'rel_y': rel_y,
                     'type': 'output', 'color': '#3b82f6',
                     'label': str(case), 'tag': f"port_out_case_{i}_{self.id}"
                 }
-            rel_y_default = 35 + 30 * len(cases)
+            rel_y_default = self.height - 20 if num_ports > 1 else self.height // 2
             self.ports['out_default'] = {
                 'rel_x': self.width, 'rel_y': rel_y_default,
                 'type': 'output', 'color': '#64748b',
@@ -323,58 +383,53 @@ class VisualNode:
             # Standard nodes have 1 output on the right center
             self.ports['out'] = {
                 'rel_x': self.width, 'rel_y': self.height // 2,
-                'type': 'output', 'color': '#3b82f6', # Blue
+                'type': 'output', 'color': '#3b82f6',
                 'tag': f"port_out_{self.id}"
             }
 
     def draw(self):
-        # 1. Main body card and 2. Header Bar
-        if self.type == 'start':
-            r = 16
-            points = get_rounded_rect_points(self.x, self.y, self.width, self.height, r, corners=(True, False, False, True))
-            self.body_ui = self.canvas.create_polygon(
-                points, fill="#ffffff", outline="#e2e8f0", width=2, tags=(self.tag, "node_body")
-            )
-            header_points = get_rounded_rect_points(self.x, self.y, self.width, 26, r, corners=(True, False, False, False))
-            self.header_ui = self.canvas.create_polygon(
-                header_points, fill=self.theme['header'], outline=self.theme['header'], tags=self.tag
-            )
-        elif self.type == 'break_loop':
-            r = 16
-            points = get_rounded_rect_points(self.x, self.y, self.width, self.height, r, corners=(False, True, True, False))
-            self.body_ui = self.canvas.create_polygon(
-                points, fill="#ffffff", outline="#e2e8f0", width=2, tags=(self.tag, "node_body")
-            )
-            header_points = get_rounded_rect_points(self.x, self.y, self.width, 26, r, corners=(False, True, False, False))
-            self.header_ui = self.canvas.create_polygon(
-                header_points, fill=self.theme['header'], outline=self.theme['header'], tags=self.tag
+        # 1. Main body card (rounded square card)
+        r = 12
+        points = get_rounded_rect_points(self.x, self.y, self.width, self.height, r, corners=(True, True, True, True))
+        self.body_ui = self.canvas.create_polygon(
+            points, fill="#ffffff", outline="#e2e8f0", width=2, tags=(self.tag, "node_body")
+        )
+        
+        # Placeholder header references to prevent errors in other scripts
+        self.header_ui = None
+        self.header_text_ui = None
+        
+        # 2. Representative Icon (Image)
+        icon_name = self.ICON_MAPPING.get(self.type, 'question')
+        icon_color = self.theme.get('header', '#64748b')
+        
+        app = getattr(self.canvas, 'app', None)
+        zoom_scale = getattr(app, 'zoom_scale', 1.0) if app else 1.0
+        icon_sz = max(8, int(round(32 * zoom_scale)))
+        
+        self.icon_photo = get_recolored_icon(icon_name, icon_color, icon_sz)
+        
+        if self.icon_photo:
+            self.icon_ui = self.canvas.create_image(
+                self.x + self.width / 2, self.y + self.height / 2,
+                image=self.icon_photo, tags=self.tag
             )
         else:
-            self.body_ui = self.canvas.create_rectangle(
-                self.x, self.y, self.x + self.width, self.y + self.height,
-                fill="#ffffff", outline="#e2e8f0", width=2, tags=(self.tag, "node_body")
-            )
-            self.header_ui = self.canvas.create_rectangle(
-                self.x, self.y, self.x + self.width, self.y + 26,
-                fill=self.theme['header'], outline=self.theme['header'], tags=self.tag
+            self.icon_ui = self.canvas.create_text(
+                self.x + self.width / 2, self.y + self.height / 2,
+                text="?", fill=icon_color, font=("Segoe UI", 24, "bold"), tags=self.tag
             )
         
-        # 3. Header Text (Type description)
-        self.header_text_ui = self.canvas.create_text(
-            self.x + 10, self.y + 13, text=self.theme['title'].upper(), anchor="w",
-            fill="#ffffff", font=("Segoe UI", 8, "bold"), tags=self.tag
-        )
-        
-        # 4. Body Name Text (Editable by user)
+        # 3. Body Name Text (Editable by user) - placed outside node (below it)
         self.name_text_ui = self.canvas.create_text(
-            self.x + 10, self.y + 50, text=self.name, anchor="w",
-            fill="#1e293b", font=("Segoe UI", 10, "bold"), tags=self.tag, width=self.width - 20
+            self.x + self.width / 2, self.y + self.height + 12, text=self.name, anchor="n",
+            fill="#1e293b", font=("Segoe UI", 9), tags=self.tag, width=120, justify="center"
         )
         
-        # 5. Display brief summary of properties
-        self.update_summary_text()
+        # Placeholder summary text reference
+        self.summary_text_ui = None
         
-        # 6. Draw ports (circles and optional labels)
+        # 4. Draw ports (circles and optional labels)
         for port_name, p in self.ports.items():
             px = self.x + p['rel_x']
             py = self.y + p['rel_y']
@@ -382,91 +437,42 @@ class VisualNode:
             # Draw port circle
             p['ui_circle'] = self.canvas.create_oval(
                 px - 6, py - 6, px + 6, py + 6,
-                fill=p['color'], outline="#ffffff", width=2,
+                fill="#ffffff", outline="#cbd5e1", width=2,
                 tags=(p['tag'], "port", f"node_port_{self.id}_{port_name}")
             )
             
             # Draw text label if conditional
             if 'label' in p:
-                text_anchor = "e" if p['rel_x'] == self.width else "w"
-                tx_offset = -12 if p['rel_x'] == self.width else 12
+                is_right_side = (p['rel_x'] >= self.width / 2)
+                text_anchor = "w" if is_right_side else "e"
+                tx_offset = 10 if is_right_side else -10
                 p['ui_label'] = self.canvas.create_text(
                     px + tx_offset, py, text=p['label'], anchor=text_anchor,
                     fill="#64748b", font=("Segoe UI", 8, "bold"), tags=self.tag
                 )
 
     def update_summary_text(self):
-        # Remove old summary text if exists
-        if hasattr(self, 'summary_text_ui'):
-            self.canvas.delete(self.summary_text_ui)
-            
-        summary = ""
-        if self.type == 'click':
-            summary = f"X: {self.properties.get('x', 0)}, Y: {self.properties.get('y', 0)}"
-        elif self.type == 'capture':
-            summary = f"Tipo: {self.properties.get('capture_type', '')}"
-        elif self.type == 'condition':
-            summary = f"{self.properties.get('variable', '')[:10]}... {self.properties.get('operator', '')}"
-        elif self.type == 'key':
-            summary = f"Tecla: {self.properties.get('key', '')} ({self.properties.get('count', 1)}x)"
-        elif self.type == 'type_text':
-            summary = f"Texto: {self.properties.get('text', '')[:15]}..."
-        elif self.type == 'delay':
-            summary = f"Espera: {self.properties.get('seconds', 1.0)}s"
-        elif self.type == 'move_mouse':
-            summary = f"Para X: {self.properties.get('x', 0)}, Y: {self.properties.get('y', 0)}"
-        elif self.type == 'start':
-            mode = self.properties.get('loop_mode', 'Executar 1 vez')
-            if mode == 'Executar N vezes':
-                summary = f"Loop: {self.properties.get('loop_count', 5)} vezes"
-            elif mode == 'Loop Infinito':
-                summary = "Loop Infinito"
-            else:
-                summary = "Executar 1 vez"
-        elif self.type == 'sqlite':
-            summary = f"SQLite: {self.properties.get('connection_name', '')}"
-        elif self.type == 'postgres':
-            summary = f"Postgres: {self.properties.get('connection_name', '')}"
-        elif self.type == 'mysql':
-            summary = f"MySQL: {self.properties.get('connection_name', '')}"
-        elif self.type == 'api':
-            summary = f"API: {self.properties.get('method', 'GET')} {self.properties.get('path', '')}"
-        elif self.type == 'loop':
-            summary = f"Loop: {self.properties.get('array_data', '[]')[:15]}..."
-        elif self.type == 'break_loop':
-            summary = t("toolbox.nodes.break_loop")
-        elif self.type == 'continue_loop':
-            summary = t("toolbox.nodes.continue_loop")
-        elif self.type == 'storage_var':
-            alias = self.properties.get('alias', f"node_{self.id}")
-            summary = f"Var: {alias} = {self.properties.get('variable_value', '')}"
-        elif self.type == 'confirm_dialog':
-            summary = f"Título: {self.properties.get('title', '')}"
-        elif self.type == 'alert_dialog':
-            summary = f"Título: {self.properties.get('title', '')}"
-        elif self.type == 'switch':
-            summary = f"Switch: {self.properties.get('variable', '')[:15]}..."
-            
-        self.summary_text_ui = self.canvas.create_text(
-            self.x + 10, self.y + 75, text=summary, anchor="w",
-            fill="#64748b", font=("Segoe UI", 8, "italic"), tags=self.tag, width=self.width - 20
-        )
+        pass
 
     def rename(self, new_name):
         self.name = new_name
         self.canvas.itemconfig(self.name_text_ui, text=new_name)
 
     def scale_fonts(self, scale):
-        header_sz = max(int(8 * scale), 1)
-        name_sz = max(int(10 * scale), 1)
-        summary_sz = max(int(8 * scale), 1)
+        name_sz = max(int(9 * scale), 1)
         port_sz = max(int(8 * scale), 1)
+        icon_sz = max(8, int(round(32 * scale)))
         
-        self.canvas.itemconfig(self.header_text_ui, font=("Segoe UI", header_sz, "bold"))
-        self.canvas.itemconfig(self.name_text_ui, font=("Segoe UI", name_sz, "bold"), width=max(int(self.width - 8 * scale), 5))
+        icon_name = self.ICON_MAPPING.get(self.type, 'question')
+        icon_color = self.theme.get('header', '#64748b')
         
-        if hasattr(self, 'summary_text_ui') and self.summary_text_ui:
-            self.canvas.itemconfig(self.summary_text_ui, font=("Segoe UI", summary_sz, "italic"), width=max(int(self.width - 8 * scale), 5))
+        self.icon_photo = get_recolored_icon(icon_name, icon_color, icon_sz)
+        
+        if self.icon_photo and hasattr(self, 'icon_ui') and self.icon_ui:
+            self.canvas.itemconfig(self.icon_ui, image=self.icon_photo)
+            
+        if hasattr(self, 'name_text_ui') and self.name_text_ui:
+            self.canvas.itemconfig(self.name_text_ui, font=("Segoe UI", name_sz), width=max(int(120 * scale), 5))
             
         for p in self.ports.values():
             if 'ui_label' in p and p['ui_label']:

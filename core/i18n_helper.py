@@ -40,7 +40,9 @@ def load_app_settings():
         'countdown_seconds': 3,
         'auto_save': False,
         'zoom_min': 0.2,
-        'zoom_max': 3.0
+        'zoom_max': 3.0,
+        'connection_width': 3,
+        'connection_color': '#94a3b8'
     }
     
     # 1. Try to load local config first

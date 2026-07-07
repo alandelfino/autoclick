@@ -157,6 +157,8 @@ class LeftPanelMixin:
         self.auto_save_var = tk.BooleanVar(value=settings.get('auto_save', False))
         self.zoom_min_var = tk.DoubleVar(value=settings.get('zoom_min', 0.2))
         self.zoom_max_var = tk.DoubleVar(value=settings.get('zoom_max', 3.0))
+        self.connection_width_var = tk.IntVar(value=settings.get('connection_width', 3))
+        self.connection_color_var = tk.StringVar(value=settings.get('connection_color', '#94a3b8'))
         
         # 2. DEBUG LOG WINDOW (at the bottom)
         lower_sidebar_frame = tk.Frame(self.left_panel, bg="#0f172a")
