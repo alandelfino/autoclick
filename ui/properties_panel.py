@@ -12,7 +12,7 @@ import re
 import threading
 import json
 
-from core.payload import get_payload_value, infer_payload_schema, resolve_value
+from core.payload import get_payload_value, infer_payload_schema, resolve_value, truncate_payload_data
 from core.i18n_helper import t
 
 
@@ -236,35 +236,60 @@ class PropertiesPanelMixin:
         return payload if has_payload else None
 
     def get_node_input_payload(self, node, input_schema=None):
-        if input_schema is None:
-            input_schema = self.get_node_input_schema(node)
-
-        real_input = None
-        if node.id in self.execution_history:
-            real_input = self.execution_history[node.id].get("input")
-
-        if not real_input:
-            real_input = self.get_predecessor_test_payload(node.id)
-
-        if not real_input and self.last_run_payload:
-            real_input = copy.deepcopy(self.last_run_payload)
-
-        if real_input:
-            return self.get_resolved_payload(input_schema, real_input), True
-
-        mock_payload = self.get_mock_payload()
-        if input_schema:
-            return self.get_resolved_payload(input_schema, mock_payload), False
-        return {}, False
+        ordered_preds = self.get_ordered_predecessors(node.id)
+        
+        input_data = {}
+        has_real_input = False
+        
+        for pred_id in ordered_preds:
+            pred_node = self.nodes.get(pred_id)
+            if not pred_node:
+                continue
+                
+            pred_output = None
+            if pred_id in self.execution_history:
+                pred_output = self.execution_history[pred_id].get("output")
+            if not pred_output:
+                step_test = pred_node.properties.get('step_test')
+                if isinstance(step_test, dict) and step_test.get('status') == 'success':
+                    pred_output = step_test.get('output_payload')
+                    
+            pred_alias = pred_node.properties.get('alias', f"node_{pred_id}")
+            
+            if pred_node.type == 'start':
+                if pred_output and pred_alias in pred_output:
+                    input_data[pred_alias] = copy.deepcopy(pred_output[pred_alias])
+                    has_real_input = True
+                else:
+                    input_data[pred_alias] = {
+                        'active_window': {
+                            'title': 'Documento - Google Chrome',
+                            'width': 1920,
+                            'height': 1080,
+                            'hwnd': 196804
+                        },
+                        'flow': {
+                            'index': 1,
+                            'total_execution': 1
+                        }
+                    }
+            else:
+                if pred_output and pred_alias in pred_output:
+                    input_data[pred_alias] = copy.deepcopy(pred_output[pred_alias])
+                    has_real_input = True
+                else:
+                    pred_schema = self.get_node_output_schema(pred_node, visited={node.id})
+                    if pred_alias in pred_schema:
+                        input_data[pred_alias] = copy.deepcopy(pred_schema[pred_alias])
+                        
+        return input_data, has_real_input
 
     def save_step_test_result(self, node, input_payload, output_payload, next_port):
         step_test = {
             'status': 'success',
             'tested_at': datetime.datetime.now().isoformat(timespec='seconds'),
             'properties_signature': self.get_node_test_signature(node),
-            'input_payload': copy.deepcopy(input_payload),
-            'output_payload': copy.deepcopy(output_payload),
-            'output_schema': infer_payload_schema(output_payload),
+            'output_payload': truncate_payload_data(output_payload),
             'next_port': next_port
         }
         node.properties['step_test'] = step_test
@@ -274,6 +299,76 @@ class PropertiesPanelMixin:
             "output": copy.deepcopy(output_payload)
         }
         self.last_run_payload = copy.deepcopy(output_payload)
+        
+        self.propagate_payload_changes(node.id)
+
+    def propagate_payload_changes(self, start_node_id):
+        """Recursively updates step_test outputs for all successor nodes downstream of start_node_id."""
+        visited = set()
+        queue = [start_node_id]
+        successors_ordered = []
+        
+        while queue:
+            curr_id = queue.pop(0)
+            if curr_id in visited:
+                continue
+            visited.add(curr_id)
+            if curr_id != start_node_id:
+                successors_ordered.append(curr_id)
+                
+            # Find direct successors
+            for conn in self.connections:
+                if conn.source.id == curr_id:
+                    to_id = conn.target.id
+                    if to_id not in visited:
+                        queue.append(to_id)
+                        
+        # Now, process successors in order
+        for node_id in successors_ordered:
+            node = self.nodes.get(node_id)
+            if not node:
+                continue
+                
+            step_test = node.properties.get('step_test')
+            if not isinstance(step_test, dict):
+                continue
+                
+            # 1. Rebuild new input payload from predecessors
+            new_input_payload = {}
+            for pred_id in self.get_ordered_predecessors(node):
+                pred_node = self.nodes.get(pred_id)
+                if pred_node and 'step_test' in pred_node.properties:
+                    pred_step = pred_node.properties['step_test']
+                    if isinstance(pred_step, dict) and 'output_payload' in pred_step:
+                        pred_out = pred_step['output_payload']
+                        for k, v in pred_out.items():
+                            new_input_payload[k] = copy.deepcopy(v)
+                            
+            # 2. Update output payload based on node type
+            alias = node.properties.get('alias', f"node_{node.id}")
+            if node.type == 'storage_var':
+                var_val_raw = node.properties.get('variable_value', '')
+                resolved_val = resolve_value(var_val_raw, new_input_payload)
+                step_test['output_payload'] = {alias: resolved_val}
+            elif node.type in ['condition', 'switch']:
+                try:
+                    temp_payload = copy.deepcopy(new_input_payload)
+                    node.execute(temp_payload, lambda msg: None)
+                    if alias in temp_payload:
+                        step_test['output_payload'] = {alias: temp_payload[alias]}
+                except Exception:
+                    pass
+            else:
+                # Ensure the alias key matches in the output_payload
+                old_output = step_test.get('output_payload', {})
+                if isinstance(old_output, dict) and len(old_output) == 1:
+                    old_k = list(old_output.keys())[0]
+                    if old_k != alias:
+                        step_test['output_payload'] = {alias: old_output[old_k]}
+                        
+            # Update temp_properties if this is the currently selected node
+            if hasattr(self, 'selected_node') and self.selected_node and self.selected_node.id == node.id:
+                self.temp_properties = copy.deepcopy(node.properties)
 
     def run_step_test_for_node(self, node, button=None):
         if not node:
@@ -308,7 +403,7 @@ class PropertiesPanelMixin:
 
         if button:
             try:
-                button.config(state="disabled", text=t("properties.step_test_running"))
+                button.config(state="disabled", text="Running...")
             except Exception:
                 pass
 
@@ -321,15 +416,23 @@ class PropertiesPanelMixin:
 
                 def update_ui():
                     self.save_step_test_result(node, input_payload, output_payload, next_port)
+                    
+                    alias = node.properties.get('alias', f"node_{node.id}")
+                    output_data = {}
+                    if output_payload:
+                        if alias in output_payload:
+                            output_data = {alias: output_payload[alias]}
+                    
                     self.build_payload_tree(
                         self.output_payload_container,
-                        output_payload,
-                        t("properties.no_output_params"),
-                        is_mock=False
+                        output_data,
+                        "",
+                        is_mock=False,
+                        open_nodes=True
                     )
                     self.log_message(t("properties.step_test_success_log").format(node.name, next_port))
                     if button:
-                        button.config(state="normal", text=t("properties.step_test"))
+                        button.config(state="normal", text="Execute Step")
                     if getattr(self, 'current_filepath', None):
                         self.trigger_auto_save()
 
@@ -343,14 +446,13 @@ class PropertiesPanelMixin:
                     node.properties['step_test'].update({
                         'status': 'error',
                         'tested_at': datetime.datetime.now().isoformat(timespec='seconds'),
-                        'input_payload': copy.deepcopy(input_payload),
                         'error': err_msg
                     })
                     self.temp_properties = copy.deepcopy(node.properties)
                     self.log_message(t("properties.step_test_error_log").format(node.name, err_msg))
                     messagebox.showerror(t("messages.error"), t("properties.step_test_error_msg").format(err_msg))
                     if button:
-                        button.config(state="normal", text=t("properties.step_test"))
+                        button.config(state="normal", text="Execute Step")
 
                 self.root.after(0, update_error)
 
@@ -400,7 +502,6 @@ class PropertiesPanelMixin:
             
         # Ensure temp variables are initialized defensively
         if not hasattr(self, 'temp_properties') or self.temp_properties is None:
-            import copy
             self.temp_properties = copy.deepcopy(node.properties)
         if not hasattr(self, 'temp_node_name') or self.temp_node_name is None:
             self.temp_node_name = node.name
@@ -421,24 +522,28 @@ class PropertiesPanelMixin:
         ):
             real_output = step_test.get('output_payload')
         
-        output_schema = self.get_node_output_schema(node)
-        output_data = self.get_resolved_payload(output_schema, real_output) if (real_output or output_schema) else {}
-        
-        is_mock_input = not has_real_input
-        is_mock_output = (real_output is None or not real_output)
-        
+        alias = node.properties.get('alias', f"node_{node.id}")
+        output_data = {}
+        if real_output:
+            if alias in real_output:
+                output_data = {alias: real_output[alias]}
+
+        # Build trees
         self.build_payload_tree(
             self.input_payload_container, 
             input_data, 
             t("properties.no_input_params"), 
-            is_mock=is_mock_input if input_data else False
+            is_mock=not has_real_input if input_data else False,
+            open_nodes=False
         )
         self.build_payload_tree(
             self.output_payload_container, 
             output_data, 
-            t("properties.no_output_params"), 
-            is_mock=is_mock_output if output_data else False
+            "",  # Completely blank if empty (no mockup/simulated)
+            is_mock=False,
+            open_nodes=True
         )
+        
         lbl_name = tk.Label(self.properties_container, text=t("properties.node_name"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
         lbl_name.pack(anchor="w", pady=(0, 2))
         
@@ -452,8 +557,23 @@ class PropertiesPanelMixin:
             
         ent_name.bind("<KeyRelease>", update_name)
 
+        # Alias Key Configuration Field
+        lbl_alias = tk.Label(self.properties_container, text="Alias (Payload Key):", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+        lbl_alias.pack(anchor="w", pady=(0, 2))
+        
+        ent_alias = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+        ent_alias.property_key = 'alias'
+        ent_alias.insert(0, self.temp_properties.get('alias', ''))
+        ent_alias.pack(fill="x", pady=(0, 15))
+        
+        def update_alias(event):
+            val = ent_alias.get()
+            self.temp_properties['alias'] = val
+            
+        ent_alias.bind("<KeyRelease>", update_alias)
+
         btn_step_test = tk.Button(
-            self.properties_container, text=t("properties.step_test"), font=("Segoe UI", 9, "bold"),
+            self.properties_container, text="Execute Step", font=("Segoe UI", 9, "bold"),
             bg="#16a34a", fg="#ffffff", activebackground="#15803d", activeforeground="#ffffff",
             bd=0, pady=8, cursor="hand2"
         )
@@ -562,7 +682,6 @@ class PropertiesPanelMixin:
             lbl_var_hint.pack(anchor="w", pady=(0, 2))
             
             ent_var = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
-            ent_var.is_payload_var_field = True
             ent_var.insert(0, self.temp_properties.get('variable', ''))
             ent_var.pack(fill="x", pady=(0, 10))
             ent_var.property_key = 'variable'
@@ -604,7 +723,10 @@ class PropertiesPanelMixin:
                 if not var_name:
                     preview_lbl.config(text="[Enter variable name]")
                     return
-                val = get_payload_value(input_data, var_name)
+                if '{' in var_name or '}' in var_name:
+                    val = resolve_value(var_name, input_data)
+                else:
+                    val = get_payload_value(input_data, var_name)
                 if val is not None:
                     formatted_val = self.format_preview_value(val)
                     preview_lbl.config(text=f"{formatted_val} ({type(val).__name__})")
@@ -707,7 +829,6 @@ class PropertiesPanelMixin:
                     lbl_v = tk.Label(card, text=t("properties.payload_var"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#ffffff")
                     lbl_v.pack(anchor="w", pady=(0, 1))
                     ent_v = ttk.Entry(card, font=("Segoe UI", 9))
-                    ent_v.is_payload_var_field = True
                     ent_v.insert(0, cond.get('variable', ''))
                     ent_v.pack(fill="x", pady=(0, 6))
                     
@@ -1220,61 +1341,7 @@ class PropertiesPanelMixin:
             if conn_name:
                 autocomplete.schema = self.saved_connections.get(conn_name, {}).get('schema', {})
             
-            def run_capture_db():
-                save_db_fields()
-                node.properties = copy.deepcopy(self.temp_properties)
-                conn_name = cb_conn.get()
-                query = sql_text.get("1.0", "end-1c")
-                if not conn_name:
-                    messagebox.showwarning(t("messages.warning"), t("connection_dialogs.select_connection"))
-                    return
-                
-                btn_run_db.config(state="disabled", text="⌛ Running...")
-                self.log_message(f">> Running test query for node '{node.name}'...")
-                
-                def thread_target():
-                    try:
-                        conn_config = self.saved_connections.get(conn_name)
-                        resolved_sql = resolve_value(query, input_data)
-                        result = self.run_db_query(db_type, conn_config, resolved_sql)
-                        
-                        self.temp_properties['sample_payload'] = result
-                        node.properties['sample_payload'] = result
-                        self.log_message(f">> Test executed successfully for node '{node.name}'.")
-                        
-                        def update_ui():
-                            output_payload = copy.deepcopy(input_data)
-                            var_name = self.get_var_name(node.name)
-                            output_payload[var_name] = result
-                            output_payload['last_db_result'] = result
-                            self.save_step_test_result(node, input_data, output_payload, 'out')
-                            self.build_payload_tree(
-                                self.output_payload_container,
-                                output_payload,
-                                t("properties.no_output_params"),
-                                is_mock=False
-                            )
-                            btn_run_db.config(state="normal", text=t("properties.run_test"))
-                            if getattr(self, 'current_filepath', None):
-                                self.trigger_auto_save()
-                        self.root.after(0, update_ui)
-                        
-                    except Exception as e:
-                        err_msg = str(e)
-                        self.log_message(f">> Error in node '{node.name}' test: {err_msg}")
-                        def err_ui():
-                            messagebox.showerror(t("messages.error"), t("messages.query_error").format(err_msg))
-                            btn_run_db.config(state="normal", text=t("properties.run_test"))
-                        self.root.after(0, err_ui)
-                        
-                threading.Thread(target=thread_target, daemon=True).start()
-                
-            btn_run_db = tk.Button(
-                self.properties_container, text=t("properties.run_test"), font=("Segoe UI", 9, "bold"),
-                bg="#22c55e", fg="#ffffff", activebackground="#16a34a", activeforeground="#ffffff",
-                bd=0, pady=8, cursor="hand2", command=run_capture_db
-            )
-            btn_run_db.pack(fill="x", pady=5)
+
  
         elif node.type == 'api':
             lbl_conn = tk.Label(self.properties_container, text=t("properties.api_conn"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
@@ -1484,14 +1551,6 @@ class PropertiesPanelMixin:
             lbl_info.pack(anchor="w", pady=(10, 10))
             
         elif node.type == 'storage_var':
-            lbl_var_name = tk.Label(self.properties_container, text=t("properties.storage_var_name"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
-            lbl_var_name.pack(anchor="w", pady=(0, 2))
-            
-            ent_var_name = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
-            ent_var_name.insert(0, self.temp_properties.get('variable_name', 'var_1'))
-            ent_var_name.pack(fill="x", pady=(0, 10))
-            ent_var_name.property_key = 'variable_name'
-            
             lbl_var_val = tk.Label(self.properties_container, text=t("properties.storage_var_value"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_var_val.pack(anchor="w", pady=(0, 2))
             
@@ -1504,10 +1563,8 @@ class PropertiesPanelMixin:
             ent_var_val.property_key = 'variable_value'
             
             def save_storage_var(event=None):
-                self.temp_properties['variable_name'] = ent_var_name.get().strip()
                 self.temp_properties['variable_value'] = ent_var_val.get()
                 
-            ent_var_name.bind("<KeyRelease>", save_storage_var)
             ent_var_val.bind("<KeyRelease>", save_storage_var)
 
         elif node.type == 'confirm_dialog':
@@ -1689,20 +1746,20 @@ class PropertiesPanelMixin:
             }
         }
 
-    def populate_tree(self, tree, parent_iid, key, val, path=""):
+    def populate_tree(self, tree, parent_iid, key, val, path="", open_nodes=True):
         child_path = f"{path}.{key}" if path else key
         type_str = type(val).__name__
         
         if isinstance(val, dict):
             node_id = tree.insert(parent_iid, "end", iid=child_path, text=key, values=("", f"dict ({len(val)})"))
-            tree.item(node_id, open=True)
+            tree.item(node_id, open=open_nodes)
             for k, v in val.items():
-                self.populate_tree(tree, node_id, k, v, child_path)
+                self.populate_tree(tree, node_id, k, v, child_path, open_nodes=open_nodes)
         elif isinstance(val, list):
             node_id = tree.insert(parent_iid, "end", iid=child_path, text=key, values=("", f"list ({len(val)})"))
-            tree.item(node_id, open=True)
+            tree.item(node_id, open=open_nodes)
             for idx, v in enumerate(val):
-                self.populate_tree(tree, node_id, str(idx), v, child_path)
+                self.populate_tree(tree, node_id, str(idx), v, child_path, open_nodes=open_nodes)
         else:
             val_str = str(val)
             if type_str == "str" and len(val_str) > 80:
@@ -1740,17 +1797,18 @@ class PropertiesPanelMixin:
             except Exception:
                 self.active_text_widget = None
 
-    def build_payload_tree(self, container, data, title_msg, is_mock=False):
+    def build_payload_tree(self, container, data, title_msg, is_mock=False, open_nodes=True):
         for widget in container.winfo_children():
             widget.destroy()
             
         if not data:
-            lbl = tk.Label(
-                container, 
-                text=title_msg, 
-                font=("Segoe UI", 9, "italic"), fg="#64748b", bg="#f8fafc", justify="center", wraplength=350
-            )
-            lbl.pack(pady=40)
+            if title_msg:
+                lbl = tk.Label(
+                    container, 
+                    text=title_msg, 
+                    font=("Segoe UI", 9, "italic"), fg="#64748b", bg="#f8fafc", justify="center", wraplength=350
+                )
+                lbl.pack(pady=40)
             return
 
         if is_mock:
@@ -1760,7 +1818,7 @@ class PropertiesPanelMixin:
                 font=("Segoe UI", 8, "bold"), fg="#b45309", bg="#fef3c7", pady=4, padx=8, bd=1, relief="solid"
             )
             warn_lbl.pack(fill="x", pady=(0, 5))
-        else:
+        elif title_msg: # Only show this label if title_msg is set, indicating input payload
             info_lbl = tk.Label(
                 container,
                 text="✅ Dados reais da última execução",
@@ -1796,7 +1854,7 @@ class PropertiesPanelMixin:
         hsb.config(command=tree.xview)
         
         for k, v in data.items():
-            self.populate_tree(tree, "", k, v, "")
+            self.populate_tree(tree, "", k, v, "", open_nodes=open_nodes)
             
         tree.bind("<Double-1>", lambda e: self.on_tree_double_click(e, tree))
 
@@ -1815,6 +1873,44 @@ class PropertiesPanelMixin:
                     queue.append(parent)
         return visited
 
+    def get_ordered_predecessors(self, node_id):
+        preds = self.get_predecessors(node_id)
+        if not preds:
+            return []
+            
+        start_node = None
+        for n in self.nodes.values():
+            if n.type == 'start':
+                start_node = n
+                break
+        if not start_node:
+            return sorted(list(preds))
+            
+        ordered = []
+        visited = set()
+        queue = [start_node.id]
+        visited.add(start_node.id)
+        
+        adj = {nid: [] for nid in self.nodes}
+        for conn in self.connections:
+            if conn.target.id not in adj[conn.source.id]:
+                adj[conn.source.id].append(conn.target.id)
+                
+        while queue:
+            curr = queue.pop(0)
+            if curr in preds:
+                ordered.append(curr)
+            for child in adj.get(curr, []):
+                if child not in visited:
+                    visited.add(child)
+                    queue.append(child)
+                    
+        for p in preds:
+            if p not in ordered:
+                ordered.append(p)
+                
+        return ordered
+
     def get_node_output_schema(self, node, visited=None):
         if visited is None:
             visited = set()
@@ -1830,46 +1926,51 @@ class PropertiesPanelMixin:
             output_schema = step_test.get('output_schema')
             if isinstance(output_schema, dict) and output_schema:
                 return copy.deepcopy(output_schema)
+            output_payload = step_test.get('output_payload')
+            if output_payload:
+                return infer_payload_schema(output_payload)
+                
         schema = {}
-        if node.type == 'click':
-            schema['last_click'] = {'x': '<Número>', 'y': '<Número>'}
+        alias = node.properties.get('alias', f"node_{node.id}")
+        if node.type == 'start':
+            schema['active_window'] = {'title': '<Texto>', 'width': '<Número>', 'height': '<Número>', 'hwnd': '<Número>'}
+            schema['flow'] = {'index': '<Número>', 'total_execution': '<Número>'}
+        elif node.type == 'click':
+            schema[alias] = {'x': '<Número>', 'y': '<Número>'}
         elif node.type == 'capture':
             capture_type = node.properties.get('capture_type', 'Dados da Janela Ativa')
-            if capture_type in ['Dados da Janela Ativa', 'Janela Ativa']:
-                schema['active_window'] = {'title': '<Texto>', 'hwnd': '<Número>'}
+            if capture_type in ['Dados da Janela Ativa', 'Janela Ativa', 'Active Window Data']:
+                schema[alias] = {'title': '<Texto>', 'hwnd': '<Número>'}
             else:
-                schema['captured_mouse'] = {'x': '<Número>', 'y': '<Número>', 'cursor_name': '<Texto>', 'cursor_handle': '<Número>'}
+                schema[alias] = {'x': '<Número>', 'y': '<Número>', 'cursor_name': '<Texto>', 'cursor_handle': '<Número>'}
         elif node.type == 'key':
-            schema['last_key'] = {'key': '<Texto>', 'count': '<Número>'}
+            schema[alias] = {'key': '<Texto>', 'count': '<Número>'}
         elif node.type == 'type_text':
-            schema['last_typed'] = '<Texto>'
+            schema[alias] = '<Texto>'
+        elif node.type == 'delay':
+            schema[alias] = {'seconds': '<Número>'}
         elif node.type == 'move_mouse':
-            schema['last_mouse_pos'] = {'x': '<Número>', 'y': '<Número>'}
+            schema[alias] = {'x': '<Número>', 'y': '<Número>'}
         elif node.type in ['postgres', 'mysql', 'sqlite', 'api']:
-            var_name = self.get_var_name(node.name)
             sample = node.properties.get('sample_payload')
             if sample:
-                schema[var_name] = infer_payload_schema(sample)
+                schema[alias] = infer_payload_schema(sample)
             else:
                 if node.type == 'api':
-                    schema[var_name] = {
+                    schema[alias] = {
                         "status_code": 200,
                         "status": "success",
                         "body": {},
                         "headers": {}
                     }
                 else:
-                    schema[var_name] = {
+                    schema[alias] = {
                         "status": "success",
                         "rows_affected": 0,
                         "rows": []
                     }
         elif node.type in ['js', 'python']:
-            var_name = self.get_var_name(node.name)
-            schema[var_name] = '<Qualquer>'
-            schema[f"last_{node.type}_result"] = '<Qualquer>'
-            
-            # Try to parse return dictionary literal to extract specific sub-keys
+            schema[alias] = '<Qualquer>'
             code = node.properties.get('code', '')
             ret_match = re.search(r'return\s+\{([^}]+)\}', code)
             if ret_match:
@@ -1877,17 +1978,14 @@ class PropertiesPanelMixin:
                 keys = re.findall(r'[\'"](\w+)[\'"]\s*:', inner)
                 if node.type == 'js':
                     keys.extend(re.findall(r'(?<![\'"])\b(\w+)\b\s*:', inner))
-                
-                # Deduplicate and add to schema
+                sub_schema = {}
                 for k in set(keys):
-                    schema[k] = '<Valor>'
-                    
+                    sub_schema[k] = '<Valor>'
+                if sub_schema:
+                    schema[alias] = sub_schema
         elif node.type == 'loop':
-            var_name = self.get_var_name(node.name)
             item_schema = {}
             array_data = node.properties.get('array_data', '[]').strip()
-            
-            # Check if it is a payload variable reference, e.g. {{variable}} or {variable}
             match = re.match(r'^\{\{?([^{}]+)\}\}?$', array_data)
             if match:
                 p_var = match.group(1).strip()
@@ -1919,7 +2017,6 @@ class PropertiesPanelMixin:
                 else:
                     item_schema = "<Qualquer>"
             else:
-                # Treat as literal JSON array (Manual JSON)
                 try:
                     data = json.loads(array_data)
                     if isinstance(data, list) and len(data) > 0:
@@ -1933,20 +2030,19 @@ class PropertiesPanelMixin:
                 except Exception:
                     item_schema = "<Qualquer>"
             
-            schema[var_name] = {
+            schema[alias] = {
                 'item': item_schema,
                 'index': '<Número>',
-                'total': '<Número>'
+                'total': '<Número>',
+                'status': '<Texto>'
             }
         elif node.type == 'storage_var':
-            var_name = node.properties.get('variable_name', 'var_1')
             var_val = node.properties.get('variable_value', '')
-            schema[var_name] = var_val or '<Valor>'
+            schema[alias] = var_val or '<Valor>'
         elif node.type == 'confirm_dialog':
-            payload_var = node.properties.get('payload_var', 'confirm_result')
-            schema[payload_var] = '<Boolean>'
-        elif node.type == 'break_loop':
-            pass
+            schema[alias] = '<Boolean>'
+        elif node.type == 'alert_dialog':
+            schema[alias] = '<Boolean>'
             
         return schema
 

@@ -10,8 +10,8 @@ import json
 import threading
 import tkinter as tk
 
-from core.automation import click_mouse, simulate_keypress, get_active_window_info, simulate_type_text
-from core.payload import get_payload_value, resolve_value
+from core.automation import click_mouse, simulate_keypress, get_active_window_info, simulate_type_text, get_active_window_details
+from core.payload import get_payload_value, resolve_value, truncate_payload_data
 from core.i18n_helper import t
 
 
@@ -54,6 +54,45 @@ def get_cursor_name(h_cursor):
     return f"Desconhecido ({h_cursor})"
 
 
+def get_rounded_rect_points(x, y, w, h, r=12, corners=(True, True, True, True), steps=10):
+    import math
+    points = []
+    
+    # Top-Left corner
+    if corners[0]:
+        for i in range(steps + 1):
+            theta = math.pi + (i / steps) * (math.pi / 2)
+            points.extend([x + r + r * math.cos(theta), y + r + r * math.sin(theta)])
+    else:
+        points.extend([x, y])
+        
+    # Top-Right corner
+    if corners[1]:
+        for i in range(steps + 1):
+            theta = 1.5 * math.pi + (i / steps) * (math.pi / 2)
+            points.extend([x + w - r + r * math.cos(theta), y + r + r * math.sin(theta)])
+    else:
+        points.extend([x + w, y])
+        
+    # Bottom-Right corner
+    if corners[2]:
+        for i in range(steps + 1):
+            theta = 0.0 + (i / steps) * (math.pi / 2)
+            points.extend([x + w - r + r * math.cos(theta), y + h - r + r * math.sin(theta)])
+    else:
+        points.extend([x + w, y + h])
+        
+    # Bottom-Left corner
+    if corners[3]:
+        for i in range(steps + 1):
+            theta = 0.5 * math.pi + (i / steps) * (math.pi / 2)
+            points.extend([x + r + r * math.cos(theta), y + h - r + r * math.sin(theta)])
+    else:
+        points.extend([x, y + h])
+        
+    return points
+
+
 class VisualNode:
     def __init__(self, canvas, node_id, node_type, name, x, y, properties=None):
         self.canvas = canvas
@@ -67,6 +106,19 @@ class VisualNode:
         
         # Load default properties if none provided
         self.properties = properties if properties is not None else self.get_default_properties()
+        
+        # Ensure alias is set (especially when loading saved/external flows)
+        if 'alias' not in self.properties:
+            alias_map = {
+                'start': 'inicio', 'click': 'clique', 'capture': 'captura', 'condition': 'condicao',
+                'key': 'tecla', 'type_text': 'digitar', 'delay': 'delay', 'move_mouse': 'mover',
+                'postgres': 'postgres', 'mysql': 'mysql', 'sqlite': 'sqlite', 'api': 'api',
+                'loop': 'loop', 'break_loop': 'break', 'continue_loop': 'continue',
+                'storage_var': 'var', 'confirm_dialog': 'confirmar', 'alert_dialog': 'alerta',
+                'switch': 'switch', 'js': 'js', 'python': 'python'
+            }
+            prefix = alias_map.get(self.type, self.type)
+            self.properties['alias'] = 'inicio' if self.type == 'start' else f"{prefix}_{self.id}"
         
         if self.type == 'switch':
             cases = self.properties.get('cases', [])
@@ -121,34 +173,46 @@ class VisualNode:
         self.canvas.tag_bind(self.tag, "<Button-2>", self.on_right_click_node)
 
     def get_default_properties(self):
+        alias_map = {
+            'start': 'inicio', 'click': 'clique', 'capture': 'captura', 'condition': 'condicao',
+            'key': 'tecla', 'type_text': 'digitar', 'delay': 'delay', 'move_mouse': 'mover',
+            'postgres': 'postgres', 'mysql': 'mysql', 'sqlite': 'sqlite', 'api': 'api',
+            'loop': 'loop', 'break_loop': 'break', 'continue_loop': 'continue',
+            'storage_var': 'var', 'confirm_dialog': 'confirmar', 'alert_dialog': 'alerta',
+            'switch': 'switch', 'js': 'js', 'python': 'python'
+        }
+        prefix = alias_map.get(self.type, self.type)
+        alias_val = 'inicio' if self.type == 'start' else f"{prefix}_{self.id}"
+        
+        props = {}
         if self.type == 'click':
-            return {'x': 0, 'y': 0}
+            props = {'x': 0, 'y': 0}
         elif self.type == 'capture':
-            return {'capture_type': 'Dados da Janela Ativa'}
+            props = {'capture_type': 'Dados da Janela Ativa'}
         elif self.type == 'condition':
-            return {'variable': 'active_window.title', 'operator': 'contém', 'value': '', 'else_ifs': []}
+            props = {'variable': 'active_window.title', 'operator': 'contém', 'value': '', 'else_ifs': []}
         elif self.type == 'key':
-            return {'key': 'enter', 'count': 1}
+            props = {'key': 'enter', 'count': 1}
         elif self.type == 'type_text':
-            return {'text': ''}
+            props = {'text': ''}
         elif self.type == 'delay':
-            return {'seconds': 1.0}
+            props = {'seconds': 1.0}
         elif self.type == 'move_mouse':
-            return {'x': 0, 'y': 0}
+            props = {'x': 0, 'y': 0}
         elif self.type == 'start':
-            return {'loop_mode': 'Executar 1 vez', 'loop_count': 5}
+            props = {'loop_mode': 'Executar 1 vez', 'loop_count': 5}
         elif self.type in ['postgres', 'mysql', 'sqlite']:
-            return {'connection_name': '', 'sql': 'SELECT 1;', 'sample_payload': None}
+            props = {'connection_name': '', 'sql': 'SELECT 1;', 'sample_payload': None}
         elif self.type == 'api':
-            return {'connection_name': '', 'method': 'GET', 'path': '', 'headers': '', 'body': '', 'sample_payload': None}
+            props = {'connection_name': '', 'method': 'GET', 'path': '', 'headers': '', 'body': '', 'sample_payload': None}
         elif self.type == 'loop':
-            return {'array_data': '[]'}
+            props = {'array_data': '[]'}
         elif self.type in ['break_loop', 'continue_loop']:
-            return {}
+            props = {}
         elif self.type == 'storage_var':
-            return {'variable_name': 'var_1', 'variable_value': ''}
+            props = {'variable_name': 'var_1', 'variable_value': ''}
         elif self.type == 'confirm_dialog':
-            return {
+            props = {
                 'title': 'Confirmação',
                 'message': 'Você deseja continuar?',
                 'btn_true_text': 'Sim',
@@ -156,21 +220,25 @@ class VisualNode:
                 'payload_var': 'confirm_result'
             }
         elif self.type == 'alert_dialog':
-            return {
+            props = {
                 'title': 'Alerta',
                 'message': 'Fluxo interrompido!',
                 'btn_ok_text': 'OK'
             }
         elif self.type == 'switch':
-            return {
+            props = {
                 'variable': 'active_window.title',
                 'cases': ['Opção A', 'Opção B']
             }
         elif self.type == 'js':
-            return {'code': '// JavaScript\npayload.resultado = "sucesso JS";\nlog("Executou JS: " + payload.resultado);'}
+            props = {'code': '// JavaScript\npayload.resultado = "sucesso JS";\nlog("Executou JS: " + payload.resultado);'}
         elif self.type == 'python':
-            return {'code': '# Python\npayload[\'resultado\'] = "sucesso Python"\nprint("Executou Python:", payload[\'resultado\'])'}
-        return {}
+            props = {'code': '# Python\npayload[\'resultado\'] = "sucesso Python"\nprint("Executou Python:", payload[\'resultado\'])'}
+        else:
+            props = {}
+            
+        props['alias'] = alias_val
+        return props
 
     def setup_ports(self):
         # All nodes have 1 Input port on the left center EXCEPT the 'start' node
@@ -188,12 +256,12 @@ class VisualNode:
                 self.ports['out_true'] = {
                     'rel_x': self.width, 'rel_y': 30,
                     'type': 'output', 'color': '#22c55e', # Green
-                    'label': 'True', 'tag': f"port_out_true_{self.id}"
+                    'label': t('properties.out_true'), 'tag': f"port_out_true_{self.id}"
                 }
                 self.ports['out_false'] = {
                     'rel_x': self.width, 'rel_y': 70,
                     'type': 'output', 'color': '#ef4444', # Red
-                    'label': 'False', 'tag': f"port_out_false_{self.id}"
+                    'label': t('properties.out_false'), 'tag': f"port_out_false_{self.id}"
                 }
             else:
                 self.ports['out_true'] = {
@@ -260,17 +328,36 @@ class VisualNode:
             }
 
     def draw(self):
-        # 1. Main body card
-        self.body_ui = self.canvas.create_rectangle(
-            self.x, self.y, self.x + self.width, self.y + self.height,
-            fill="#ffffff", outline="#e2e8f0", width=2, tags=(self.tag, "node_body")
-        )
-        
-        # 2. Header Bar
-        self.header_ui = self.canvas.create_rectangle(
-            self.x, self.y, self.x + self.width, self.y + 26,
-            fill=self.theme['header'], outline=self.theme['header'], tags=self.tag
-        )
+        # 1. Main body card and 2. Header Bar
+        if self.type == 'start':
+            r = 16
+            points = get_rounded_rect_points(self.x, self.y, self.width, self.height, r, corners=(True, False, False, True))
+            self.body_ui = self.canvas.create_polygon(
+                points, fill="#ffffff", outline="#e2e8f0", width=2, tags=(self.tag, "node_body")
+            )
+            header_points = get_rounded_rect_points(self.x, self.y, self.width, 26, r, corners=(True, False, False, False))
+            self.header_ui = self.canvas.create_polygon(
+                header_points, fill=self.theme['header'], outline=self.theme['header'], tags=self.tag
+            )
+        elif self.type == 'break_loop':
+            r = 16
+            points = get_rounded_rect_points(self.x, self.y, self.width, self.height, r, corners=(False, True, True, False))
+            self.body_ui = self.canvas.create_polygon(
+                points, fill="#ffffff", outline="#e2e8f0", width=2, tags=(self.tag, "node_body")
+            )
+            header_points = get_rounded_rect_points(self.x, self.y, self.width, 26, r, corners=(False, True, False, False))
+            self.header_ui = self.canvas.create_polygon(
+                header_points, fill=self.theme['header'], outline=self.theme['header'], tags=self.tag
+            )
+        else:
+            self.body_ui = self.canvas.create_rectangle(
+                self.x, self.y, self.x + self.width, self.y + self.height,
+                fill="#ffffff", outline="#e2e8f0", width=2, tags=(self.tag, "node_body")
+            )
+            self.header_ui = self.canvas.create_rectangle(
+                self.x, self.y, self.x + self.width, self.y + 26,
+                fill=self.theme['header'], outline=self.theme['header'], tags=self.tag
+            )
         
         # 3. Header Text (Type description)
         self.header_text_ui = self.canvas.create_text(
@@ -351,7 +438,8 @@ class VisualNode:
         elif self.type == 'continue_loop':
             summary = t("toolbox.nodes.continue_loop")
         elif self.type == 'storage_var':
-            summary = f"Var: {self.properties.get('variable_name', 'var_1')} = {self.properties.get('variable_value', '')}"
+            alias = self.properties.get('alias', f"node_{self.id}")
+            summary = f"Var: {alias} = {self.properties.get('variable_value', '')}"
         elif self.type == 'confirm_dialog':
             summary = f"Título: {self.properties.get('title', '')}"
         elif self.type == 'alert_dialog':
@@ -632,9 +720,29 @@ class VisualNode:
     def execute(self, payload, log_func):
         """Runs the action of the node, writes to log, updates payload, and returns next port path."""
         log_func(t("logs.node_executing").format(self.name, self.type.upper()))
+        alias = self.properties.get('alias', f"node_{self.id}")
         
         if self.type == 'start':
             log_func(t("logs.start_executing"))
+            win_details = get_active_window_details()
+            
+            app = getattr(self.canvas, 'app', None)
+            run_idx = getattr(app, 'current_run', 1)
+            total_runs = getattr(app, 'max_runs', 1)
+            
+            payload.clear()
+            payload[alias] = {
+                'active_window': {
+                    'title': win_details['title'],
+                    'width': win_details['width'],
+                    'height': win_details['height'],
+                    'hwnd': win_details['hwnd']
+                },
+                'flow': {
+                    'index': run_idx,
+                    'total_execution': total_runs
+                }
+            }
             return 'out'
             
         elif self.type == 'click':
@@ -652,15 +760,18 @@ class VisualNode:
                 y = 0
             log_func(t("logs.click_executing").format(x, y))
             click_mouse(x, y)
-            payload['last_click'] = {'x': x, 'y': y}
+            result = {'x': x, 'y': y}
+            payload[alias] = result
             return 'out'
             
         elif self.type == 'capture':
             capture_type = self.properties.get('capture_type', 'Active Window Data')
             if capture_type in ['Dados da Janela Ativa', 'Janela Ativa', 'Active Window Data']:
-                title, hwnd = get_active_window_info()
+                win_details = get_active_window_details()
+                title, hwnd = win_details['title'], win_details['hwnd']
                 log_func(t("logs.capture_window_success").format(title, hwnd))
-                payload['active_window'] = {'title': title, 'hwnd': hwnd}
+                result = {'title': title, 'hwnd': hwnd}
+                payload[alias] = result
             else:
                 class POINT(ctypes.Structure):
                     _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
@@ -679,7 +790,8 @@ class VisualNode:
                 h_cursor = ci.hCursor
                 cursor_name = get_cursor_name(h_cursor)
                 log_func(t("logs.capture_mouse_success").format(x, y, cursor_name, h_cursor))
-                payload['captured_mouse'] = {'x': x, 'y': y, 'cursor_name': cursor_name, 'cursor_handle': h_cursor}
+                result = {'x': x, 'y': y, 'cursor_name': cursor_name, 'cursor_handle': h_cursor}
+                payload[alias] = result
             return 'out'
             
         elif self.type == 'key':
@@ -693,7 +805,8 @@ class VisualNode:
                 count = 1
             log_func(t("logs.key_pressing").format(key, count))
             simulate_keypress(key, count)
-            payload['last_key'] = {'key': key, 'count': count}
+            result = {'key': key, 'count': count}
+            payload[alias] = result
             return 'out'
             
         elif self.type == 'type_text':
@@ -701,7 +814,7 @@ class VisualNode:
             formatted_text = str(resolve_value(raw_text, payload))
             log_func(t("logs.text_typing").format(formatted_text))
             simulate_type_text(formatted_text)
-            payload['last_typed'] = formatted_text
+            payload[alias] = formatted_text
             return 'out'
             
         elif self.type == 'delay':
@@ -713,6 +826,7 @@ class VisualNode:
                 secs = 1.0
             log_func(t("logs.delay_waiting").format(secs))
             time.sleep(secs)
+            payload[alias] = {'seconds': secs}
             return 'out'
             
         elif self.type == 'move_mouse':
@@ -730,24 +844,27 @@ class VisualNode:
                 y = 0
             log_func(t("logs.move_mouse_executing").format(x, y))
             ctypes.windll.user32.SetCursorPos(x, y)
-            payload['last_mouse_pos'] = {'x': x, 'y': y}
+            result = {'x': x, 'y': y}
+            payload[alias] = result
             return 'out'
             
         elif self.type == 'condition':
-            variable = self.properties.get('variable', '')
-            while variable.startswith('{') and variable.endswith('}'):
-                variable = variable[1:-1]
+            variable_raw = self.properties.get('variable', '')
             operator = self.properties.get('operator', 'equals')
             target_value_raw = self.properties.get('value', '')
             
-            # Resolve value from payload
-            actual_value = get_payload_value(payload, variable)
+            if '{' in variable_raw or '}' in variable_raw:
+                actual_value = resolve_value(variable_raw, payload)
+            else:
+                actual_value = get_payload_value(payload, variable_raw)
+                if actual_value is None:
+                    actual_value = variable_raw
             if actual_value is None:
                 actual_value = ""
                 
             target_value = resolve_value(str(target_value_raw), payload)
             
-            log_func(t("logs.condition_current_val").format(variable, actual_value))
+            log_func(t("logs.condition_current_val").format(variable_raw, actual_value))
             log_func(t("logs.condition_comparing").format(actual_value, operator, target_value))
             
             def evaluate(act_val, op, tgt_val):
@@ -769,33 +886,39 @@ class VisualNode:
 
             result = evaluate(actual_value, operator, target_value)
             log_func(t("logs.condition_result").format(result))
+            
+            # Else If checks
+            matched_port = 'out_false'
             if result:
-                return 'out_true'
-                
-            # If main condition is False, evaluate else_ifs sequentially
-            else_ifs = self.properties.get('else_ifs', [])
-            for i, else_if in enumerate(else_ifs):
-                var_else_if = else_if.get('variable', '')
-                while var_else_if.startswith('{') and var_else_if.endswith('}'):
-                    var_else_if = var_else_if[1:-1]
-                op_else_if = else_if.get('operator', 'equals')
-                tgt_val_else_if_raw = else_if.get('value', '')
-                
-                act_val_else_if = get_payload_value(payload, var_else_if)
-                if act_val_else_if is None:
-                    act_val_else_if = ""
-                tgt_val_else_if = resolve_value(str(tgt_val_else_if_raw), payload)
-                
-                log_func(f" -> Else If {i+1}: valor atual de '{var_else_if}' = '{act_val_else_if}'")
-                log_func(f" -> Comparando Else If {i+1}: '{act_val_else_if}' {op_else_if} '{tgt_val_else_if}'")
-                
-                res_else_if = evaluate(act_val_else_if, op_else_if, tgt_val_else_if)
-                log_func(f" -> Resultado do Else If {i+1}: {res_else_if}")
-                if res_else_if:
-                    return f'out_else_if_{i}'
+                matched_port = 'out_true'
+            else:
+                else_ifs = self.properties.get('else_ifs', [])
+                for i, else_if in enumerate(else_ifs):
+                    var_else_if_raw = else_if.get('variable', '')
+                    if '{' in var_else_if_raw or '}' in var_else_if_raw:
+                        act_val_else_if = resolve_value(var_else_if_raw, payload)
+                    else:
+                        act_val_else_if = get_payload_value(payload, var_else_if_raw)
+                        if act_val_else_if is None:
+                            act_val_else_if = var_else_if_raw
+                    if act_val_else_if is None:
+                        act_val_else_if = ""
+                        
+                    op_else_if = else_if.get('operator', 'equals')
+                    tgt_val_else_if_raw = else_if.get('value', '')
+                    tgt_val_else_if = resolve_value(str(tgt_val_else_if_raw), payload)
                     
-            # If all conditions are False, follow out_false
-            return 'out_false'
+                    log_func(f" -> Else If {i+1}: valor atual de '{var_else_if_raw}' = '{act_val_else_if}'")
+                    log_func(f" -> Comparando Else If {i+1}: '{act_val_else_if}' {op_else_if} '{tgt_val_else_if}'")
+                    
+                    res_else_if = evaluate(act_val_else_if, op_else_if, tgt_val_else_if)
+                    log_func(f" -> Resultado do Else If {i+1}: {res_else_if}")
+                    if res_else_if:
+                        matched_port = f'out_else_if_{i}'
+                        break
+            
+            payload[alias] = matched_port == 'out_true' or matched_port.startswith('out_else_if_')
+            return matched_port
             
         elif self.type == 'sqlite':
             conn_name = self.properties.get('connection_name', '')
@@ -808,9 +931,8 @@ class VisualNode:
                 if conn_config:
                     try:
                         result = app.run_db_query('sqlite', conn_config, sql)
-                        var_name = app.get_var_name(self.name)
-                        payload[var_name] = result
-                        payload['last_db_result'] = result
+                        self.properties['sample_payload'] = truncate_payload_data(result)
+                        payload[alias] = result
                         log_func(t("logs.db_sqlite_ok"))
                     except Exception as e:
                         log_func(t("logs.db_sqlite_error").format(str(e)))
@@ -831,9 +953,8 @@ class VisualNode:
                 if conn_config:
                     try:
                         result = app.run_db_query('postgres', conn_config, sql)
-                        var_name = app.get_var_name(self.name)
-                        payload[var_name] = result
-                        payload['last_db_result'] = result
+                        self.properties['sample_payload'] = truncate_payload_data(result)
+                        payload[alias] = result
                         log_func(t("logs.db_postgres_ok"))
                     except Exception as e:
                         log_func(t("logs.db_postgres_error").format(str(e)))
@@ -854,9 +975,8 @@ class VisualNode:
                 if conn_config:
                     try:
                         result = app.run_db_query('mysql', conn_config, sql)
-                        var_name = app.get_var_name(self.name)
-                        payload[var_name] = result
-                        payload['last_db_result'] = result
+                        self.properties['sample_payload'] = truncate_payload_data(result)
+                        payload[alias] = result
                         log_func(t("logs.db_mysql_ok"))
                     except Exception as e:
                         log_func(t("logs.db_mysql_error").format(str(e)))
@@ -882,9 +1002,8 @@ class VisualNode:
                 conn_config = app.saved_connections.get(conn_name) if conn_name else None
                 try:
                     result = app.run_api_request(conn_config, method, path_url, headers_json, body_text)
-                    var_name = app.get_var_name(self.name)
-                    payload[var_name] = result
-                    payload['last_api_result'] = result
+                    self.properties['sample_payload'] = truncate_payload_data(result)
+                    payload[alias] = result
                     log_func(t("logs.api_ok").format(result['status_code']))
                 except Exception as e:
                     log_func(t("logs.api_error").format(str(e)))
@@ -901,7 +1020,6 @@ class VisualNode:
             import tempfile
             import os
             
-            # Check if Node.js is available
             use_node = False
             try:
                 res = subprocess.run(["node", "-v"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=1)
@@ -990,14 +1108,7 @@ if (typeof JSON !== 'undefined') {{
                             payload.clear()
                             payload.update(new_payload)
                             
-                            app = getattr(self.canvas, 'app', None)
-                            var_name = app.get_var_name(self.name) if app and hasattr(app, 'get_var_name') else f"js_result_{self.id}"
-                            
-                            payload[var_name] = js_result
-                            payload['last_js_result'] = js_result
-                            
-                            if isinstance(js_result, dict):
-                                payload.update(js_result)
+                            payload[alias] = js_result
                         except Exception as ex:
                             log_func(f"[JS] Error parsing updated payload: {ex}")
                             
@@ -1025,7 +1136,6 @@ if (typeof JSON !== 'undefined') {{
                 'print': lambda *args: log_func("[Python] " + " ".join(str(a) for a in args))
             }
             
-            # Wrap in function to support return statements safely
             if not code_resolved.strip():
                 indented_code = "    pass"
             else:
@@ -1044,14 +1154,7 @@ __result = __user_function()
                 exec(wrapper_code, {}, local_scope)
                 py_result = local_scope.get('__result')
                 
-                app = getattr(self.canvas, 'app', None)
-                var_name = app.get_var_name(self.name) if app and hasattr(app, 'get_var_name') else f"python_result_{self.id}"
-                
-                payload[var_name] = py_result
-                payload['last_python_result'] = py_result
-                
-                if isinstance(py_result, dict):
-                    payload.update(py_result)
+                payload[alias] = py_result
                     
             except Exception as e:
                 log_func(f"[Python Error] {e}")
@@ -1066,11 +1169,19 @@ __result = __user_function()
             var_name = app.get_var_name(self.name)
             
             # Check if interrupted
-            if var_name in payload and isinstance(payload[var_name], dict):
+            if alias in payload and isinstance(payload[alias], dict):
+                if payload[alias].get('status') == 'broken':
+                    log_func(t("logs.loop_break_detect").format(self.name))
+                    payload[alias]['status'] = 'done'
+                    if var_name in payload and isinstance(payload[var_name], dict):
+                        payload[var_name]['status'] = 'done'
+                    if '__active_loops__' in payload and self.id in payload['__active_loops__']:
+                        payload['__active_loops__'].remove(self.id)
+                    return 'out_done'
+            elif var_name in payload and isinstance(payload[var_name], dict):
                 if payload[var_name].get('status') == 'broken':
                     log_func(t("logs.loop_break_detect").format(self.name))
                     payload[var_name]['status'] = 'done'
-                    # Remove from active loops
                     if '__active_loops__' in payload and self.id in payload['__active_loops__']:
                         payload['__active_loops__'].remove(self.id)
                     return 'out_done'
@@ -1083,7 +1194,6 @@ __result = __user_function()
             if isinstance(resolved, list):
                 items = resolved
             elif isinstance(resolved, dict):
-                # Smart extraction of arrays from database and API wrappers
                 if "rows" in resolved and isinstance(resolved["rows"], list):
                     items = resolved["rows"]
                 elif "body" in resolved and isinstance(resolved["body"], list):
@@ -1107,26 +1217,39 @@ __result = __user_function()
                 items = []
             
             is_running = False
-            if var_name in payload and isinstance(payload[var_name], dict):
+            if alias in payload and isinstance(payload[alias], dict):
+                if payload[alias].get('status') == 'running':
+                    is_running = True
+            elif var_name in payload and isinstance(payload[var_name], dict):
                 if payload[var_name].get('status') == 'running':
                     is_running = True
             
             if not is_running:
                 log_func(t("logs.loop_start").format(self.name, len(items)))
-                payload[var_name] = {
+                loop_state = {
                     'item': None,
                     'index': 0,
                     'total': len(items),
                     'status': 'running'
                 }
             else:
-                payload[var_name]['index'] += 1
+                if alias in payload and isinstance(payload[alias], dict):
+                    curr_idx_val = payload[alias]['index'] + 1
+                else:
+                    curr_idx_val = payload[var_name]['index'] + 1
+                loop_state = {
+                    'item': None,
+                    'index': curr_idx_val,
+                    'total': len(items),
+                    'status': 'running'
+                }
                 
-            curr_idx = payload[var_name]['index']
+            curr_idx = loop_state['index']
             if curr_idx < len(items):
-                payload[var_name]['item'] = items[curr_idx]
+                loop_state['item'] = items[curr_idx]
                 log_func(t("logs.loop_iteration").format(self.name, curr_idx + 1, len(items), items[curr_idx]))
-                # Ensure loop is in active loops stack
+                payload[alias] = loop_state
+                payload[var_name] = loop_state
                 if '__active_loops__' not in payload:
                     payload['__active_loops__'] = []
                 if self.id not in payload['__active_loops__']:
@@ -1134,8 +1257,9 @@ __result = __user_function()
                 return 'out_item'
             else:
                 log_func(t("logs.loop_end").format(self.name))
-                payload[var_name]['status'] = 'done'
-                # Remove from active loops
+                loop_state['status'] = 'done'
+                payload[alias] = loop_state
+                payload[var_name] = loop_state
                 if '__active_loops__' in payload and self.id in payload['__active_loops__']:
                     payload['__active_loops__'].remove(self.id)
                 return 'out_done'
@@ -1153,10 +1277,14 @@ __result = __user_function()
             
             if loop_node and app:
                 var_name = app.get_var_name(loop_node.name)
+                loop_alias = loop_node.properties.get('alias', f"node_{loop_node_id}")
+                if loop_alias in payload and isinstance(payload[loop_alias], dict):
+                    payload[loop_alias]['status'] = 'broken'
                 if var_name in payload and isinstance(payload[var_name], dict):
                     payload[var_name]['status'] = 'broken'
                     
             log_func(t("logs.loop_break_executing").format(loop_name))
+            payload[alias] = True
             raise BreakLoopException(loop_node_id)
 
         elif self.type == 'continue_loop':
@@ -1171,15 +1299,15 @@ __result = __user_function()
             loop_name = loop_node.name if loop_node else f"ID {loop_node_id}"
             
             log_func(t("logs.loop_continue_executing").format(loop_name))
+            payload[alias] = True
             raise ContinueLoopException(loop_node_id)
 
         elif self.type == 'storage_var':
-            var_name = self.properties.get('variable_name', 'var_1')
             var_val_raw = self.properties.get('variable_value', '')
             resolved_value = resolve_value(var_val_raw, payload)
             
-            payload[var_name] = resolved_value
-            log_func(t("logs.storage_set").format(var_name, resolved_value))
+            payload[alias] = resolved_value
+            log_func(t("logs.storage_set").format(alias, resolved_value))
             return 'out'
             
         elif self.type == 'confirm_dialog':
@@ -1255,6 +1383,7 @@ __result = __user_function()
             event.wait()
             
             val = result_container[0] if result_container else False
+            payload[alias] = val
             payload[payload_var] = val
             log_func(f"Caixa de confirmação respondida: {val}")
             return 'out'
@@ -1319,6 +1448,7 @@ __result = __user_function()
             self.canvas.after(0, show_dialog)
             event.wait()
             log_func("Caixa de alerta fechada.")
+            payload[alias] = True
             return 'out'
             
         elif self.type == 'switch':
@@ -1345,6 +1475,7 @@ __result = __user_function()
             if matched_port == 'out_default':
                 log_func(f" -> Switch nenhuma correspondência encontrada. Indo pelo caminho Default.")
             
+            payload[alias] = actual_value
             return matched_port
             
         return None

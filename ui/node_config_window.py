@@ -29,11 +29,11 @@ class NodeConfigWindowMixin:
         self.node_window.title(t("node_config.title").format(node.name))
         self.node_window.transient(self.root)
         
-        # Dimension window and center on screen
-        window_width = 1150
-        window_height = 680
+        # Dimension window and center on screen (85% of screen width and height)
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
+        window_width = int(screen_width * 0.85)
+        window_height = int(screen_height * 0.85)
         x = (screen_width - window_width) // 2
         y = (screen_height - window_height) // 2
         self.node_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
@@ -134,6 +134,23 @@ class NodeConfigWindowMixin:
         if hasattr(self, 'save_properties_from_widgets'):
             self.save_properties_from_widgets()
         if self.selected_node:
+            import re
+            from tkinter import messagebox
+            
+            alias_val = self.temp_properties.get('alias', '').strip()
+            if not alias_val:
+                messagebox.showerror("Erro de Validação", "O campo Alias não pode ser vazio.")
+                return
+                
+
+                
+            for nid, other_node in self.nodes.items():
+                if nid != self.selected_node.id:
+                    other_alias = other_node.properties.get('alias', '')
+                    if other_alias == alias_val:
+                        messagebox.showerror("Erro de Validação", f"O Alias '{alias_val}' já está sendo utilizado pelo nó '{other_node.name}'.")
+                        return
+
             import copy
             self.selected_node.properties = copy.deepcopy(self.temp_properties)
             self.selected_node.rename(self.temp_node_name)
@@ -158,6 +175,8 @@ class NodeConfigWindowMixin:
                     if conn.source.id == self.selected_node.id or conn.target.id == self.selected_node.id:
                         conn.update_line()
             self.log_message(t("node_config.applied_log").format(self.selected_node.name))
+            if hasattr(self, 'propagate_payload_changes'):
+                self.propagate_payload_changes(self.selected_node.id)
             if getattr(self, 'current_filepath', None):
                 self.trigger_auto_save()
         self.close_node_window()

@@ -65,10 +65,20 @@ def get_payload_value(payload, path):
             
     parts = path.split('.')
     val = payload
-    for part in parts:
+    for i, part in enumerate(parts):
         if isinstance(val, dict) and part in val:
             val = val[part]
         else:
+            # Fallback for 'active_window' and 'flow' from start node alias
+            if i == 0 and part in ['active_window', 'flow'] and isinstance(payload, dict):
+                found = False
+                for k, v in payload.items():
+                    if isinstance(v, dict) and part in v:
+                        val = v[part]
+                        found = True
+                        break
+                if found:
+                    continue
             return None
     return val
 
@@ -114,3 +124,12 @@ def resolve_value(val_str, payload):
             formatted = formatted.replace(f"{{{ph}}}", str(resolved))
             
     return formatted
+
+
+def truncate_payload_data(val, limit=5):
+    """Recursively truncates lists/arrays in a payload to a maximum limit to prevent file bloat."""
+    if isinstance(val, dict):
+        return {k: truncate_payload_data(v, limit) for k, v in val.items()}
+    elif isinstance(val, list):
+        return [truncate_payload_data(item, limit) for item in val[:limit]]
+    return val

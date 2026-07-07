@@ -3,15 +3,15 @@ Left panel — Toolbox for adding nodes and debug console.
 """
 import tkinter as tk
 from tkinter import ttk
-from core.i18n_helper import t
+from core.i18n_helper import t, load_app_settings
 
 
 class LeftPanelMixin:
     """Mixin providing the left sidebar UI (toolbox + console)."""
 
     def setup_left_panel(self):
-        # Configure left_panel row/column weights
-        self.left_panel.rowconfigure(0, weight=3)
+        # Configure left_panel row/column weights (Log height reduced by 50% using weight=7 on tools)
+        self.left_panel.rowconfigure(0, weight=7)
         self.left_panel.rowconfigure(1, weight=1)
         self.left_panel.columnconfigure(0, weight=1)
         self.left_panel.grid_propagate(False)
@@ -148,12 +148,15 @@ class LeftPanelMixin:
                 btn.bind("<MouseWheel>", _on_mousewheel)
                 make_drag_handlers(btn, type_key)
                 
+        # Load app settings from configuration file
+        settings = load_app_settings()
+        
         # Control variable for hide window (moved checkbox to Config menu)
-        self.hide_window_var = tk.BooleanVar(value=True)
-        self.countdown_seconds_var = tk.IntVar(value=3)
-        self.auto_save_var = tk.BooleanVar(value=False)
-        self.zoom_min_var = tk.DoubleVar(value=0.2)
-        self.zoom_max_var = tk.DoubleVar(value=3.0)
+        self.hide_window_var = tk.BooleanVar(value=settings.get('hide_window', True))
+        self.countdown_seconds_var = tk.IntVar(value=settings.get('countdown_seconds', 3))
+        self.auto_save_var = tk.BooleanVar(value=settings.get('auto_save', False))
+        self.zoom_min_var = tk.DoubleVar(value=settings.get('zoom_min', 0.2))
+        self.zoom_max_var = tk.DoubleVar(value=settings.get('zoom_max', 3.0))
         
         # 2. DEBUG LOG WINDOW (at the bottom)
         lower_sidebar_frame = tk.Frame(self.left_panel, bg="#0f172a")

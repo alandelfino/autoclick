@@ -53,6 +53,7 @@ class CanvasInteractionsMixin:
         
         # 1. Clicked on a Port
         if "port" in tags:
+            self.select_node(None)
             port_tag = [t for t in tags if t.startswith("node_port_")][0]
             parts = port_tag.split("_")
             source_id = int(parts[2])
@@ -108,6 +109,9 @@ class CanvasInteractionsMixin:
             self._is_multi_dragging = False
             self.drag_data['x'] = cx
             self.drag_data['y'] = cy
+        else:
+            # Clicked on a connection line, drag handle, or other non-node item
+            self.select_node(None)
 
     def _shift_click_node(self, node):
         """Shift+Click: toggle node in/out of the multi-selection set."""
@@ -313,13 +317,10 @@ class CanvasInteractionsMixin:
         selected = set()
         for node in self.nodes.values():
             try:
-                coords = self.canvas.coords(node.body_ui)
-                if len(coords) == 4:
-                    nx1, ny1, nx2, ny2 = coords
-                    node_cx = (nx1 + nx2) / 2.0
-                    node_cy = (ny1 + ny2) / 2.0
-                    if x1 <= node_cx <= x2 and y1 <= node_cy <= y2:
-                        selected.add(node)
+                node_cx = node.x + node.width / 2.0
+                node_cy = node.y + node.height / 2.0
+                if x1 <= node_cx <= x2 and y1 <= node_cy <= y2:
+                    selected.add(node)
             except Exception:
                 pass
         

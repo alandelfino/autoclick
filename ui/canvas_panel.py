@@ -83,15 +83,22 @@ class CanvasPanelMixin:
         # Base grid spacing in canvas coordinate space
         base_spacing = 40
         
-        # Adjust spacing dynamically based on zoom level to prevent clustering or sparsity
-        if self.zoom_scale < 0.3:
-            spacing = base_spacing * 4 # 160
-        elif self.zoom_scale < 0.6:
-            spacing = base_spacing * 2 # 80
-        elif self.zoom_scale > 1.6:
-            spacing = base_spacing // 2 # 20
-        else:
-            spacing = base_spacing
+        # Adjust spacing dynamically based on zoom scale to keep grid spacing on screen
+        # approximately constant and prevent performance collapse/freezing at low zoom levels.
+        import math
+        try:
+            k = round(math.log2(1.2 / max(0.0001, self.zoom_scale)))
+            spacing = int(base_spacing * (2 ** k))
+        except Exception:
+            # Fallback steps if log calculation fails
+            if self.zoom_scale < 0.3:
+                spacing = base_spacing * 4
+            elif self.zoom_scale < 0.6:
+                spacing = base_spacing * 2
+            elif self.zoom_scale > 1.6:
+                spacing = base_spacing // 2
+            else:
+                spacing = base_spacing
             
         # Find start and end grid lines to draw
         start_x = int(x1 - (x1 % spacing))
@@ -175,12 +182,6 @@ class CanvasPanelMixin:
             
         # Re-render lines to align cleanly
         for c in self.connections:
-            for i, wp in enumerate(c.waypoints):
-                wpx, wpy = wp
-                c.waypoints[i] = [
-                    cx + (wpx - cx) * factor,
-                    cy + (wpy - cy) * factor
-                ]
             c.update_line()
             
         # Redraw grid dynamically
@@ -232,8 +233,8 @@ class CanvasPanelMixin:
             self.reset_zoom()
             return
             
-        # Get bounding box of all nodes based on canvas visual shapes
-        coords = [self.canvas.coords(n.body_ui) for n in self.nodes.values()]
+        # Get bounding box of all nodes based on python node properties
+        coords = [[n.x, n.y, n.x + n.width, n.y + n.height] for n in self.nodes.values()]
         min_x = min(c[0] for c in coords)
         min_y = min(c[1] for c in coords)
         max_x = max(c[2] for c in coords)
@@ -264,8 +265,6 @@ class CanvasPanelMixin:
             
         # Refresh connection lines
         for c in self.connections:
-            for i, wp in enumerate(c.waypoints):
-                c.waypoints[i] = [wp[0] + dx, wp[1] + dy]
             c.update_line()
             
         self.log_message(t("canvas.view_centered"))
@@ -333,9 +332,11 @@ class CanvasPanelMixin:
                 dy = y_pos - node.y
                 node.move_by(dx, dy)
                 
-        # Reset waypoints for all connections during auto-layout to avoid weird stretching
+        # Reset overrides for all connections during auto-layout to avoid weird stretching
         for c in self.connections:
-            c.waypoints.clear()
+            c.offset_source_override = None
+            c.offset_target_override = None
+            c.mid_y_override = None
             c.update_line()
             
         self.log_message(t("canvas.auto_layout_complete"))

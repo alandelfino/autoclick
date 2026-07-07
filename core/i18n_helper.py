@@ -32,33 +32,42 @@ def get_user_config_path():
         return os.path.join(user_dir, 'config.json')
     return None
 
-# Load selected language from configuration
-def load_language_pref():
-    # 1. Try to load from user's AppData configuration first (takes precedence)
+def load_app_settings():
+    """Loads all settings from configuration files, combining them with defaults."""
+    settings = {
+        'language': 'en',
+        'hide_window': True,
+        'countdown_seconds': 3,
+        'auto_save': False,
+        'zoom_min': 0.2,
+        'zoom_max': 3.0
+    }
+    
+    # 1. Try to load local config first
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                settings.update(config)
+        except Exception:
+            pass
+            
+    # 2. Try AppData config to overwrite
     user_config = get_user_config_path()
     if user_config and os.path.exists(user_config):
         try:
             with open(user_config, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-                return config.get('language', 'en')
-        except Exception:
-            pass
-
-    # 2. Fall back to reading from local app directory CONFIG_FILE (e.g. written by installer)
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                return config.get('language', 'en')
+                settings.update(config)
         except Exception:
             pass
             
-    return 'en'
+    return settings
 
-def save_language_pref(lang):
+def save_app_settings(settings):
+    """Saves the given settings dictionary to the configuration files."""
+    # Read existing config to preserve other keys
     config = {}
-    
-    # 1. Try to load existing local config
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
@@ -66,21 +75,27 @@ def save_language_pref(lang):
         except Exception:
             pass
             
-    config['language'] = lang
-
-    # 2. Try to write to local directory CONFIG_FILE
+    user_config = get_user_config_path()
+    if user_config and os.path.exists(user_config):
+        try:
+            with open(user_config, 'r', encoding='utf-8') as f:
+                config.update(json.load(f))
+        except Exception:
+            pass
+            
+    config.update(settings)
+    
+    # Try local
     try:
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=4)
         return
     except (PermissionError, IOError):
-        # If we don't have permission (e.g., installed in Program Files), write to AppData instead
         pass
     except Exception:
         pass
-
-    # 3. Fallback: Write to user's AppData directory
-    user_config = get_user_config_path()
+        
+    # Try AppData
     if user_config:
         try:
             os.makedirs(os.path.dirname(user_config), exist_ok=True)
@@ -88,6 +103,16 @@ def save_language_pref(lang):
                 json.dump(config, f, indent=4)
         except Exception:
             pass
+
+# Load selected language from configuration
+def load_language_pref():
+    settings = load_app_settings()
+    return settings.get('language', 'en')
+
+def save_language_pref(lang):
+    settings = load_app_settings()
+    settings['language'] = lang
+    save_app_settings(settings)
 
 # Initialize language
 current_lang = load_language_pref()

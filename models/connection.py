@@ -44,6 +44,69 @@ def compute_catmull_rom_chain(points_list, steps=15):
     return curve_points
 
 
+def generate_rounded_path(raw_pts, r=16.0):
+    """
+    Generates a dense list of coordinates representing straight segments with rounded corners.
+    raw_pts: list of [x, y] coordinates
+    r: corner rounding radius
+    """
+    if len(raw_pts) < 3:
+        # Just return the points flattened
+        flat = []
+        for p in raw_pts:
+            flat.extend(p)
+        return flat
+        
+    path = [raw_pts[0][0], raw_pts[0][1]]
+    
+    for i in range(1, len(raw_pts) - 1):
+        A = raw_pts[i-1]
+        B = raw_pts[i]
+        C = raw_pts[i+1]
+        
+        # Vectors from B to A and B to C
+        v1_x, v1_y = A[0] - B[0], A[1] - B[1]
+        v2_x, v2_y = C[0] - B[0], C[1] - B[1]
+        
+        d1 = (v1_x**2 + v1_y**2)**0.5
+        d2 = (v2_x**2 + v2_y**2)**0.5
+        
+        if d1 == 0 or d2 == 0:
+            path.extend(B)
+            continue
+            
+        actual_r = min(r, d1 / 2.0, d2 / 2.0)
+        if actual_r <= 0:
+            path.extend(B)
+            continue
+            
+        # Start and end points of the corner arc
+        p0_x = B[0] + (v1_x / d1) * actual_r
+        p0_y = B[1] + (v1_y / d1) * actual_r
+        
+        p2_x = B[0] + (v2_x / d2) * actual_r
+        p2_y = B[1] + (v2_y / d2) * actual_r
+        
+        # Add the straight line segment start point of the corner
+        path.extend([p0_x, p0_y])
+        
+        # Generate quadratic Bezier curve points using B as the control point
+        steps = 8
+        for s in range(1, steps):
+            t = s / float(steps)
+            t_inv = 1.0 - t
+            
+            px = (t_inv ** 2) * p0_x + 2 * t_inv * t * B[0] + (t ** 2) * p2_x
+            py = (t_inv ** 2) * p0_y + 2 * t_inv * t * B[1] + (t ** 2) * p2_y
+            path.extend([px, py])
+            
+        # Add the end point of the corner arc
+        path.extend([p2_x, p2_y])
+        
+    path.extend([raw_pts[-1][0], raw_pts[-1][1]])
+    return path
+
+
 class VisualConnection:
     def __init__(self, canvas, source_node, source_port, target_node, target_port, waypoints=None):
         self.canvas = canvas
@@ -51,9 +114,13 @@ class VisualConnection:
         self.source_port = source_port
         self.target = target_node
         self.target_port = target_port
-        self.waypoints = waypoints or [] # List of [x, y] coordinates
-        self.waypoint_handles = [] # List of canvas oval element IDs
         self.is_hovered = False
+        
+        self.offset_source_override = None
+        self.offset_target_override = None
+        self.mid_y_override = None
+        self.dragged_segment = None
+        self.handle_ids = []
         
         self.tag = f"conn_{self.source.id}_{self.source_port}_to_{self.target.id}_{self.target_port}"
         
@@ -66,9 +133,9 @@ class VisualConnection:
             arrowshape=(10, 12, 5), tags=(self.tag, "connection"),
             capstyle="round", joinstyle="round", splinesteps=36
         )
-        
-        # Bind double click on connection line to add waypoints
-        self.canvas.tag_bind(self.tag, "<Double-1>", self.on_double_click_line)
+        self.canvas.tag_lower(self.line_id)
+        if self.canvas.find_withtag("grid"):
+            self.canvas.tag_raise(self.line_id, "grid")
         
         # Bind hover events
         self.canvas.tag_bind(self.tag, "<Enter>", self.on_enter)
@@ -101,49 +168,105 @@ class VisualConnection:
             arrowshape=scaled_arrowshape
         )
         
-        if self.waypoints:
-            raw_points = [(x1, y1)] + self.waypoints + [(x2, y2)]
-            # Draw smooth curve passing exactly through the waypoints (increased to 36 steps for AA look)
-            points = compute_catmull_rom_chain(raw_points, steps=36)
+        # Check if the connection needs to contour (target is to the left or overlapping)
+        if self.target.x <= self.source.x + self.source.width:
+            # Contour routing (n8n-style orthogonal line)
+            offset_source = (self.offset_source_override * zoom_scale) if self.offset_source_override is not None else (40.0 * zoom_scale)
+            offset_target = (self.offset_target_override * zoom_scale) if self.offset_target_override is not None else (40.0 * zoom_scale)
+            
+            if self.mid_y_override is not None:
+                mid_y = y1 + (self.mid_y_override * zoom_scale)
+            else:
+                if abs(y2 - y1) >= 150.0 * zoom_scale:
+                    mid_y = (y1 + y2) / 2.0
+                else:
+                    mid_y = max(y1, y2) + 100.0 * zoom_scale
+                    
+            raw_pts = [
+                [x1, y1],
+                [x1 + offset_source, y1],
+                [x1 + offset_source, mid_y],
+                [x2 - offset_target, mid_y],
+                [x2 - offset_target, y2],
+                [x2, y2]
+            ]
+            points = generate_rounded_path(raw_pts, r=16.0 * zoom_scale)
             self.canvas.itemconfig(self.line_id, smooth=False)
             self.canvas.coords(self.line_id, *points)
             
-            # Recreate handles if counts mismatch (added/deleted)
-            if len(self.waypoints) != len(self.waypoint_handles):
-                for h in self.waypoint_handles:
-                    self.canvas.delete(h)
-                self.waypoint_handles.clear()
-                
-                for idx, wp in enumerate(self.waypoints):
-                    wx, wy = wp
-                    r = max(2.0, 6.0 * zoom_scale) # radius
-                    h_id = self.canvas.create_oval(
-                        wx - r, wy - r, wx + r, wy + r,
-                        fill="#3b82f6", outline="#ffffff", width=max(1.0, 2.0 * zoom_scale),
-                        tags=(f"wp_{self.tag}_{idx}", "waypoint")
-                    )
-                    self.waypoint_handles.append(h_id)
-                    
-                    # Bind dragging, double-click, and right-click context menu
-                    self.canvas.tag_bind(h_id, "<B1-Motion>", lambda event, i=idx: self.on_drag_waypoint(event, i))
-                    self.canvas.tag_bind(h_id, "<ButtonRelease-1>", self.on_release_waypoint)
-                    self.canvas.tag_bind(h_id, "<Double-1>", lambda event, i=idx: self.on_double_click_waypoint(event, i))
-                    self.canvas.tag_bind(h_id, "<Button-3>", lambda event, i=idx: self.on_right_click_waypoint(event, i))
-                    self.canvas.tag_bind(h_id, "<Button-2>", lambda event, i=idx: self.on_right_click_waypoint(event, i))
-            else:
-                # Just update coordinates of existing handles
-                for idx, wp in enumerate(self.waypoints):
-                    wx, wy = wp
-                    r = max(2.0, 6.0 * zoom_scale)
-                    self.canvas.coords(self.waypoint_handles[idx], wx - r, wy - r, wx + r, wy + r)
-                    self.canvas.itemconfig(self.waypoint_handles[idx], width=max(1.0, 2.0 * zoom_scale))
-        else:
-            # Clear handles if no waypoints
-            for h in self.waypoint_handles:
-                self.canvas.delete(h)
-            self.waypoint_handles.clear()
+            # Draw/update the three segment drag handles ("pequenas luvas")
+            h1_x, h1_y = x1 + offset_source, (y1 + mid_y) / 2.0
+            h2_x, h2_y = (x1 + offset_source + x2 - offset_target) / 2.0, mid_y
+            h3_x, h3_y = x2 - offset_target, (mid_y + y2) / 2.0
+            # Calculate pipe dimensions aligned to segments - shrink proportionally down to 1px
+            w_vert = max(1.0, 6.0 * zoom_scale)
+            h_vert = max(1.0, 16.0 * zoom_scale)
+            w_horz = max(1.0, 16.0 * zoom_scale)
+            h_horz = max(1.0, 6.0 * zoom_scale)
             
-            # Calculate Bezier control points for custom aesthetic curves
+            show_handles = getattr(self, 'is_hovered', False) or (getattr(self, 'dragged_segment', None) is not None)
+            
+            if show_handles:
+                if hasattr(self, 'handle_ids') and len(self.handle_ids) == 3:
+                    # Update coordinate and sizes of existing handle shapes
+                    self.canvas.coords(self.handle_ids[0], h1_x - w_vert/2, h1_y - h_vert/2, h1_x + w_vert/2, h1_y + h_vert/2)
+                    self.canvas.coords(self.handle_ids[1], h2_x - w_horz/2, h2_y - h_horz/2, h2_x + w_horz/2, h2_y + h_horz/2)
+                    self.canvas.coords(self.handle_ids[2], h3_x - w_vert/2, h3_y - h_vert/2, h3_x + w_vert/2, h3_y + h_vert/2)
+                    for h in self.handle_ids:
+                        self.canvas.itemconfig(h, width=max(1.0, 1.5 * zoom_scale))
+                else:
+                    # Clean up old handle shapes
+                    if hasattr(self, 'handle_ids'):
+                        for h in self.handle_ids:
+                            self.canvas.delete(h)
+                    
+                    # Create three handles as rectangles ("canos")
+                    h1 = self.canvas.create_rectangle(
+                        h1_x - w_vert/2, h1_y - h_vert/2, h1_x + w_vert/2, h1_y + h_vert/2,
+                        fill="#ffffff", outline="#3b82f6", width=max(1.0, 1.5 * zoom_scale),
+                        tags=("drag_handle",)
+                    )
+                    h2 = self.canvas.create_rectangle(
+                        h2_x - w_horz/2, h2_y - h_horz/2, h2_x + w_horz/2, h2_y + h_horz/2,
+                        fill="#ffffff", outline="#3b82f6", width=max(1.0, 1.5 * zoom_scale),
+                        tags=("drag_handle",)
+                    )
+                    h3 = self.canvas.create_rectangle(
+                        h3_x - w_vert/2, h3_y - h_vert/2, h3_x + w_vert/2, h3_y + h_vert/2,
+                        fill="#ffffff", outline="#3b82f6", width=max(1.0, 1.5 * zoom_scale),
+                        tags=("drag_handle",)
+                    )
+                    
+                    self.handle_ids = [h1, h2, h3]
+                    for h in self.handle_ids:
+                        self.canvas.tag_raise(h)
+                        
+                    # Bind handle dragging events
+                    self.canvas.tag_bind(h1, "<Button-1>", lambda event: self.on_handle_click(event, 1))
+                    self.canvas.tag_bind(h1, "<B1-Motion>", self.on_handle_drag)
+                    self.canvas.tag_bind(h1, "<ButtonRelease-1>", self.on_handle_release)
+                    self.canvas.tag_bind(h1, "<Enter>", lambda event: self.on_handle_enter(event, "size_we"))
+                    self.canvas.tag_bind(h1, "<Leave>", self.on_leave)
+                    
+                    self.canvas.tag_bind(h2, "<Button-1>", lambda event: self.on_handle_click(event, 2))
+                    self.canvas.tag_bind(h2, "<B1-Motion>", self.on_handle_drag)
+                    self.canvas.tag_bind(h2, "<ButtonRelease-1>", self.on_handle_release)
+                    self.canvas.tag_bind(h2, "<Enter>", lambda event: self.on_handle_enter(event, "size_ns"))
+                    self.canvas.tag_bind(h2, "<Leave>", self.on_leave)
+                    
+                    self.canvas.tag_bind(h3, "<Button-1>", lambda event: self.on_handle_click(event, 3))
+                    self.canvas.tag_bind(h3, "<B1-Motion>", self.on_handle_drag)
+                    self.canvas.tag_bind(h3, "<ButtonRelease-1>", self.on_handle_release)
+                    self.canvas.tag_bind(h3, "<Enter>", lambda event: self.on_handle_enter(event, "size_we"))
+                    self.canvas.tag_bind(h3, "<Leave>", self.on_leave)
+            else:
+                # Remove handles if hover is inactive and we are not dragging
+                if hasattr(self, 'handle_ids'):
+                    for h in self.handle_ids:
+                        self.canvas.delete(h)
+                    self.handle_ids.clear()
+        else:
+            # Common forward connection (standard Bezier S-curve)
             dx = abs(x2 - x1)
             cx1 = x1 + dx * 0.4
             cy1 = y1
@@ -151,109 +274,46 @@ class VisualConnection:
             cy2 = y2
             self.canvas.itemconfig(self.line_id, smooth=True)
             self.canvas.coords(self.line_id, x1, y1, cx1, cy1, cx2, cy2, x2, y2)
-
-    def on_double_click_line(self, event):
-        cx = self.canvas.canvasx(event.x)
-        cy = self.canvas.canvasy(event.y)
-        self.add_segment_at(cx, cy)
-
-    def add_segment_at(self, cx, cy):
-        # Determine the insertion index for the new waypoint
-        x1, y1 = self.source.get_port_center(self.source_port)
-        x2, y2 = self.target.get_port_center(self.target_port)
-        
-        points = [(x1, y1)] + self.waypoints + [(x2, y2)]
-        
-        best_idx = 0
-        min_dist = float('inf')
-        
-        # Iterate over all segments
-        for i in range(len(points) - 1):
-            A = points[i]
-            B = points[i+1]
-            # Vector AB
-            vx = B[0] - A[0]
-            vy = B[1] - A[1]
-            # Vector AP
-            wx = cx - A[0]
-            wy = cy - A[1]
             
-            ab_len_sq = vx * vx + vy * vy
-            if ab_len_sq == 0:
-                t_val = 0.0
-            else:
-                t_val = (wx * vx + wy * vy) / ab_len_sq
-                t_val = max(0.0, min(1.0, t_val))
-            
-            # Closest point on segment
-            proj_x = A[0] + t_val * vx
-            proj_y = A[1] + t_val * vy
-            
-            # Distance from P to closest point
-            dx = cx - proj_x
-            dy = cy - proj_y
-            dist = (dx * dx + dy * dy) ** 0.5
-            
-            if dist < min_dist:
-                min_dist = dist
-                best_idx = i
-        
-        # Insert the waypoint at the best index
-        self.waypoints.insert(best_idx, [cx, cy])
-        self.update_line()
-        self.save_app_flow()
-
-    def on_drag_waypoint(self, event, idx):
-        cx = self.canvas.canvasx(event.x)
-        cy = self.canvas.canvasy(event.y)
-        if 0 <= idx < len(self.waypoints):
-            self.waypoints[idx] = [cx, cy]
-            self.update_line()
-
-    def on_release_waypoint(self, event):
-        self.save_app_flow()
-
-    def on_double_click_waypoint(self, event, idx):
-        self.confirm_delete_waypoint(idx)
-
-    def on_right_click_waypoint(self, event, idx):
-        menu = tk.Menu(self.canvas, tearoff=0)
-        menu.add_command(
-            label=t("connection.delete_waypoint"),
-            command=lambda: self.confirm_delete_waypoint(idx)
-        )
-        menu.post(event.x_root, event.y_root)
-
-    def confirm_delete_waypoint(self, idx):
-        if messagebox.askyesno(t("connection_dialogs.confirm_delete_title"), t("connection.delete_waypoint_msg")):
-            if 0 <= idx < len(self.waypoints):
-                self.waypoints.pop(idx)
-                self.update_line()
-                self.save_app_flow()
+            # Clean up old handle ovals
+            if hasattr(self, 'handle_ids'):
+                for h in self.handle_ids:
+                    self.canvas.delete(h)
+                self.handle_ids.clear()
 
     def on_enter(self, event):
         self.is_hovered = True
         self.update_line()
 
+    def on_handle_enter(self, event, cursor_shape):
+        self.is_hovered = True
+        self.canvas.config(cursor=cursor_shape)
+
     def on_leave(self, event):
-        item = self.canvas.find_withtag("current")
-        if item:
-            tags = self.canvas.gettags(item[0])
-            # If the cursor moved to a waypoint of this connection, keep the highlight
-            if any(t.startswith(f"wp_{self.tag}_") for t in tags):
-                return
+        # Find what items are actually under the mouse coordinate (2x2 bounding box)
+        cx = self.canvas.canvasx(event.x)
+        cy = self.canvas.canvasy(event.y)
+        overlapping = self.canvas.find_overlapping(cx - 1, cy - 1, cx + 1, cy + 1)
+        
+        # If the mouse moved to one of our own handles or the line itself, do nothing!
+        if self.line_id in overlapping or (hasattr(self, 'handle_ids') and any(h in overlapping for h in self.handle_ids)):
+            if self.line_id in overlapping:
+                self.canvas.config(cursor="")
+            return
+                
         self.is_hovered = False
+        self.canvas.config(cursor="")
         self.update_line()
 
     def on_right_click_line(self, event):
         cx = self.canvas.canvasx(event.x)
         cy = self.canvas.canvasy(event.y)
         
+        app = getattr(self.canvas, 'app', None)
+        if app:
+            app.select_node(None)
+            
         menu = tk.Menu(self.canvas, tearoff=0)
-        menu.add_command(
-            label=t("connection.add_segment"),
-            command=lambda: self.add_segment_at(cx, cy)
-        )
         menu.add_command(
             label=t("connection.delete_connection"),
             command=self.confirm_delete_connection
@@ -321,6 +381,38 @@ class VisualConnection:
 
     def delete(self):
         self.canvas.delete(self.line_id)
-        for h in self.waypoint_handles:
-            self.canvas.delete(h)
-        self.waypoint_handles.clear()
+        if hasattr(self, 'handle_ids'):
+            for h in self.handle_ids:
+                self.canvas.delete(h)
+            self.handle_ids.clear()
+
+    def on_handle_click(self, event, idx):
+        self.dragged_segment = idx
+        app = getattr(self.canvas, 'app', None)
+        if app:
+            app.select_node(None)
+        
+    def on_handle_drag(self, event):
+        if self.dragged_segment is None:
+            return
+        cx = self.canvas.canvasx(event.x)
+        cy = self.canvas.canvasy(event.y)
+        
+        app = getattr(self.canvas, 'app', None)
+        zoom_scale = getattr(app, 'zoom_scale', 1.0) if app else 1.0
+        
+        x1, y1 = self.source.get_port_center(self.source_port)
+        x2, y2 = self.target.get_port_center(self.target_port)
+        
+        if self.dragged_segment == 1:
+            self.offset_source_override = max(10.0, cx - x1) / zoom_scale
+        elif self.dragged_segment == 2:
+            self.mid_y_override = (cy - y1) / zoom_scale
+        elif self.dragged_segment == 3:
+            self.offset_target_override = max(10.0, x2 - cx) / zoom_scale
+            
+        self.update_line()
+        
+    def on_handle_release(self, event):
+        self.dragged_segment = None
+        self.save_app_flow()

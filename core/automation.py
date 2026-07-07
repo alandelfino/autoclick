@@ -87,3 +87,45 @@ def simulate_type_text(text):
             # Release Unicode character (KEYEVENTF_KEYUP = 0x0002)
             ctypes.windll.user32.keybd_event(0, ord(char), 0x0004 | 0x0002, 0)
             time.sleep(0.015) # Brief pause to simulate human typing
+
+
+def get_active_window_details():
+    """Gets the title, width, height and window handle (HWND) of the currently active window."""
+    hwnd = ctypes.windll.user32.GetForegroundWindow()
+    if not hwnd:
+        return {
+            'title': "Nenhuma janela ativa",
+            'width': 0,
+            'height': 0,
+            'hwnd': 0
+        }
+    
+    # Get Title
+    length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
+    if length == 0:
+        title = "Janela sem título"
+    else:
+        buf = ctypes.create_unicode_buffer(length + 1)
+        ctypes.windll.user32.GetWindowTextW(hwnd, buf, length + 1)
+        title = buf.value
+        
+    # Get Rect
+    class RECT(ctypes.Structure):
+        _fields_ = [
+            ("left", ctypes.c_long),
+            ("top", ctypes.c_long),
+            ("right", ctypes.c_long),
+            ("bottom", ctypes.c_long)
+        ]
+    rect = RECT()
+    ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect))
+    width = rect.right - rect.left
+    height = rect.bottom - rect.top
+    
+    return {
+        'title': title,
+        'width': width,
+        'height': height,
+        'hwnd': hwnd
+    }
+

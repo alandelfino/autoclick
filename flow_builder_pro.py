@@ -285,8 +285,11 @@ class FlowBuilderProApp(
                     'source_port': c.source_port,
                     'target_id': c.target.id,
                     'target_port': c.target_port,
-                    'waypoints': getattr(c, 'waypoints', []),
-                    'is_auto_loop': getattr(c, 'is_auto_loop', False)
+                    'waypoints': [],
+                    'is_auto_loop': getattr(c, 'is_auto_loop', False),
+                    'offset_source_override': getattr(c, 'offset_source_override', None),
+                    'offset_target_override': getattr(c, 'offset_target_override', None),
+                    'mid_y_override': getattr(c, 'mid_y_override', None)
                 })
                 
             with open(filepath, 'w', encoding='utf-8') as f:
@@ -349,8 +352,11 @@ class FlowBuilderProApp(
                 'source_port': c.source_port,
                 'target_id': c.target.id,
                 'target_port': c.target_port,
-                'waypoints': copy.deepcopy(getattr(c, 'waypoints', [])),
-                'is_auto_loop': getattr(c, 'is_auto_loop', False)
+                'waypoints': [],
+                'is_auto_loop': getattr(c, 'is_auto_loop', False),
+                'offset_source_override': getattr(c, 'offset_source_override', None),
+                'offset_target_override': getattr(c, 'offset_target_override', None),
+                'mid_y_override': getattr(c, 'mid_y_override', None)
             })
         return flow_data
 
@@ -371,7 +377,8 @@ class FlowBuilderProApp(
                 x=node_data['x'],
                 y=node_data['y'],
                 properties=copy.deepcopy(node_data['properties']),
-                is_canvas_coords=True
+                is_canvas_coords=True,
+                node_id=nid
             )
             if nid > max_id:
                 max_id = nid
@@ -386,10 +393,12 @@ class FlowBuilderProApp(
                     src_node, 
                     conn_data['source_port'], 
                     tgt_node, 
-                    conn_data['target_port'],
-                    waypoints=copy.deepcopy(conn_data.get('waypoints', []))
+                    conn_data['target_port']
                 )
                 new_conn.is_auto_loop = conn_data.get('is_auto_loop', False)
+                new_conn.offset_source_override = conn_data.get('offset_source_override')
+                new_conn.offset_target_override = conn_data.get('offset_target_override')
+                new_conn.mid_y_override = conn_data.get('mid_y_override')
                 self.connections.append(new_conn)
                 
         start_exists = any(n.type == 'start' for n in self.nodes.values())
@@ -568,7 +577,8 @@ class FlowBuilderProApp(
                     x=node_data['x'],
                     y=node_data['y'],
                     properties=node_data['properties'],
-                    is_canvas_coords=True
+                    is_canvas_coords=True,
+                    node_id=nid
                 )
                 if nid > max_id:
                     max_id = nid
@@ -585,10 +595,12 @@ class FlowBuilderProApp(
                         src_node, 
                         conn_data['source_port'], 
                         tgt_node, 
-                        conn_data['target_port'],
-                        waypoints=conn_data.get('waypoints', [])
+                        conn_data['target_port']
                     )
                     new_conn.is_auto_loop = conn_data.get('is_auto_loop', False)
+                    new_conn.offset_source_override = conn_data.get('offset_source_override')
+                    new_conn.offset_target_override = conn_data.get('offset_target_override')
+                    new_conn.mid_y_override = conn_data.get('mid_y_override')
                     self.connections.append(new_conn)
                     
             start_exists = any(n.type == 'start' for n in self.nodes.values())
@@ -621,9 +633,12 @@ class FlowBuilderProApp(
 
     # --- Node Creation and Management ---
 
-    def create_node(self, node_type, name=None, x=150, y=120, properties=None, is_canvas_coords=False):
-        self.node_counter += 1
-        node_id = self.node_counter
+    def create_node(self, node_type, name=None, x=150, y=120, properties=None, is_canvas_coords=False, node_id=None):
+        if node_id is None:
+            self.node_counter += 1
+            node_id = self.node_counter
+        else:
+            self.node_counter = max(self.node_counter, node_id)
         
         if is_canvas_coords:
             cx = x
@@ -986,7 +1001,8 @@ class FlowBuilderProApp(
 
     def run_flow_thread(self, start_node, max_runs):
         payload = {}
-        current_run = 0
+        self.current_run = 0
+        self.max_runs = max_runs
         self.log_message("=== STARTING FLOW EXECUTION ===")
         self.log_message(f"Initial Payload: {json.dumps(payload)}")
         
@@ -995,7 +1011,8 @@ class FlowBuilderProApp(
         
         try:
             while self.is_running:
-                current_run += 1
+                self.current_run += 1
+                current_run = self.current_run
                 if max_runs != -1 and current_run > max_runs:
                     break
                     
@@ -1279,6 +1296,17 @@ class FlowBuilderProApp(
             self.countdown_seconds_var.set(sec)
             self.zoom_min_var.set(z_min)
             self.zoom_max_var.set(z_max)
+            
+            # Save configuration to file
+            from core.i18n_helper import save_app_settings
+            save_app_settings({
+                'hide_window': temp_hide_var.get(),
+                'auto_save': temp_auto_save_var.get(),
+                'countdown_seconds': sec,
+                'zoom_min': z_min,
+                'zoom_max': z_max
+            })
+            
             self.log_message(t("menu.settings_applied_log").format(temp_hide_var.get(), sec, temp_auto_save_var.get(), z_min, z_max))
             settings_win.destroy()
             
