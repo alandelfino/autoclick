@@ -1098,11 +1098,19 @@ class PropertiesPanelMixin:
             lbl_key.pack(anchor="w", pady=(0, 2))
             
             cb_key = ttk.Combobox(self.properties_container, values=[
-                "enter", "tab", "space", "backspace", "escape", "up", "down", "left", "right", "ctrl", "alt", "shift"
+                "enter", "tab", "space", "backspace", "escape", "up", "down", "left", "right", "ctrl", "alt", "shift",
+                "pageup", "pagedown", "home", "end", "delete", "insert",
+                "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12"
             ])
             cb_key.set(self.temp_properties.get('key', 'enter'))
-            cb_key.pack(fill="x", pady=(0, 10))
+            cb_key.pack(fill="x", pady=(0, 2))
             cb_key.property_key = 'key'
+            
+            lbl_key_hint = tk.Label(
+                self.properties_container, text=t("properties.key_hint"), 
+                font=("Segoe UI", 8), fg="#64748b", bg="#f8fafc", justify="left", wraplength=220
+            )
+            lbl_key_hint.pack(anchor="w", pady=(0, 10))
             
             lbl_cnt = tk.Label(self.properties_container, text=t("properties.quantity"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_cnt.pack(anchor="w", pady=(0, 2))

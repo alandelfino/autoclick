@@ -120,6 +120,7 @@
       "op_greater_than": "greater than",
       "comp_value": "Comparison Value:",
       "key": "Key:",
+      "key_hint": "You can also type special key names (e.g. pgdn, home, delete, f5) or the Virtual Key Code in decimal or hexadecimal (e.g. 0x2C for Print Screen).",
       "quantity": "Quantity:",
       "text_to_type": "Text to Type:",
       "text_to_type_hint": "Payload variables can be referenced,\ne.g. Hello {active_window.title} !",

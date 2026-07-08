@@ -120,6 +120,7 @@
       "op_greater_than": "maior que",
       "comp_value": "Valor de Comparação:",
       "key": "Tecla:",
+      "key_hint": "Você também pode digitar o nome de uma tecla especial (ex: pgdn, home, delete, f5) ou o código da tecla em decimal ou hexadecimal (ex: 0x2C para Print Screen).",
       "quantity": "Quantidade de vezes:",
       "text_to_type": "Texto a Digitar:",
       "text_to_type_hint": "Variáveis do payload podem ser referenciadas,\nex: Olá {active_window.title} !",

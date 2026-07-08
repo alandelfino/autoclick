@@ -40,18 +40,54 @@ VK_CODES = {
     'ctrl': 0x11,
     'alt': 0x12,
     'shift': 0x10,
+    'pageup': 0x21,
+    'page_up': 0x21,
+    'pgup': 0x21,
+    'pagedown': 0x22,
+    'page_down': 0x22,
+    'pgdn': 0x22,
+    'home': 0x24,
+    'end': 0x23,
+    'delete': 0x2E,
+    'del': 0x2E,
+    'insert': 0x2D,
+    'ins': 0x2D,
+    'f1': 0x70,
+    'f2': 0x71,
+    'f3': 0x72,
+    'f4': 0x73,
+    'f5': 0x74,
+    'f6': 0x75,
+    'f7': 0x76,
+    'f8': 0x77,
+    'f9': 0x78,
+    'f10': 0x79,
+    'f11': 0x7A,
+    'f12': 0x7B,
 }
 
 def simulate_keypress(key, count=1):
     """Simulates pressing a key multiple times."""
-    key_lower = key.lower()
-    if key_lower in VK_CODES:
-        vk_code = VK_CODES[key_lower]
-    elif len(key) == 1:
-        # Get virtual-key code for the single character
-        vk_code = ctypes.windll.user32.VkKeyScanW(ord(key)) & 0xFF
-    else:
-        return # Invalid/Unsupported Key
+    key_lower = key.strip().lower()
+    vk_code = None
+    
+    # Check if user input is a virtual key code in hex (e.g. "0x22") or decimal (e.g. "34") format
+    if key_lower.startswith("0x"):
+        try:
+            vk_code = int(key_lower, 16)
+        except ValueError:
+            pass
+    elif key_lower.isdigit():
+        vk_code = int(key_lower)
+        
+    if vk_code is None:
+        if key_lower in VK_CODES:
+            vk_code = VK_CODES[key_lower]
+        elif len(key) == 1:
+            # Get virtual-key code for the single character
+            vk_code = ctypes.windll.user32.VkKeyScanW(ord(key)) & 0xFF
+        else:
+            return # Invalid/Unsupported Key
 
     for _ in range(count):
         # KEYEVENTF_KEYUP = 0x0002
