@@ -1,10 +1,10 @@
 {
     "language": "pt",
-    "hide_window": true,
+    "hide_window": false,
     "auto_save": true,
     "countdown_seconds": 3,
-    "zoom_min": 0.1,
+    "zoom_min": 0.2,
     "zoom_max": 3.0,
     "connection_width": 2,
-    "connection_color": "#94a3b8"
+    "connection_color": "#c0c0c0"
 }

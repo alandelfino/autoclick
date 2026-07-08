@@ -68,6 +68,16 @@ class FlowBuilderProApp(
         self.root = root
         self.root.title(t("app.title"))
         
+        # Set Window Icon
+        try:
+            from PIL import Image, ImageTk
+            icon_img = Image.open(r"c:\apps\autoclick\autoclick-icone.png")
+            icon_photo = ImageTk.PhotoImage(icon_img)
+            self.root.iconphoto(True, icon_photo)
+            self._window_icon = icon_photo
+        except Exception as e:
+            print(f"Error setting window icon: {e}")
+        
         # Maximized full size
         try:
             self.root.state('zoomed')
@@ -119,6 +129,7 @@ class FlowBuilderProApp(
         self.root.bind("<Control-Z>", lambda event: self.undo_action())
         self.root.bind("<Control-y>", lambda event: self.redo_action())
         self.root.bind("<Control-Y>", lambda event: self.redo_action())
+        self.root.bind("<Button-1>", self.on_global_click, add="+")
 
     def setup_ui(self):
         # Main Layout Styling
@@ -135,12 +146,35 @@ class FlowBuilderProApp(
         self.top_bar = tk.Frame(self.root, bg="#0f172a", height=55)
         self.top_bar.pack_propagate(False)
         
+        # Set Topbar Icon next to Title
+        try:
+            from PIL import Image, ImageTk
+            resample_filter = None
+            if hasattr(Image, 'Resampling') and hasattr(Image.Resampling, 'LANCEZOS'):
+                resample_filter = Image.Resampling.LANCEZOS
+            elif hasattr(Image, 'LANCEZOS'):
+                resample_filter = Image.LANCEZOS
+            elif hasattr(Image, 'ANTIALIAS'):
+                resample_filter = Image.ANTIALIAS
+            
+            if resample_filter is not None:
+                topbar_img = Image.open(r"c:\apps\autoclick\autoclick-icone.png").resize((24, 24), resample_filter)
+            else:
+                topbar_img = Image.open(r"c:\apps\autoclick\autoclick-icone.png").resize((24, 24))
+                
+            topbar_photo = ImageTk.PhotoImage(topbar_img)
+            self.topbar_logo_img = topbar_photo
+            self.logo_icon_lbl = tk.Label(self.top_bar, image=self.topbar_logo_img, bg="#0f172a")
+            self.logo_icon_lbl.pack(side="left", padx=(20, 0), pady=10)
+        except Exception as e:
+            print(f"Error setting topbar icon: {e}")
+            
         # Logo / Title in Topbar
         self.logo_label = tk.Label(
-            self.top_bar, text="⚙️ AUTOCLICK PRO", font=("Segoe UI", 13, "bold"),
+            self.top_bar, text="AUTOCLICK PRO", font=("Segoe UI", 13, "bold"),
             fg="#38bdf8", bg="#0f172a"
         )
-        self.logo_label.pack(side="left", padx=20, pady=10)
+        self.logo_label.pack(side="left", padx=(5, 20), pady=10)
         
         # Run button inside Topbar
         self.run_btn = tk.Button(
@@ -174,16 +208,25 @@ class FlowBuilderProApp(
         # Draw left panel contents (toolbox and console logs)
         self.setup_left_panel()
         
-        # Pack left panel to the left of the flow tab
-        self.left_panel.pack(side="left", fill="y")
+        # Initialize slide panel (collapsible nodes sidebar)
+        self.slide_panel = tk.Frame(self.tab_flow, width=280, bg="#0f172a", bd=0, relief="solid")
+        self.slide_panel.pack_propagate(False)
+        self.setup_slide_panel()
+        
+        # Setup the bottom debug console
+        self.setup_bottom_console()
         
         # Pack the canvas to fill the remaining space of the flow tab
-        self.canvas.pack(side="right", fill="both", expand=True)
+        self.canvas.pack(side="top", fill="both", expand=True)
         
-        # Initialize slide panel (collapsible nodes sidebar)
-        self.slide_panel = tk.Frame(self.tab_flow, width=280, bg="#0f172a", bd=1, relief="solid")
-        self.slide_panel.place(relx=1.0, x=0, y=0, relheight=1.0, anchor="nw")
-        self.setup_slide_panel()
+        # Top right canvas plus button
+        self.canvas_plus_btn = tk.Button(
+            self.canvas, text="➕", font=("Segoe UI", 12, "bold"),
+            bg="#ffffff", fg="#475569", activebackground="#f1f5f9", activeforeground="#475569",
+            bd=1, relief="solid", cursor="hand2", padx=8, pady=4,
+            command=self.open_canvas_node_sidebar
+        )
+        self.canvas_plus_btn.place(relx=0.98, rely=0.02, anchor="ne")
         
         # Setup top menu (not configured on root yet)
         self.setup_menu_bar()
@@ -1426,6 +1469,61 @@ class FlowBuilderProApp(
         canvas.bind("<MouseWheel>", _on_mousewheel)
         scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
         
+        def make_drag_handlers(button_widget, tk_type):
+            def on_press(event):
+                self.dragged_node_type = tk_type
+                self.drag_start_x = event.x_root
+                self.drag_start_y = event.y_root
+                self.has_dragged = False
+                
+            def on_motion(event):
+                if not hasattr(self, 'drag_start_x'):
+                    return
+                src_node = getattr(self, 'plus_btn_source_node', None)
+                if src_node is not None:
+                    return # Disable drag when opened via port
+                dist = ((event.x_root - self.drag_start_x)**2 + (event.y_root - self.drag_start_y)**2)**0.5
+                if dist > 8:
+                    self.has_dragged = True
+                    self.root.config(cursor="plus")
+                    
+            def on_release(event):
+                self.root.config(cursor="")
+                if not hasattr(self, 'has_dragged'):
+                    return
+                if self.has_dragged:
+                    src_node = getattr(self, 'plus_btn_source_node', None)
+                    if src_node is not None:
+                        return # Disable drag when opened via port
+                    target = self.root.winfo_containing(event.x_root, event.y_root)
+                    is_canvas = (target == self.canvas)
+                    if not is_canvas and target:
+                        widget = target
+                        while widget:
+                            if widget == self.canvas:
+                                is_canvas = True
+                                break
+                            try:
+                                widget = widget.master
+                            except AttributeError:
+                                break
+                    if is_canvas:
+                        cx = self.canvas.canvasx(event.x_root - self.canvas.winfo_rootx())
+                        cy = self.canvas.canvasy(event.y_root - self.canvas.winfo_rooty())
+                        self.create_node(tk_type, x=cx, y=cy, is_canvas_coords=True)
+                        self.slide_panel_out()
+                else:
+                    bx1 = button_widget.winfo_rootx()
+                    by1 = button_widget.winfo_rooty()
+                    bx2 = bx1 + button_widget.winfo_width()
+                    by2 = by1 + button_widget.winfo_height()
+                    if bx1 <= event.x_root <= bx2 and by1 <= event.y_root <= by2:
+                        self.on_click_sidebar_node(tk_type)
+                        
+            button_widget.bind("<ButtonPress-1>", on_press)
+            button_widget.bind("<B1-Motion>", on_motion)
+            button_widget.bind("<ButtonRelease-1>", on_release)
+            
         # Group list
         from core.i18n_helper import t
         from models.node import get_recolored_icon
@@ -1484,11 +1582,13 @@ class FlowBuilderProApp(
                 fg="#64748b", bg="#0f172a"
             )
             lbl_sec.pack(anchor="w", pady=(15, 5), padx=15)
+            lbl_sec.bind("<MouseWheel>", _on_mousewheel)
             
             for name, n_type, color in nodes:
                 # Add node button
                 btn_frame = tk.Frame(scrollable_frame, bg="#0f172a")
                 btn_frame.pack(fill="x", padx=10, pady=2)
+                btn_frame.bind("<MouseWheel>", _on_mousewheel)
                 
                 # Retrieve and recolor icon for list
                 icon_file = icon_mapping.get(n_type, 'question')
@@ -1500,10 +1600,11 @@ class FlowBuilderProApp(
                     btn_frame, text=f"  {name}", image=photo, compound="left",
                     font=("Segoe UI", 9, "bold"), fg="#e2e8f0", bg="#1e293b",
                     activeforeground="#ffffff", activebackground="#334155",
-                    bd=0, padx=10, pady=8, cursor="hand2", anchor="w",
-                    command=lambda nt=n_type, nm=name: self.on_select_slide_node(nt, nm)
+                    bd=0, padx=10, pady=8, cursor="hand2", anchor="w"
                 )
                 btn_item.pack(fill="x", expand=True)
+                btn_item.bind("<MouseWheel>", _on_mousewheel)
+                make_drag_handlers(btn_item, n_type)
                 
                 # Bind hover effects
                 def on_enter(e, widget=btn_item):
@@ -1518,21 +1619,18 @@ class FlowBuilderProApp(
         self.plus_btn_source_node = source_node
         self.plus_btn_source_port = source_port
         
+        self.slide_panel.config(bd=1, width=280)
+        self.canvas.pack_forget()
+        self.bottom_console_frame.pack_forget()
+        self.slide_panel.pack(side="right", fill="y")
+        self.bottom_console_frame.pack(side="bottom", fill="x")
+        self.canvas.pack(side="top", fill="both", expand=True)
         self.slide_panel.lift()
-        self.animate_slide(-280, 0, step=30)
+        self.slide_panel_open = True
         
     def slide_panel_out(self):
-        self.animate_slide(0, -280, step=30)
-        
-    def animate_slide(self, target_x, current_x, step=30):
-        if target_x < current_x:
-            new_x = max(target_x, current_x - step)
-            self.slide_panel.place(relx=1.0, x=new_x, y=0, relheight=1.0, anchor="nw")
-            self.root.after(8, lambda: self.animate_slide(target_x, new_x, step))
-        elif target_x > current_x:
-            new_x = min(target_x, current_x + step)
-            self.slide_panel.place(relx=1.0, x=new_x, y=0, relheight=1.0, anchor="nw")
-            self.root.after(8, lambda: self.animate_slide(target_x, new_x, step))
+        self.slide_panel.pack_forget()
+        self.slide_panel_open = False
 
     def on_select_slide_node(self, node_type, name):
         self.slide_panel_out()
@@ -1572,6 +1670,125 @@ class FlowBuilderProApp(
         # Clear references
         self.plus_btn_source_node = None
         self.plus_btn_source_port = None
+
+    def open_canvas_node_sidebar(self):
+        self.plus_btn_source_node = None
+        self.plus_btn_source_port = None
+        
+        self.slide_panel.config(bd=1, width=280)
+        self.canvas.pack_forget()
+        self.bottom_console_frame.pack_forget()
+        self.slide_panel.pack(side="right", fill="y")
+        self.bottom_console_frame.pack(side="bottom", fill="x")
+        self.canvas.pack(side="top", fill="both", expand=True)
+        self.slide_panel.lift()
+        self.slide_panel_open = True
+
+    def on_click_sidebar_node(self, node_type):
+        src_node = getattr(self, 'plus_btn_source_node', None)
+        src_port = getattr(self, 'plus_btn_source_port', None)
+        
+        if src_node and src_port:
+            self.on_select_slide_node(node_type, "")
+        else:
+            cx = self.canvas.canvasx(self.canvas.winfo_width() / 2)
+            cy = self.canvas.canvasy(self.canvas.winfo_height() / 2)
+            self.create_node(node_type, x=cx, y=cy, is_canvas_coords=True)
+            self.slide_panel_out()
+
+    def on_global_click(self, event):
+        if getattr(self, 'slide_panel_open', False):
+            widget = event.widget
+            
+            # Check if clicked on a canvas item with tag "plus_handle"
+            if widget == self.canvas:
+                clicked_items = self.canvas.find_withtag("current")
+                if clicked_items:
+                    tags = self.canvas.gettags(clicked_items[0])
+                    if "plus_handle" in tags:
+                        return # Ignore, let the tag binding open the panel
+                        
+            is_descendant = False
+            # Also, check if they clicked the canvas plus button, so we don't immediately close and reopen it!
+            if widget == self.canvas_plus_btn:
+                return
+            while widget:
+                if widget == self.slide_panel:
+                    is_descendant = True
+                    break
+                try:
+                    widget = widget.master
+                except AttributeError:
+                    break
+            if not is_descendant:
+                self.slide_panel_out()
+
+    def setup_bottom_console(self):
+        self.bottom_console_frame = tk.Frame(self.tab_flow, bg="#0f172a", height=35, bd=1, relief="solid")
+        self.bottom_console_frame.pack_propagate(False)
+        self.bottom_console_frame.pack(side="bottom", fill="x")
+        
+        self.console_header = tk.Frame(self.bottom_console_frame, bg="#1e293b", height=35)
+        self.console_header.pack_propagate(False)
+        self.console_header.pack(side="top", fill="x")
+        
+        self.console_toggle_btn = tk.Button(
+            self.console_header, text="▲", font=("Segoe UI", 10, "bold"),
+            fg="#94a3b8", bg="#1e293b", activeforeground="#f8fafc", activebackground="#1e293b",
+            bd=0, cursor="hand2", command=self.toggle_console
+        )
+        self.console_toggle_btn.pack(side="left", padx=(15, 5), pady=5)
+        
+        self.console_title_lbl = tk.Label(
+            self.console_header, text=t("toolbox.debug_console"), font=("Segoe UI", 9, "bold"),
+            fg="#e2e8f0", bg="#1e293b"
+        )
+        self.console_title_lbl.pack(side="left", padx=5, pady=5)
+        
+        self.console_header.bind("<Button-1>", lambda e: self.toggle_console())
+        self.console_title_lbl.bind("<Button-1>", lambda e: self.toggle_console())
+        
+        self.console_clear_btn = tk.Button(
+            self.console_header, text="Limpar", font=("Segoe UI", 8, "bold"),
+            bg="#ef4444", fg="#ffffff", activebackground="#dc2626", activeforeground="#ffffff",
+            bd=0, padx=8, pady=3, cursor="hand2", command=self.clear_console_log
+        )
+        self.console_clear_btn.pack(side="right", padx=(5, 15), pady=5)
+        
+        self.console_expand_btn = tk.Button(
+            self.console_header, text="Expandir", font=("Segoe UI", 8, "bold"),
+            bg="#3b82f6", fg="#ffffff", activebackground="#2563eb", activeforeground="#ffffff",
+            bd=0, padx=8, pady=3, cursor="hand2", command=self.expand_log_console
+        )
+        self.console_expand_btn.pack(side="right", padx=5, pady=5)
+        
+        divider = tk.Frame(self.bottom_console_frame, bg="#1e293b", height=1)
+        divider.pack(side="top", fill="x")
+        
+        self.console_content = tk.Frame(self.bottom_console_frame, bg="#0f172a")
+        self.console_content.pack(side="top", fill="both", expand=True)
+        
+        self.log_text = tk.Text(
+            self.console_content, bg="#1e293b", fg="#e2e8f0", bd=0,
+            font=("Consolas", 8), state="disabled", wrap="word"
+        )
+        self.log_text.pack(pady=10, padx=15, fill="both", expand=True)
+        self.console_expanded = False
+
+    def toggle_console(self):
+        if self.console_expanded:
+            self.console_expanded = False
+            self.console_toggle_btn.config(text="▲")
+            self.bottom_console_frame.config(height=35)
+        else:
+            self.console_expanded = True
+            self.console_toggle_btn.config(text="▼")
+            self.bottom_console_frame.config(height=200)
+
+    def clear_console_log(self):
+        self.log_text.config(state="normal")
+        self.log_text.delete("1.0", tk.END)
+        self.log_text.config(state="disabled")
 
 
 if __name__ == "__main__":

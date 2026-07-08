@@ -230,6 +230,12 @@ class VisualNode:
         # Bind right-click events
         self.canvas.tag_bind(self.tag, "<Button-3>", self.on_right_click_node)
         self.canvas.tag_bind(self.tag, "<Button-2>", self.on_right_click_node)
+        
+        # Initialize plus handles only if zoom scale is 1.0 (to avoid double scaling on initial load)
+        app = getattr(self.canvas, 'app', None)
+        zoom_scale = getattr(app, 'zoom_scale', 1.0) if app else 1.0
+        if zoom_scale == 1.0:
+            self.update_plus_handles()
 
     def get_default_properties(self):
         alias_map = {
@@ -451,8 +457,7 @@ class VisualNode:
                     fill="#64748b", font=("Segoe UI", 8, "bold"), tags=self.tag
                 )
                 
-        # 5. Draw plus handles for unconnected output ports
-        self.update_plus_handles()
+
 
     def update_summary_text(self):
         pass
@@ -541,7 +546,7 @@ class VisualNode:
         cx = self.canvas.canvasx(event.x)
         cy = self.canvas.canvasy(event.y)
         
-        overlapping = self.canvas.find_overlapping(cx - 1, cy - 1, cx + 1, cy + 1)
+        overlapping = self.canvas.find_overlapping(cx, cy, cx, cy)
         node_items = self.canvas.find_withtag(self.tag)
         is_still_over_node = any(item in overlapping for item in node_items)
         is_over_port = any("port" in self.canvas.gettags(item) for item in overlapping)
@@ -584,7 +589,7 @@ class VisualNode:
                 if not connected:
                     px, py = self.get_port_center(port_name)
                     
-                    line_len = 20 * zoom_scale
+                    line_len = 30 * zoom_scale
                     box_sz = 16 * zoom_scale
                     r_corner = 4 * zoom_scale
                     
@@ -603,11 +608,11 @@ class VisualNode:
                         tags=(self.tag, f"plus_btn_{self.id}_{port_name}", "plus_handle")
                     )
                     
-                    # Plus text
+                    # Plus text (centered)
                     plus_font_sz = max(1, int(round(10 * zoom_scale)))
                     text_id = self.canvas.create_text(
-                        bx1 + box_sz / 2, py, text="+", fill="#475569",
-                        font=("Segoe UI", plus_font_sz, "bold"),
+                        bx1 + box_sz / 2, py + (0.5 * zoom_scale), text="+", fill="#475569",
+                        font=("Segoe UI", plus_font_sz, "bold"), anchor="center",
                         tags=(self.tag, f"plus_btn_{self.id}_{port_name}", "plus_handle")
                     )
                     
@@ -618,6 +623,11 @@ class VisualNode:
                     self.canvas.tag_bind(tag_name, "<Button-1>", lambda event, pn=port_name: self.on_click_plus_handle(pn))
                     self.canvas.tag_bind(tag_name, "<Enter>", lambda event, tn=tag_name: self.canvas.config(cursor="hand2"))
                     self.canvas.tag_bind(tag_name, "<Leave>", lambda event: self.canvas.config(cursor=""))
+                    
+        # Raise port text labels to be drawn on top of the plus handles
+        for p in self.ports.values():
+            if 'ui_label' in p and p['ui_label']:
+                self.canvas.tag_raise(p['ui_label'])
 
     def on_click_plus_handle(self, port_name):
         app = getattr(self.canvas, 'app', None)
@@ -1582,16 +1592,37 @@ __result = __user_function()
             if 'ui_label' in p:
                 self.canvas.delete(p['ui_label'])
         
+        # Clean up plus handles too
+        if hasattr(self, 'plus_handles'):
+            for item_ids in list(self.plus_handles.values()):
+                for iid in item_ids:
+                    try:
+                        self.canvas.delete(iid)
+                    except Exception:
+                        pass
+            self.plus_handles.clear()
+        
         if self.type == 'switch':
             cases = self.properties.get('cases', [])
-            self.height = max(100, 45 + 30 * (len(cases) + 1))
+            self.height = max(68, 30 * (len(cases) + 1))
         elif self.type == 'condition':
             else_ifs = self.properties.get('else_ifs', [])
-            self.height = max(100, 45 + 30 * (len(else_ifs) + 2))
+            self.height = max(68, 30 * (len(else_ifs) + 2))
             
         self.ports = {}
         self.setup_ports()
         self.draw()
+        
+        app = getattr(self.canvas, 'app', None)
+        zoom_scale = getattr(app, 'zoom_scale', 1.0) if app else 1.0
+        if zoom_scale != 1.0:
+            cx, cy = self.x, self.y
+            self.canvas.scale(self.tag, cx, cy, zoom_scale, zoom_scale)
+            for p in self.ports.values():
+                self.canvas.scale(p['tag'], cx, cy, zoom_scale, zoom_scale)
+            self.scale_fonts(zoom_scale)
+        else:
+            self.update_plus_handles()
         
         self.canvas.tag_bind(self.tag, "<Enter>", self.on_enter)
         self.canvas.tag_bind(self.tag, "<Leave>", self.on_leave)

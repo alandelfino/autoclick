@@ -10,6 +10,8 @@ class NodeConfigWindowMixin:
     """Mixin providing the node configuration window UI."""
 
     def open_node_config_window(self, node):
+        node.is_hovered = False
+        node.update_outline()
         self.select_node(node)
         
         # Close existing popup window if open

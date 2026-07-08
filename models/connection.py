@@ -298,10 +298,10 @@ class VisualConnection:
         self.canvas.config(cursor=cursor_shape)
 
     def on_leave(self, event):
-        # Find what items are actually under the mouse coordinate (2x2 bounding box)
+        # Find what items are actually under the mouse coordinate (single pixel)
         cx = self.canvas.canvasx(event.x)
         cy = self.canvas.canvasy(event.y)
-        overlapping = self.canvas.find_overlapping(cx - 1, cy - 1, cx + 1, cy + 1)
+        overlapping = self.canvas.find_overlapping(cx, cy, cx, cy)
         
         # If the mouse is over a port, we've left the connection
         for item_id in overlapping:

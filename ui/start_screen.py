@@ -15,8 +15,29 @@ class StartScreenMixin:
         card = tk.Frame(self.start_frame, bg="#1e293b", padx=45, pady=45, highlightbackground="#38bdf8", highlightthickness=1)
         card.place(relx=0.5, rely=0.5, anchor="center")
         
-        # Icon
-        logo_lbl = tk.Label(card, text="⚙️", font=("Segoe UI", 52), fg="#38bdf8", bg="#1e293b")
+        # Logo Image
+        try:
+            from PIL import Image, ImageTk
+            import os
+            logo_path = r"c:\apps\autoclick\Autoclick.png"
+            if os.path.exists(logo_path):
+                raw_img = Image.open(logo_path)
+                w, h = raw_img.size
+                new_w = 250
+                new_h = int(h * (new_w / w))
+                resample_filter = Image.LANCEZOS
+                if hasattr(Image, 'Resampling') and hasattr(Image.Resampling, 'LANCEZOS'):
+                    resample_filter = Image.Resampling.LANCEZOS
+                elif hasattr(Image, 'ANTIALIAS'):
+                    resample_filter = Image.ANTIALIAS
+                img = raw_img.resize((new_w, new_h), resample_filter)
+                self.start_logo_photo = ImageTk.PhotoImage(img)
+                logo_lbl = tk.Label(card, image=self.start_logo_photo, bg="#1e293b")
+            else:
+                logo_lbl = tk.Label(card, text="⚙️", font=("Segoe UI", 52), fg="#38bdf8", bg="#1e293b")
+        except Exception:
+            logo_lbl = tk.Label(card, text="⚙️", font=("Segoe UI", 52), fg="#38bdf8", bg="#1e293b")
+            
         logo_lbl.pack(pady=(0, 10))
         
         # App Title
