@@ -388,11 +388,13 @@ class VisualConnection:
                 self.delete()
                 if self in app.connections:
                     app.connections.remove(self)
+                app.flow_has_changes = True
                 app.trigger_auto_save()
 
     def save_app_flow(self):
         app = getattr(self.canvas, 'app', None)
         if app:
+            app.flow_has_changes = True
             app.trigger_auto_save()
 
     def delete(self):

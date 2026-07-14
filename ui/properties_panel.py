@@ -433,6 +433,7 @@ class PropertiesPanelMixin:
                     self.log_message(t("properties.step_test_success_log").format(node.name, next_port))
                     if button:
                         button.config(state="normal", text="Execute Step")
+                    self.flow_has_changes = True
                     if getattr(self, 'current_filepath', None):
                         self.trigger_auto_save()
 
@@ -1443,6 +1444,7 @@ class PropertiesPanelMixin:
                                 is_mock=False
                             )
                             btn_run_api.config(state="normal", text=t("properties.run_test"))
+                            self.flow_has_changes = True
                             if getattr(self, 'current_filepath', None):
                                 self.trigger_auto_save()
                         self.root.after(0, update_ui)

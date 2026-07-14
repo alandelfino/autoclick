@@ -1,6 +1,6 @@
 {
     "language": "pt",
-    "hide_window": false,
+    "hide_window": true,
     "auto_save": true,
     "countdown_seconds": 3,
     "zoom_min": 0.2,

@@ -70,52 +70,7 @@ class CanvasPanelMixin:
     def draw_grid(self):
         # Delete existing grid lines
         self.canvas.delete("grid")
-        
-        # Determine current viewport bounds in canvas coordinates
-        vw = self.canvas.winfo_width() or 1200
-        vh = self.canvas.winfo_height() or 800
-        
-        x1 = self.canvas.canvasx(0)
-        y1 = self.canvas.canvasy(0)
-        x2 = self.canvas.canvasx(vw)
-        y2 = self.canvas.canvasy(vh)
-        
-        # Base grid spacing in canvas coordinate space
-        base_spacing = 40
-        
-        # Adjust spacing dynamically based on zoom scale to keep grid spacing on screen
-        # approximately constant and prevent performance collapse/freezing at low zoom levels.
-        import math
-        try:
-            k = round(math.log2(1.2 / max(0.0001, self.zoom_scale)))
-            spacing = int(base_spacing * (2 ** k))
-        except Exception:
-            # Fallback steps if log calculation fails
-            if self.zoom_scale < 0.3:
-                spacing = base_spacing * 4
-            elif self.zoom_scale < 0.6:
-                spacing = base_spacing * 2
-            elif self.zoom_scale > 1.6:
-                spacing = base_spacing // 2
-            else:
-                spacing = base_spacing
-            
-        # Find start and end grid lines to draw
-        start_x = int(x1 - (x1 % spacing))
-        end_x = int(x2 + spacing)
-        start_y = int(y1 - (y1 % spacing))
-        end_y = int(y2 + spacing)
-        
-        # Draw vertical lines within the viewport bounds
-        for x in range(start_x, end_x, spacing):
-            self.canvas.create_line(x, y1, x, y2, fill="#cbd5e1", dash=(1, 5), tags="grid")
-            
-        # Draw horizontal lines within the viewport bounds
-        for y in range(start_y, end_y, spacing):
-            self.canvas.create_line(x1, y, x2, y, fill="#cbd5e1", dash=(1, 5), tags="grid")
-            
-        # Ensure grid is drawn behind all other elements
-        self.canvas.tag_lower("grid")
+        return
 
     # --- Canvas Zoom, Pan, Center, and Auto Layout ---
 

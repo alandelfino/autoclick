@@ -764,6 +764,7 @@ class VisualNode:
             new_conn2 = VisualConnection(self.canvas, new_node, new_node_out, self, 'in')
             app.connections.append(new_conn2)
             
+        app.flow_has_changes = True
         app.trigger_auto_save()
 
     def insert_node_after(self, node_type):
@@ -813,6 +814,7 @@ class VisualNode:
                 new_conn = VisualConnection(self.canvas, self, self_out, new_node, 'in')
                 app.connections.append(new_conn)
                 
+        app.flow_has_changes = True
         app.trigger_auto_save()
 
     def execute(self, payload, log_func):

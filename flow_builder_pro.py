@@ -108,6 +108,7 @@ class FlowBuilderProApp(
         self.undo_stack = []
         self.redo_stack = []
         self.is_undo_redo_or_loading = False
+        self.flow_has_changes = False
         
         # GUI Interaction states
         self.drag_data = {'x': 0, 'y': 0}
@@ -376,11 +377,19 @@ class FlowBuilderProApp(
                 
         self._auto_save_timer = self.root.after(1500, perform_auto_save)
 
+    def fast_copy(self, obj):
+        if isinstance(obj, dict):
+            return {k: self.fast_copy(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self.fast_copy(x) for x in obj]
+        else:
+            return obj
+
     def serialize_flow(self):
         flow_data = {
             'nodes': [],
             'connections': [],
-            'saved_connections': copy.deepcopy(getattr(self, 'saved_connections', {})),
+            'saved_connections': self.fast_copy(getattr(self, 'saved_connections', {})),
             'zoom_scale': getattr(self, 'zoom_scale', 1.0),
             'scroll_x': self.canvas.canvasx(0),
             'scroll_y': self.canvas.canvasy(0)
@@ -392,7 +401,7 @@ class FlowBuilderProApp(
                 'name': n.name,
                 'x': n.x,
                 'y': n.y,
-                'properties': copy.deepcopy(n.properties)
+                'properties': self.fast_copy(n.properties)
             })
         for c in self.connections:
             flow_data['connections'].append({
@@ -410,7 +419,7 @@ class FlowBuilderProApp(
 
     def deserialize_flow(self, flow_data):
         self.clear_flow(ask=False, recreate_start=False)
-        self.saved_connections = copy.deepcopy(flow_data.get('saved_connections', {}))
+        self.saved_connections = self.fast_copy(flow_data.get('saved_connections', {}))
         if hasattr(self, 'populate_connections_list'):
             self.populate_connections_list()
             
@@ -424,7 +433,7 @@ class FlowBuilderProApp(
                 name=node_data['name'],
                 x=node_data['x'],
                 y=node_data['y'],
-                properties=copy.deepcopy(node_data['properties']),
+                properties=self.fast_copy(node_data['properties']),
                 is_canvas_coords=True,
                 node_id=nid
             )
@@ -463,15 +472,20 @@ class FlowBuilderProApp(
         
         self.select_node(None)
         self.draw_grid()
+        self.flow_has_changes = False
 
     def push_undo(self):
         if getattr(self, 'is_undo_redo_or_loading', False):
+            return
+            
+        if not getattr(self, 'flow_has_changes', False):
             return
             
         state = self.serialize_flow()
         
         # Avoid pushing identical consecutive states
         if self.undo_stack and self.undo_stack[-1] == state:
+            self.flow_has_changes = False
             return
             
         self.undo_stack.append(state)
@@ -479,6 +493,7 @@ class FlowBuilderProApp(
             self.undo_stack.pop(0)
             
         self.redo_stack.clear()
+        self.flow_has_changes = False
 
     def undo_action(self):
         if len(self.undo_stack) > 1:
@@ -732,6 +747,7 @@ class FlowBuilderProApp(
         
         # Auto select the newly created node
         self.select_node(new_node)
+        self.flow_has_changes = True
         self.trigger_auto_save()
         return new_node
 
@@ -806,6 +822,7 @@ class FlowBuilderProApp(
             if node_id in self.nodes:
                 del self.nodes[node_id]
             self.log_message(f"Node {node_id} ('{node.name}') removed.")
+            self.flow_has_changes = True
             self.trigger_auto_save()
 
     def delete_multiple_nodes(self, nodes_to_delete):
@@ -840,6 +857,7 @@ class FlowBuilderProApp(
             
             self.select_node(None)
             self.log_message(f"{len(nodes_to_delete)} nós removidos.")
+            self.flow_has_changes = True
             self.trigger_auto_save()
 
     def delete_node_from_config(self):
@@ -871,6 +889,7 @@ class FlowBuilderProApp(
         
         self.select_node(None)
         self.log_message(f"Node {node_id} successfully removed.")
+        self.flow_has_changes = True
         self.trigger_auto_save()
 
     def clear_flow(self, ask=True, recreate_start=True):

@@ -179,6 +179,7 @@ class NodeConfigWindowMixin:
             self.log_message(t("node_config.applied_log").format(self.selected_node.name))
             if hasattr(self, 'propagate_payload_changes'):
                 self.propagate_payload_changes(self.selected_node.id)
+            self.flow_has_changes = True
             if getattr(self, 'current_filepath', None):
                 self.trigger_auto_save()
         self.close_node_window()

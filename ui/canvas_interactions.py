@@ -193,6 +193,9 @@ class CanvasInteractionsMixin:
             
             self.drag_data['x'] = cx
             self.drag_data['y'] = cy
+            app = getattr(self.canvas, 'app', None)
+            if app:
+                app.flow_has_changes = True
             return
             
         # 3. Processing single node movements
@@ -208,6 +211,9 @@ class CanvasInteractionsMixin:
                     
             self.drag_data['x'] = cx
             self.drag_data['y'] = cy
+            app = getattr(self.canvas, 'app', None)
+            if app:
+                app.flow_has_changes = True
 
     def on_release_canvas(self, event):
         self.is_dragging_waypoint = False
@@ -272,6 +278,9 @@ class CanvasInteractionsMixin:
                         existing_conn.delete()
                         self.connections.remove(existing_conn)
                         self.log_message(f"Conexão anterior saindo de {src_node.name} ({src_port}) substituída.")
+                        app = getattr(self.canvas, 'app', None)
+                        if app:
+                            app.flow_has_changes = True
                         
                     duplicate = any(
                         c.source.id == src_node.id and c.source_port == src_port and
@@ -283,6 +292,9 @@ class CanvasInteractionsMixin:
                         new_conn = VisualConnection(self.canvas, src_node, src_port, tgt_node, target_port)
                         self.connections.append(new_conn)
                         self.log_message(f"Conexão criada: {src_node.name} ({src_port}) -> {tgt_node.name}")
+                        app = getattr(self.canvas, 'app', None)
+                        if app:
+                            app.flow_has_changes = True
                     else:
                         messagebox.showwarning("Aviso", "Esta conexão específica já existe.")
                         
