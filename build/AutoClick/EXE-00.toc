@@ -55,14 +55,6 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_inspect.py',
    'PYSOURCE'),
-  ('pyi_rth_pkgutil',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgutil.py',
-   'PYSOURCE'),
-  ('pyi_rth_multiprocessing',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_multiprocessing.py',
-   'PYSOURCE'),
   ('pyi_rth__tkinter',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth__tkinter.py',
@@ -71,7 +63,7 @@
  [],
  False,
  False,
- 1783531785,
+ 1784033620,
  [('runw.exe',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',

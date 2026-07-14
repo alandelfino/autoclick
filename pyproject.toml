@@ -28,6 +28,9 @@ postgres = [
 mysql = [
     "pymysql>=1.1.0",
 ]
+ocr = [
+    "pytesseract>=0.3.10",
+]
 dev = [
     "pyinstaller>=6.0.0",
 ]

@@ -674,6 +674,128 @@ class PropertiesPanelMixin:
                 
             cb_type.bind("<<ComboboxSelected>>", save_capture_type)
             
+        elif node.type == 'screenshot':
+            # Combobox Mode selection (Full Screen vs Specified Area)
+            lbl_mode = tk.Label(self.properties_container, text=t("properties.screenshot_mode"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_mode.pack(anchor="w", pady=(0, 2))
+            
+            cb_mode = ttk.Combobox(self.properties_container, values=[t("properties.screenshot_fullscreen"), t("properties.screenshot_area")], state="readonly")
+            initial_val = self.temp_properties.get('screenshot_mode', 'Tela Inteira')
+            if initial_val in ['Tela Inteira', 'Full Screen']:
+                initial_val = t("properties.screenshot_fullscreen")
+            elif initial_val in ['Área Especificada', 'Area Específica', 'Specified Area']:
+                initial_val = t("properties.screenshot_area")
+            cb_mode.set(initial_val)
+            cb_mode.pack(fill="x", pady=(0, 10))
+            cb_mode.property_key = 'screenshot_mode'
+            
+            # Fields: X, Y, Width, Height
+            lbl_x = tk.Label(self.properties_container, text=t("properties.coord_x"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_x.pack(anchor="w", pady=(0, 2))
+            ent_x = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_x.insert(0, str(self.temp_properties.get('x', 0)))
+            ent_x.pack(fill="x", pady=(0, 8))
+            ent_x.property_key = 'x'
+            
+            lbl_y = tk.Label(self.properties_container, text=t("properties.coord_y"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_y.pack(anchor="w", pady=(0, 2))
+            ent_y = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_y.insert(0, str(self.temp_properties.get('y', 0)))
+            ent_y.pack(fill="x", pady=(0, 8))
+            ent_y.property_key = 'y'
+            
+            lbl_w = tk.Label(self.properties_container, text="Largura / Width:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_w.pack(anchor="w", pady=(0, 2))
+            ent_w = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_w.insert(0, str(self.temp_properties.get('width', 1920)))
+            ent_w.pack(fill="x", pady=(0, 8))
+            ent_w.property_key = 'width'
+            
+            lbl_h = tk.Label(self.properties_container, text="Altura / Height:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_h.pack(anchor="w", pady=(0, 2))
+            ent_h = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_h.insert(0, str(self.temp_properties.get('height', 1080)))
+            ent_h.pack(fill="x", pady=(0, 15))
+            ent_h.property_key = 'height'
+            
+            def save_screenshot_fields(event=None):
+                sel = cb_mode.get()
+                if sel == t("properties.screenshot_fullscreen"):
+                    self.temp_properties['screenshot_mode'] = 'Tela Inteira'
+                else:
+                    self.temp_properties['screenshot_mode'] = 'Área Especificada'
+                
+                try:
+                    self.temp_properties['x'] = int(ent_x.get())
+                except ValueError:
+                    self.temp_properties['x'] = ent_x.get()
+                try:
+                    self.temp_properties['y'] = int(ent_y.get())
+                except ValueError:
+                    self.temp_properties['y'] = ent_y.get()
+                try:
+                    self.temp_properties['width'] = int(ent_w.get())
+                except ValueError:
+                    self.temp_properties['width'] = ent_w.get()
+                try:
+                    self.temp_properties['height'] = int(ent_h.get())
+                except ValueError:
+                    self.temp_properties['height'] = ent_h.get()
+                    
+            def update_screenshot_fields_state():
+                is_area = (cb_mode.get() == t("properties.screenshot_area"))
+                state = "normal" if is_area else "disabled"
+                ent_x.config(state=state)
+                ent_y.config(state=state)
+                ent_w.config(state=state)
+                ent_h.config(state=state)
+                if is_area:
+                    btn_select.config(state="normal")
+                else:
+                    btn_select.config(state="disabled")
+                    
+            self.update_screenshot_fields_state = update_screenshot_fields_state
+            
+            cb_mode.bind("<<ComboboxSelected>>", lambda e: [save_screenshot_fields(), update_screenshot_fields_state()])
+            ent_x.bind("<KeyRelease>", save_screenshot_fields)
+            ent_y.bind("<KeyRelease>", save_screenshot_fields)
+            ent_w.bind("<KeyRelease>", save_screenshot_fields)
+            ent_h.bind("<KeyRelease>", save_screenshot_fields)
+            
+            btn_select = tk.Button(
+                self.properties_container, text=t("properties.screenshot_select_btn"), font=("Segoe UI", 9, "bold"),
+                bg="#3b82f6", fg="#ffffff", activebackground="#2563eb", activeforeground="#ffffff",
+                bd=0, pady=8, cursor="hand2", command=lambda: self.launch_area_capture(ent_x, ent_y, ent_w, ent_h, cb_mode)
+            )
+            btn_select.pack(fill="x", pady=5)
+            
+            update_screenshot_fields_state()
+            
+        elif node.type == 'ocr':
+            # Fields: Image (Payload Reference) and Text to Identify
+            lbl_image = tk.Label(self.properties_container, text=t("properties.ocr_image"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_image.pack(anchor="w", pady=(0, 2))
+            
+            ent_image = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_image.insert(0, str(self.temp_properties.get('image', '')))
+            ent_image.pack(fill="x", pady=(0, 8))
+            ent_image.property_key = 'image'
+            
+            lbl_text = tk.Label(self.properties_container, text=t("properties.ocr_text"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_text.pack(anchor="w", pady=(0, 2))
+            
+            ent_text = ttk.Entry(self.properties_container, font=("Segoe UI", 9))
+            ent_text.insert(0, str(self.temp_properties.get('text', '')))
+            ent_text.pack(fill="x", pady=(0, 15))
+            ent_text.property_key = 'text'
+            
+            def save_ocr_fields(event=None):
+                self.temp_properties['image'] = ent_image.get()
+                self.temp_properties['text'] = ent_text.get()
+                
+            ent_image.bind("<KeyRelease>", save_ocr_fields)
+            ent_text.bind("<KeyRelease>", save_ocr_fields)
+            
         elif node.type == 'condition':
             # Fields: Variable, Operator, Value
             lbl_var = tk.Label(self.properties_container, text=t("properties.payload_var"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
@@ -686,6 +808,7 @@ class PropertiesPanelMixin:
             ent_var.insert(0, self.temp_properties.get('variable', ''))
             ent_var.pack(fill="x", pady=(0, 10))
             ent_var.property_key = 'variable'
+            ent_var.is_payload_var_field = True
             
             lbl_op = tk.Label(self.properties_container, text=t("properties.operation"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_op.pack(anchor="w", pady=(0, 2))
@@ -724,7 +847,7 @@ class PropertiesPanelMixin:
                 if not var_name:
                     preview_lbl.config(text="[Enter variable name]")
                     return
-                if '{' in var_name or '}' in var_name:
+                if '{{' in var_name and '}}' in var_name:
                     val = resolve_value(var_name, input_data)
                 else:
                     val = get_payload_value(input_data, var_name)
@@ -1068,7 +1191,13 @@ class PropertiesPanelMixin:
                 if not var_name:
                     preview_lbl.config(text="[Enter variable name]")
                     return
-                val = get_payload_value(input_data, var_name)
+                if '{{' in var_name and '}}' in var_name:
+                    val = resolve_value(var_name, input_data)
+                else:
+                    stripped_var = var_name
+                    while stripped_var.startswith('{') and stripped_var.endswith('}'):
+                        stripped_var = stripped_var[1:-1]
+                    val = get_payload_value(input_data, stripped_var)
                 if val is not None:
                     formatted_val = self.format_preview_value(val)
                     preview_lbl.config(text=f"{formatted_val} ({type(val).__name__})")
@@ -1160,17 +1289,8 @@ class PropertiesPanelMixin:
             
             def update_preview(event=None):
                 raw_text = txt_area.get("1.0", "end-1c")
-                formatted_text = raw_text
-                placeholders = re.findall(r'\{([^}]+)\}', raw_text)
-                
-                for ph in placeholders:
-                    val = get_payload_value(input_data, ph)
-                    if val is not None:
-                        formatted_text = formatted_text.replace(f"{{{ph}}}", self.format_preview_value(val))
-                    else:
-                        formatted_text = formatted_text.replace(f"{{{ph}}}", f"[Undefined: {ph}]")
-                
-                preview_lbl.config(text=formatted_text)
+                formatted_text = resolve_value(raw_text, input_data)
+                preview_lbl.config(text=str(formatted_text))
             
             def save_text_field(event=None):
                 self.temp_properties['text'] = txt_area.get("1.0", "end-1c")
@@ -1793,15 +1913,19 @@ class PropertiesPanelMixin:
                 return
                 
             try:
+                prop_key = getattr(self.active_text_widget, 'property_key', '')
                 if isinstance(self.active_text_widget, tk.Text):
-                    self.active_text_widget.insert(tk.INSERT, f"{{{{{path}}}}}")
+                    self.active_text_widget.insert(tk.INSERT, f"{{{{ $.{path} }}}}")
                 elif isinstance(self.active_text_widget, ttk.Entry) or isinstance(self.active_text_widget, tk.Entry):
-                    if getattr(self.active_text_widget, 'is_payload_var_field', False):
+                    if prop_key == 'payload_var':
                         self.active_text_widget.delete(0, tk.END)
                         self.active_text_widget.insert(0, path)
+                    elif getattr(self.active_text_widget, 'is_payload_var_field', False):
+                        self.active_text_widget.delete(0, tk.END)
+                        self.active_text_widget.insert(0, f"{{{{ $.{path} }}}}")
                     else:
                         insert_pos = self.active_text_widget.index(tk.INSERT)
-                        self.active_text_widget.insert(insert_pos, f"{{{{{path}}}}}")
+                        self.active_text_widget.insert(insert_pos, f"{{{{ $.{path} }}}}")
                     
                 self.active_text_widget.event_generate("<KeyRelease>")
             except Exception:
@@ -1953,6 +2077,21 @@ class PropertiesPanelMixin:
                 schema[alias] = {'title': '<Texto>', 'hwnd': '<Número>'}
             else:
                 schema[alias] = {'x': '<Número>', 'y': '<Número>', 'cursor_name': '<Texto>', 'cursor_handle': '<Número>'}
+        elif node.type == 'screenshot':
+            schema[alias] = {
+                'image': '<Texto>',
+                'x': '<Número>',
+                'y': '<Número>',
+                'width': '<Número>',
+                'height': '<Número>'
+            }
+        elif node.type == 'ocr':
+            schema[alias] = {
+                'x': '<Número>',
+                'y': '<Número>',
+                'width': '<Número>',
+                'height': '<Número>'
+            }
         elif node.type == 'key':
             schema[alias] = {'key': '<Texto>', 'count': '<Número>'}
         elif node.type == 'type_text':
@@ -2094,6 +2233,9 @@ class PropertiesPanelMixin:
         if not hasattr(self, 'properties_container') or not self.properties_container:
             return
             
+        if not getattr(self, 'selected_node', None) and getattr(self, 'configuring_node', None):
+            self.selected_node = self.configuring_node
+            
         def scan_widgets(parent):
             for child in parent.winfo_children():
                 prop_key = getattr(child, 'property_key', None)
@@ -2114,6 +2256,11 @@ class PropertiesPanelMixin:
                         
                     # Perform conversions
                     if self.selected_node.type in ['click', 'move_mouse'] and prop_key in ['x', 'y']:
+                        try:
+                            val = int(val)
+                        except ValueError:
+                            pass
+                    elif self.selected_node.type == 'screenshot' and prop_key in ['x', 'y', 'width', 'height']:
                         try:
                             val = int(val)
                         except ValueError:

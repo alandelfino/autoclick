@@ -127,6 +127,10 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageFont.py',
    'PYMODULE'),
+  ('PIL.ImageGrab',
+   'C:\\Users\\ALAN '
+   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageGrab.py',
+   'PYMODULE'),
   ('PIL.ImageMath',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageMath.py',
@@ -363,26 +367,6 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\_pydecimal.py',
    'PYMODULE'),
-  ('_pyrepl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\_pyrepl\\__init__.py',
-   'PYMODULE'),
-  ('_pyrepl.pager',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\_pyrepl\\pager.py',
-   'PYMODULE'),
-  ('_pyrepl.trace',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\_pyrepl\\trace.py',
-   'PYMODULE'),
-  ('_pyrepl.types',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\_pyrepl\\types.py',
-   'PYMODULE'),
-  ('_pyrepl.utils',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\_pyrepl\\utils.py',
-   'PYMODULE'),
   ('_strptime',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\_strptime.py',
@@ -403,145 +387,9 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\ast.py',
    'PYMODULE'),
-  ('asyncio',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\__init__.py',
-   'PYMODULE'),
-  ('asyncio.base_events',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\base_events.py',
-   'PYMODULE'),
-  ('asyncio.base_futures',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\base_futures.py',
-   'PYMODULE'),
-  ('asyncio.base_subprocess',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\base_subprocess.py',
-   'PYMODULE'),
-  ('asyncio.base_tasks',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\base_tasks.py',
-   'PYMODULE'),
-  ('asyncio.constants',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\constants.py',
-   'PYMODULE'),
-  ('asyncio.coroutines',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\coroutines.py',
-   'PYMODULE'),
-  ('asyncio.events',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\events.py',
-   'PYMODULE'),
-  ('asyncio.exceptions',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\exceptions.py',
-   'PYMODULE'),
-  ('asyncio.format_helpers',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\format_helpers.py',
-   'PYMODULE'),
-  ('asyncio.futures',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\futures.py',
-   'PYMODULE'),
-  ('asyncio.graph',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\graph.py',
-   'PYMODULE'),
-  ('asyncio.locks',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\locks.py',
-   'PYMODULE'),
-  ('asyncio.log',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\log.py',
-   'PYMODULE'),
-  ('asyncio.mixins',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\mixins.py',
-   'PYMODULE'),
-  ('asyncio.proactor_events',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\proactor_events.py',
-   'PYMODULE'),
-  ('asyncio.protocols',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\protocols.py',
-   'PYMODULE'),
-  ('asyncio.queues',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\queues.py',
-   'PYMODULE'),
-  ('asyncio.runners',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\runners.py',
-   'PYMODULE'),
-  ('asyncio.selector_events',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\selector_events.py',
-   'PYMODULE'),
-  ('asyncio.sslproto',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\sslproto.py',
-   'PYMODULE'),
-  ('asyncio.staggered',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\staggered.py',
-   'PYMODULE'),
-  ('asyncio.streams',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\streams.py',
-   'PYMODULE'),
-  ('asyncio.subprocess',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\subprocess.py',
-   'PYMODULE'),
-  ('asyncio.taskgroups',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\taskgroups.py',
-   'PYMODULE'),
-  ('asyncio.tasks',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\tasks.py',
-   'PYMODULE'),
-  ('asyncio.threads',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\threads.py',
-   'PYMODULE'),
-  ('asyncio.timeouts',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\timeouts.py',
-   'PYMODULE'),
-  ('asyncio.transports',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\transports.py',
-   'PYMODULE'),
-  ('asyncio.trsock',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\trsock.py',
-   'PYMODULE'),
-  ('asyncio.unix_events',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\unix_events.py',
-   'PYMODULE'),
-  ('asyncio.windows_events',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\windows_events.py',
-   'PYMODULE'),
-  ('asyncio.windows_utils',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\asyncio\\windows_utils.py',
-   'PYMODULE'),
   ('base64',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\base64.py',
-   'PYMODULE'),
-  ('bdb',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\bdb.py',
    'PYMODULE'),
   ('bisect',
    'C:\\Users\\ALAN '
@@ -554,10 +402,6 @@
   ('calendar',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\calendar.py',
-   'PYMODULE'),
-  ('cmd',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\cmd.py',
    'PYMODULE'),
   ('code',
    'C:\\Users\\ALAN '
@@ -590,46 +434,6 @@
   ('compression.zstd._zstdfile',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\compression\\zstd\\_zstdfile.py',
-   'PYMODULE'),
-  ('concurrent',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\concurrent\\__init__.py',
-   'PYMODULE'),
-  ('concurrent.futures',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\concurrent\\futures\\__init__.py',
-   'PYMODULE'),
-  ('concurrent.futures._base',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\concurrent\\futures\\_base.py',
-   'PYMODULE'),
-  ('concurrent.futures.interpreter',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\concurrent\\futures\\interpreter.py',
-   'PYMODULE'),
-  ('concurrent.futures.process',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\concurrent\\futures\\process.py',
-   'PYMODULE'),
-  ('concurrent.futures.thread',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\concurrent\\futures\\thread.py',
-   'PYMODULE'),
-  ('concurrent.interpreters',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\concurrent\\interpreters\\__init__.py',
-   'PYMODULE'),
-  ('concurrent.interpreters._crossinterp',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\concurrent\\interpreters\\_crossinterp.py',
-   'PYMODULE'),
-  ('concurrent.interpreters._queues',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\concurrent\\interpreters\\_queues.py',
-   'PYMODULE'),
-  ('configparser',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\configparser.py',
    'PYMODULE'),
   ('connectors', 'C:\\apps\\autoclick\\connectors\\__init__.py', 'PYMODULE'),
   ('connectors.api', 'C:\\apps\\autoclick\\connectors\\api.py', 'PYMODULE'),
@@ -691,10 +495,6 @@
   ('dis',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\dis.py',
-   'PYMODULE'),
-  ('doctest',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\doctest.py',
    'PYMODULE'),
   ('email',
    'C:\\Users\\ALAN '
@@ -776,10 +576,6 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\email\\utils.py',
    'PYMODULE'),
-  ('fileinput',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\fileinput.py',
-   'PYMODULE'),
   ('fnmatch',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\fnmatch.py',
@@ -795,10 +591,6 @@
   ('getopt',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\getopt.py',
-   'PYMODULE'),
-  ('getpass',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\getpass.py',
    'PYMODULE'),
   ('gettext',
    'C:\\Users\\ALAN '
@@ -816,18 +608,6 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\hashlib.py',
    'PYMODULE'),
-  ('hmac',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\hmac.py',
-   'PYMODULE'),
-  ('html',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\html\\__init__.py',
-   'PYMODULE'),
-  ('html.entities',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\html\\entities.py',
-   'PYMODULE'),
   ('http',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\http\\__init__.py',
@@ -839,10 +619,6 @@
   ('http.cookiejar',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\http\\cookiejar.py',
-   'PYMODULE'),
-  ('http.server',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\http\\server.py',
    'PYMODULE'),
   ('i18n',
    'C:\\Users\\ALAN '
@@ -1013,98 +789,6 @@
    'C:\\apps\\autoclick\\models\\connection.py',
    'PYMODULE'),
   ('models.node', 'C:\\apps\\autoclick\\models\\node.py', 'PYMODULE'),
-  ('multiprocessing',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\__init__.py',
-   'PYMODULE'),
-  ('multiprocessing.connection',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\connection.py',
-   'PYMODULE'),
-  ('multiprocessing.context',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\context.py',
-   'PYMODULE'),
-  ('multiprocessing.dummy',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\dummy\\__init__.py',
-   'PYMODULE'),
-  ('multiprocessing.dummy.connection',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\dummy\\connection.py',
-   'PYMODULE'),
-  ('multiprocessing.forkserver',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\forkserver.py',
-   'PYMODULE'),
-  ('multiprocessing.heap',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\heap.py',
-   'PYMODULE'),
-  ('multiprocessing.managers',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\managers.py',
-   'PYMODULE'),
-  ('multiprocessing.pool',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\pool.py',
-   'PYMODULE'),
-  ('multiprocessing.popen_fork',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\popen_fork.py',
-   'PYMODULE'),
-  ('multiprocessing.popen_forkserver',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\popen_forkserver.py',
-   'PYMODULE'),
-  ('multiprocessing.popen_spawn_posix',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\popen_spawn_posix.py',
-   'PYMODULE'),
-  ('multiprocessing.popen_spawn_win32',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\popen_spawn_win32.py',
-   'PYMODULE'),
-  ('multiprocessing.process',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\process.py',
-   'PYMODULE'),
-  ('multiprocessing.queues',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\queues.py',
-   'PYMODULE'),
-  ('multiprocessing.reduction',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\reduction.py',
-   'PYMODULE'),
-  ('multiprocessing.resource_sharer',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\resource_sharer.py',
-   'PYMODULE'),
-  ('multiprocessing.resource_tracker',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\resource_tracker.py',
-   'PYMODULE'),
-  ('multiprocessing.shared_memory',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\shared_memory.py',
-   'PYMODULE'),
-  ('multiprocessing.sharedctypes',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\sharedctypes.py',
-   'PYMODULE'),
-  ('multiprocessing.spawn',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\spawn.py',
-   'PYMODULE'),
-  ('multiprocessing.synchronize',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\synchronize.py',
-   'PYMODULE'),
-  ('multiprocessing.util',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\multiprocessing\\util.py',
-   'PYMODULE'),
   ('netrc',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\netrc.py',
@@ -1112,554 +796,6 @@
   ('numbers',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\numbers.py',
-   'PYMODULE'),
-  ('numpy',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\__init__.py',
-   'PYMODULE'),
-  ('numpy.__config__',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\__config__.py',
-   'PYMODULE'),
-  ('numpy._array_api_info',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_array_api_info.py',
-   'PYMODULE'),
-  ('numpy._core',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\__init__.py',
-   'PYMODULE'),
-  ('numpy._core._add_newdocs',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_add_newdocs.py',
-   'PYMODULE'),
-  ('numpy._core._add_newdocs_scalars',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_add_newdocs_scalars.py',
-   'PYMODULE'),
-  ('numpy._core._asarray',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_asarray.py',
-   'PYMODULE'),
-  ('numpy._core._dtype',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_dtype.py',
-   'PYMODULE'),
-  ('numpy._core._dtype_ctypes',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_dtype_ctypes.py',
-   'PYMODULE'),
-  ('numpy._core._exceptions',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_exceptions.py',
-   'PYMODULE'),
-  ('numpy._core._internal',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_internal.py',
-   'PYMODULE'),
-  ('numpy._core._methods',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_methods.py',
-   'PYMODULE'),
-  ('numpy._core._string_helpers',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_string_helpers.py',
-   'PYMODULE'),
-  ('numpy._core._type_aliases',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_type_aliases.py',
-   'PYMODULE'),
-  ('numpy._core._ufunc_config',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\_ufunc_config.py',
-   'PYMODULE'),
-  ('numpy._core.arrayprint',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\arrayprint.py',
-   'PYMODULE'),
-  ('numpy._core.defchararray',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\defchararray.py',
-   'PYMODULE'),
-  ('numpy._core.einsumfunc',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\einsumfunc.py',
-   'PYMODULE'),
-  ('numpy._core.fromnumeric',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\fromnumeric.py',
-   'PYMODULE'),
-  ('numpy._core.function_base',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\function_base.py',
-   'PYMODULE'),
-  ('numpy._core.getlimits',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\getlimits.py',
-   'PYMODULE'),
-  ('numpy._core.memmap',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\memmap.py',
-   'PYMODULE'),
-  ('numpy._core.multiarray',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\multiarray.py',
-   'PYMODULE'),
-  ('numpy._core.numeric',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\numeric.py',
-   'PYMODULE'),
-  ('numpy._core.numerictypes',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\numerictypes.py',
-   'PYMODULE'),
-  ('numpy._core.overrides',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\overrides.py',
-   'PYMODULE'),
-  ('numpy._core.printoptions',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\printoptions.py',
-   'PYMODULE'),
-  ('numpy._core.records',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\records.py',
-   'PYMODULE'),
-  ('numpy._core.shape_base',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\shape_base.py',
-   'PYMODULE'),
-  ('numpy._core.strings',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\strings.py',
-   'PYMODULE'),
-  ('numpy._core.umath',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_core\\umath.py',
-   'PYMODULE'),
-  ('numpy._distributor_init',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_distributor_init.py',
-   'PYMODULE'),
-  ('numpy._expired_attrs_2_0',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_expired_attrs_2_0.py',
-   'PYMODULE'),
-  ('numpy._globals',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_globals.py',
-   'PYMODULE'),
-  ('numpy._pytesttester',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_pytesttester.py',
-   'PYMODULE'),
-  ('numpy._typing',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\__init__.py',
-   'PYMODULE'),
-  ('numpy._typing._add_docstring',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_add_docstring.py',
-   'PYMODULE'),
-  ('numpy._typing._array_like',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_array_like.py',
-   'PYMODULE'),
-  ('numpy._typing._char_codes',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_char_codes.py',
-   'PYMODULE'),
-  ('numpy._typing._dtype_like',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_dtype_like.py',
-   'PYMODULE'),
-  ('numpy._typing._nbit',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_nbit.py',
-   'PYMODULE'),
-  ('numpy._typing._nbit_base',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_nbit_base.py',
-   'PYMODULE'),
-  ('numpy._typing._nested_sequence',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_nested_sequence.py',
-   'PYMODULE'),
-  ('numpy._typing._scalars',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_scalars.py',
-   'PYMODULE'),
-  ('numpy._typing._shape',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_shape.py',
-   'PYMODULE'),
-  ('numpy._typing._ufunc',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_typing\\_ufunc.py',
-   'PYMODULE'),
-  ('numpy._utils',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_utils\\__init__.py',
-   'PYMODULE'),
-  ('numpy._utils._conversions',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_utils\\_conversions.py',
-   'PYMODULE'),
-  ('numpy._utils._inspect',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\_utils\\_inspect.py',
-   'PYMODULE'),
-  ('numpy.char',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\char\\__init__.py',
-   'PYMODULE'),
-  ('numpy.core',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\core\\__init__.py',
-   'PYMODULE'),
-  ('numpy.core._utils',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\core\\_utils.py',
-   'PYMODULE'),
-  ('numpy.ctypeslib',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\ctypeslib\\__init__.py',
-   'PYMODULE'),
-  ('numpy.ctypeslib._ctypeslib',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\ctypeslib\\_ctypeslib.py',
-   'PYMODULE'),
-  ('numpy.dtypes',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\dtypes.py',
-   'PYMODULE'),
-  ('numpy.exceptions',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\exceptions.py',
-   'PYMODULE'),
-  ('numpy.f2py',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\__init__.py',
-   'PYMODULE'),
-  ('numpy.f2py.__version__',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\__version__.py',
-   'PYMODULE'),
-  ('numpy.f2py._backends',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\_backends\\__init__.py',
-   'PYMODULE'),
-  ('numpy.f2py._backends._backend',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\_backends\\_backend.py',
-   'PYMODULE'),
-  ('numpy.f2py._backends._meson',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\_backends\\_meson.py',
-   'PYMODULE'),
-  ('numpy.f2py._isocbind',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\_isocbind.py',
-   'PYMODULE'),
-  ('numpy.f2py.auxfuncs',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\auxfuncs.py',
-   'PYMODULE'),
-  ('numpy.f2py.capi_maps',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\capi_maps.py',
-   'PYMODULE'),
-  ('numpy.f2py.cb_rules',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\cb_rules.py',
-   'PYMODULE'),
-  ('numpy.f2py.cfuncs',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\cfuncs.py',
-   'PYMODULE'),
-  ('numpy.f2py.common_rules',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\common_rules.py',
-   'PYMODULE'),
-  ('numpy.f2py.crackfortran',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\crackfortran.py',
-   'PYMODULE'),
-  ('numpy.f2py.diagnose',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\diagnose.py',
-   'PYMODULE'),
-  ('numpy.f2py.f2py2e',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\f2py2e.py',
-   'PYMODULE'),
-  ('numpy.f2py.f90mod_rules',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\f90mod_rules.py',
-   'PYMODULE'),
-  ('numpy.f2py.func2subr',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\func2subr.py',
-   'PYMODULE'),
-  ('numpy.f2py.rules',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\rules.py',
-   'PYMODULE'),
-  ('numpy.f2py.symbolic',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\symbolic.py',
-   'PYMODULE'),
-  ('numpy.f2py.use_rules',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\f2py\\use_rules.py',
-   'PYMODULE'),
-  ('numpy.fft',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\fft\\__init__.py',
-   'PYMODULE'),
-  ('numpy.fft._helper',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\fft\\_helper.py',
-   'PYMODULE'),
-  ('numpy.fft._pocketfft',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\fft\\_pocketfft.py',
-   'PYMODULE'),
-  ('numpy.lib',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\__init__.py',
-   'PYMODULE'),
-  ('numpy.lib._array_utils_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_array_utils_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._arraypad_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_arraypad_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._arraysetops_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_arraysetops_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._arrayterator_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_arrayterator_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._datasource',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_datasource.py',
-   'PYMODULE'),
-  ('numpy.lib._format_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_format_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._function_base_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_function_base_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._histograms_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_histograms_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._index_tricks_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_index_tricks_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._iotools',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_iotools.py',
-   'PYMODULE'),
-  ('numpy.lib._nanfunctions_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_nanfunctions_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._npyio_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_npyio_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._polynomial_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_polynomial_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._scimath_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_scimath_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._shape_base_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_shape_base_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._stride_tricks_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_stride_tricks_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._twodim_base_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_twodim_base_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._type_check_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_type_check_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._ufunclike_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_ufunclike_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._utils_impl',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_utils_impl.py',
-   'PYMODULE'),
-  ('numpy.lib._version',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\_version.py',
-   'PYMODULE'),
-  ('numpy.lib.array_utils',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\array_utils.py',
-   'PYMODULE'),
-  ('numpy.lib.format',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\format.py',
-   'PYMODULE'),
-  ('numpy.lib.introspect',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\introspect.py',
-   'PYMODULE'),
-  ('numpy.lib.mixins',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\mixins.py',
-   'PYMODULE'),
-  ('numpy.lib.npyio',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\npyio.py',
-   'PYMODULE'),
-  ('numpy.lib.recfunctions',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\recfunctions.py',
-   'PYMODULE'),
-  ('numpy.lib.scimath',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\scimath.py',
-   'PYMODULE'),
-  ('numpy.lib.stride_tricks',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\lib\\stride_tricks.py',
-   'PYMODULE'),
-  ('numpy.linalg',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\linalg\\__init__.py',
-   'PYMODULE'),
-  ('numpy.linalg._linalg',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\linalg\\_linalg.py',
-   'PYMODULE'),
-  ('numpy.ma',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\ma\\__init__.py',
-   'PYMODULE'),
-  ('numpy.ma.core',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\ma\\core.py',
-   'PYMODULE'),
-  ('numpy.ma.extras',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\ma\\extras.py',
-   'PYMODULE'),
-  ('numpy.ma.mrecords',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\ma\\mrecords.py',
-   'PYMODULE'),
-  ('numpy.matlib',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\matlib.py',
-   'PYMODULE'),
-  ('numpy.matrixlib',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\matrixlib\\__init__.py',
-   'PYMODULE'),
-  ('numpy.matrixlib.defmatrix',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\matrixlib\\defmatrix.py',
-   'PYMODULE'),
-  ('numpy.polynomial',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\polynomial\\__init__.py',
-   'PYMODULE'),
-  ('numpy.polynomial._polybase',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\polynomial\\_polybase.py',
-   'PYMODULE'),
-  ('numpy.polynomial.chebyshev',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\polynomial\\chebyshev.py',
-   'PYMODULE'),
-  ('numpy.polynomial.hermite',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\polynomial\\hermite.py',
-   'PYMODULE'),
-  ('numpy.polynomial.hermite_e',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\polynomial\\hermite_e.py',
-   'PYMODULE'),
-  ('numpy.polynomial.laguerre',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\polynomial\\laguerre.py',
-   'PYMODULE'),
-  ('numpy.polynomial.legendre',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\polynomial\\legendre.py',
-   'PYMODULE'),
-  ('numpy.polynomial.polynomial',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\polynomial\\polynomial.py',
-   'PYMODULE'),
-  ('numpy.polynomial.polyutils',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\polynomial\\polyutils.py',
-   'PYMODULE'),
-  ('numpy.random',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\random\\__init__.py',
-   'PYMODULE'),
-  ('numpy.random._pickle',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\random\\_pickle.py',
-   'PYMODULE'),
-  ('numpy.rec',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\rec\\__init__.py',
-   'PYMODULE'),
-  ('numpy.strings',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\strings\\__init__.py',
-   'PYMODULE'),
-  ('numpy.testing',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\testing\\__init__.py',
-   'PYMODULE'),
-  ('numpy.testing._private',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\testing\\_private\\__init__.py',
-   'PYMODULE'),
-  ('numpy.testing._private.extbuild',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\testing\\_private\\extbuild.py',
-   'PYMODULE'),
-  ('numpy.testing._private.utils',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\testing\\_private\\utils.py',
-   'PYMODULE'),
-  ('numpy.testing.overrides',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\testing\\overrides.py',
-   'PYMODULE'),
-  ('numpy.typing',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\typing\\__init__.py',
-   'PYMODULE'),
-  ('numpy.version',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\numpy\\version.py',
    'PYMODULE'),
   ('opcode',
    'C:\\Users\\ALAN '
@@ -1673,141 +809,17 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\pathlib\\_os.py',
    'PYMODULE'),
-  ('pdb',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\pdb.py',
-   'PYMODULE'),
   ('pickle',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\pickle.py',
-   'PYMODULE'),
-  ('pkgutil',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\pkgutil.py',
-   'PYMODULE'),
-  ('platform',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\platform.py',
    'PYMODULE'),
   ('pprint',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\pprint.py',
    'PYMODULE'),
-  ('psycopg2',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\psycopg2\\__init__.py',
-   'PYMODULE'),
-  ('psycopg2._ipaddress',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\psycopg2\\_ipaddress.py',
-   'PYMODULE'),
-  ('psycopg2._json',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\psycopg2\\_json.py',
-   'PYMODULE'),
-  ('psycopg2._range',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\psycopg2\\_range.py',
-   'PYMODULE'),
-  ('psycopg2.extensions',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\psycopg2\\extensions.py',
-   'PYMODULE'),
-  ('psycopg2.extras',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\psycopg2\\extras.py',
-   'PYMODULE'),
-  ('psycopg2.sql',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\psycopg2\\sql.py',
-   'PYMODULE'),
   ('py_compile',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\py_compile.py',
-   'PYMODULE'),
-  ('pydoc',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\pydoc.py',
-   'PYMODULE'),
-  ('pydoc_data',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\pydoc_data\\__init__.py',
-   'PYMODULE'),
-  ('pydoc_data.module_docs',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\pydoc_data\\module_docs.py',
-   'PYMODULE'),
-  ('pydoc_data.topics',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\pydoc_data\\topics.py',
-   'PYMODULE'),
-  ('pymysql',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\__init__.py',
-   'PYMODULE'),
-  ('pymysql._auth',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\_auth.py',
-   'PYMODULE'),
-  ('pymysql.charset',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\charset.py',
-   'PYMODULE'),
-  ('pymysql.connections',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\connections.py',
-   'PYMODULE'),
-  ('pymysql.constants',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\constants\\__init__.py',
-   'PYMODULE'),
-  ('pymysql.constants.CLIENT',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\constants\\CLIENT.py',
-   'PYMODULE'),
-  ('pymysql.constants.COMMAND',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\constants\\COMMAND.py',
-   'PYMODULE'),
-  ('pymysql.constants.CR',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\constants\\CR.py',
-   'PYMODULE'),
-  ('pymysql.constants.ER',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\constants\\ER.py',
-   'PYMODULE'),
-  ('pymysql.constants.FIELD_TYPE',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\constants\\FIELD_TYPE.py',
-   'PYMODULE'),
-  ('pymysql.constants.SERVER_STATUS',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\constants\\SERVER_STATUS.py',
-   'PYMODULE'),
-  ('pymysql.converters',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\converters.py',
-   'PYMODULE'),
-  ('pymysql.cursors',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\cursors.py',
-   'PYMODULE'),
-  ('pymysql.err',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\err.py',
-   'PYMODULE'),
-  ('pymysql.optionfile',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\optionfile.py',
-   'PYMODULE'),
-  ('pymysql.protocol',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\protocol.py',
-   'PYMODULE'),
-  ('pymysql.times',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\pymysql\\times.py',
    'PYMODULE'),
   ('pystray',
    'C:\\Users\\ALAN '
@@ -1873,18 +885,6 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\random.py',
    'PYMODULE'),
-  ('rlcompleter',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\rlcompleter.py',
-   'PYMODULE'),
-  ('runpy',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\runpy.py',
-   'PYMODULE'),
-  ('secrets',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\secrets.py',
-   'PYMODULE'),
   ('selectors',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\selectors.py',
@@ -1908,10 +908,6 @@
   ('socket',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\socket.py',
-   'PYMODULE'),
-  ('socketserver',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\socketserver.py',
    'PYMODULE'),
   ('sqlite3',
    'C:\\Users\\ALAN '
@@ -2017,10 +1013,6 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\tracemalloc.py',
    'PYMODULE'),
-  ('tty',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\tty.py',
-   'PYMODULE'),
   ('typing',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\typing.py',
@@ -2049,50 +1041,6 @@
    'PYMODULE'),
   ('ui.start_screen', 'C:\\apps\\autoclick\\ui\\start_screen.py', 'PYMODULE'),
   ('ui.tray_icon', 'C:\\apps\\autoclick\\ui\\tray_icon.py', 'PYMODULE'),
-  ('unittest',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\__init__.py',
-   'PYMODULE'),
-  ('unittest._log',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\_log.py',
-   'PYMODULE'),
-  ('unittest.async_case',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\async_case.py',
-   'PYMODULE'),
-  ('unittest.case',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\case.py',
-   'PYMODULE'),
-  ('unittest.loader',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\loader.py',
-   'PYMODULE'),
-  ('unittest.main',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\main.py',
-   'PYMODULE'),
-  ('unittest.result',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\result.py',
-   'PYMODULE'),
-  ('unittest.runner',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\runner.py',
-   'PYMODULE'),
-  ('unittest.signals',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\signals.py',
-   'PYMODULE'),
-  ('unittest.suite',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\suite.py',
-   'PYMODULE'),
-  ('unittest.util',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\unittest\\util.py',
-   'PYMODULE'),
   ('urllib',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\urllib\\__init__.py',
@@ -2112,14 +1060,6 @@
   ('urllib.response',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\urllib\\response.py',
-   'PYMODULE'),
-  ('uuid',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\uuid.py',
-   'PYMODULE'),
-  ('webbrowser',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\webbrowser.py',
    'PYMODULE'),
   ('xml',
    'C:\\Users\\ALAN '
@@ -2177,14 +1117,6 @@
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\xml\\sax\\xmlreader.py',
    'PYMODULE'),
-  ('xmlrpc',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\xmlrpc\\__init__.py',
-   'PYMODULE'),
-  ('xmlrpc.client',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\xmlrpc\\client.py',
-   'PYMODULE'),
   ('zipfile',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\zipfile\\__init__.py',
@@ -2196,8 +1128,4 @@
   ('zipfile._path.glob',
    'C:\\Users\\ALAN '
    'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\zipfile\\_path\\glob.py',
-   'PYMODULE'),
-  ('zipimport',
-   'C:\\Users\\ALAN '
-   'DELFINO\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\zipimport.py',
    'PYMODULE')])

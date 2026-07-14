@@ -10,6 +10,7 @@ class NodeConfigWindowMixin:
     """Mixin providing the node configuration window UI."""
 
     def open_node_config_window(self, node):
+        self.configuring_node = node
         node.is_hovered = False
         node.update_outline()
         self.select_node(node)
@@ -133,6 +134,8 @@ class NodeConfigWindowMixin:
             self.open_node_config_window(node)
 
     def apply_node_changes(self):
+        if not self.selected_node and getattr(self, 'configuring_node', None):
+            self.selected_node = self.configuring_node
         if hasattr(self, 'save_properties_from_widgets'):
             self.save_properties_from_widgets()
         if self.selected_node:
@@ -188,6 +191,7 @@ class NodeConfigWindowMixin:
         if self.selected_node:
             self.selected_node.select(False)
             self.selected_node = None
+        self.configuring_node = None
         if hasattr(self, 'node_window') and self.node_window:
             try:
                 self.node_window.destroy()

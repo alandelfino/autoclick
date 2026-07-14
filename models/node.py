@@ -11,6 +11,7 @@ import threading
 import tkinter as tk
 import os
 from PIL import Image, ImageTk
+import re
 
 from core.automation import click_mouse, simulate_keypress, get_active_window_info, simulate_type_text, get_active_window_details
 from core.payload import get_payload_value, resolve_value, truncate_payload_data
@@ -133,9 +134,11 @@ class VisualNode:
         'start': 'play',
         'click': 'mouse-pointer',
         'capture': 'camera',
+        'screenshot': 'camera',
         'condition': 'question',
         'key': 'keyboard-o',
         'type_text': 'font',
+        'ocr': 'font',
         'delay': 'clock-o',
         'move_mouse': 'arrows',
         'postgres': 'database',
@@ -169,9 +172,10 @@ class VisualNode:
         # Ensure alias is set (especially when loading saved/external flows)
         if 'alias' not in self.properties:
             alias_map = {
-                'start': 'inicio', 'click': 'clique', 'capture': 'captura', 'condition': 'condicao',
+                'start': 'inicio', 'click': 'clique', 'capture': 'captura', 'screenshot': 'print_tela', 'condition': 'condicao',
                 'key': 'tecla', 'type_text': 'digitar', 'delay': 'delay', 'move_mouse': 'mover',
                 'postgres': 'postgres', 'mysql': 'mysql', 'sqlite': 'sqlite', 'api': 'api',
+                'ocr': 'ocr',
                 'loop': 'loop', 'break_loop': 'break', 'continue_loop': 'continue',
                 'storage_var': 'var', 'confirm_dialog': 'confirmar', 'alert_dialog': 'alerta',
                 'switch': 'switch', 'js': 'js', 'python': 'python'
@@ -191,6 +195,8 @@ class VisualNode:
             'start': {'header': '#6366f1', 'title': 'Início'},
             'click': {'header': '#a855f7', 'title': 'Clique'},
             'capture': {'header': '#f97316', 'title': 'Capturar Dados'},
+            'screenshot': {'header': '#14b8a6', 'title': 'Print Screen'},
+            'ocr': {'header': '#84cc16', 'title': t("toolbox.nodes.ocr")},
             'condition': {'header': '#0d9488', 'title': 'Condicional'},
             'key': {'header': '#db2777', 'title': 'Pressionar Tecla'},
             'type_text': {'header': '#10b981', 'title': 'Digitar Texto'},
@@ -239,9 +245,10 @@ class VisualNode:
 
     def get_default_properties(self):
         alias_map = {
-            'start': 'inicio', 'click': 'clique', 'capture': 'captura', 'condition': 'condicao',
+            'start': 'inicio', 'click': 'clique', 'capture': 'captura', 'screenshot': 'print_tela', 'condition': 'condicao',
             'key': 'tecla', 'type_text': 'digitar', 'delay': 'delay', 'move_mouse': 'mover',
             'postgres': 'postgres', 'mysql': 'mysql', 'sqlite': 'sqlite', 'api': 'api',
+            'ocr': 'ocr',
             'loop': 'loop', 'break_loop': 'break', 'continue_loop': 'continue',
             'storage_var': 'var', 'confirm_dialog': 'confirmar', 'alert_dialog': 'alerta',
             'switch': 'switch', 'js': 'js', 'python': 'python'
@@ -254,6 +261,10 @@ class VisualNode:
             props = {'x': 0, 'y': 0}
         elif self.type == 'capture':
             props = {'capture_type': 'Dados da Janela Ativa'}
+        elif self.type == 'screenshot':
+            props = {'screenshot_mode': 'Tela Inteira', 'x': 0, 'y': 0, 'width': 1920, 'height': 1080}
+        elif self.type == 'ocr':
+            props = {'image': '', 'text': ''}
         elif self.type == 'condition':
             props = {'variable': 'active_window.title', 'operator': 'contém', 'value': '', 'else_ifs': []}
         elif self.type == 'key':
@@ -683,6 +694,8 @@ class VisualNode:
                 (t("toolbox.nodes.key"), "key"),
                 (t("toolbox.nodes.type_text"), "type_text"),
                 (t("toolbox.nodes.capture"), "capture"),
+                (t("toolbox.nodes.screenshot"), "screenshot"),
+                (t("toolbox.nodes.ocr"), "ocr"),
             ]),
             ("CONTROLE E FLUXO", [
                 (t("toolbox.nodes.condition"), "condition"),
@@ -894,6 +907,313 @@ class VisualNode:
                 payload[alias] = result
             return 'out'
             
+        elif self.type == 'screenshot':
+            mode = self.properties.get('screenshot_mode', 'Tela Inteira')
+            from PIL import ImageGrab
+            import io
+            import base64
+            
+            if mode == 'Tela Inteira':
+                try:
+                    img = ImageGrab.grab()
+                    x, y = 0, 0
+                    width, height = img.size
+                except Exception as e:
+                    log_func(f"Erro ao capturar tela inteira: {e}")
+                    raise e
+            else:
+                x_raw = self.properties.get('x', 0)
+                y_raw = self.properties.get('y', 0)
+                w_raw = self.properties.get('width', 1920)
+                h_raw = self.properties.get('height', 1080)
+                
+                x_res = resolve_value(str(x_raw), payload)
+                y_res = resolve_value(str(y_raw), payload)
+                w_res = resolve_value(str(w_raw), payload)
+                h_res = resolve_value(str(h_raw), payload)
+                
+                try:
+                    x = int(x_res)
+                except ValueError:
+                    x = 0
+                try:
+                    y = int(y_res)
+                except ValueError:
+                    y = 0
+                try:
+                    width = int(w_res)
+                except ValueError:
+                    width = 1920
+                try:
+                    height = int(h_res)
+                except ValueError:
+                    height = 1080
+                    
+                log_func(f"Capturando área: X={x}, Y={y}, W={width}, H={height}")
+                try:
+                    img = ImageGrab.grab(bbox=(x, y, x + width, y + height))
+                except Exception as e:
+                    log_func(f"Erro ao capturar área específica: {e}")
+                    raise e
+                    
+            # Convert image to Base64 PNG
+            try:
+                buffer = io.BytesIO()
+                img.save(buffer, format="PNG")
+                img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            except Exception as e:
+                log_func(f"Erro ao serializar imagem: {e}")
+                raise e
+                
+            result = {
+                'image': img_base64,
+                'x': x,
+                'y': y,
+                'width': width,
+                'height': height
+            }
+            payload[alias] = result
+            log_func(f"Captura de tela realizada com sucesso (Modo: {mode}). Dimensões: {width}x{height}")
+            return 'out'
+            
+        elif self.type == 'ocr':
+            # Resolve image and search text from payload
+            image_raw = self.properties.get('image', '')
+            image_res = resolve_value(str(image_raw), payload)
+            
+            search_text_raw = self.properties.get('text', '')
+            search_text = str(resolve_value(str(search_text_raw), payload)).strip()
+            
+            log_func(t("logs.ocr_executing").format(search_text))
+            
+            if not image_res or not isinstance(image_res, str):
+                log_func(" -> ERRO: Nenhuma imagem válida encontrada no payload para processar OCR.")
+                payload[alias] = {'x': 0, 'y': 0, 'width': 0, 'height': 0}
+                return 'out'
+                
+            # Clean up the base64 prefix if present
+            if "," in image_res:
+                image_res = image_res.split(",")[-1]
+                
+            import io
+            import base64
+            from PIL import Image
+            
+            try:
+                img_bytes = base64.b64decode(image_res)
+                img = Image.open(io.BytesIO(img_bytes))
+            except Exception as e:
+                log_func(f" -> ERRO ao decodificar imagem Base64: {e}")
+                payload[alias] = {'x': 0, 'y': 0, 'width': 0, 'height': 0}
+                return 'out'
+                
+            try:
+                import pytesseract
+            except ImportError:
+                log_func(t("logs.ocr_library_error"))
+                payload[alias] = {'x': 0, 'y': 0, 'width': 0, 'height': 0}
+                return 'out'
+                
+            # Try to auto-detect Tesseract binary path on Windows if it is not in path or configured
+            import os
+            try:
+                if not pytesseract.pytesseract.tesseract_cmd or not os.path.exists(pytesseract.pytesseract.tesseract_cmd):
+                    common_paths = [
+                        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+                        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+                    ]
+                    user_appdata = os.environ.get("LOCALAPPDATA")
+                    if user_appdata:
+                        common_paths.append(os.path.join(user_appdata, "Tesseract-OCR", "tesseract.exe"))
+                        common_paths.append(os.path.join(user_appdata, "Programs", "Tesseract-OCR", "tesseract.exe"))
+                        
+                    for path in common_paths:
+                        if os.path.exists(path):
+                            pytesseract.pytesseract.tesseract_cmd = path
+                            break
+            except Exception:
+                pass
+                
+            found_index = -1
+            matched_slice = []
+            final_words = []
+            is_scaled = False
+            
+            # Prepare configuration attempts
+            configs = [
+                "", # default automatic
+                "--psm 11", # sparse text
+                "--psm 6" # assume uniform block
+            ]
+            
+            # If it's numeric/digit, prepend whitelisted configurations
+            is_numeric = re.match(r'^[0-9.,\-\s]+$', search_text) is not None
+            if is_numeric:
+                whitelist = "0123456789.,-"
+                configs.insert(0, f"--psm 11 -c tessedit_char_whitelist={whitelist}")
+                configs.insert(1, f"--psm 6 -c tessedit_char_whitelist={whitelist}")
+            
+            log_func(f" -> Iniciando busca por '{search_text}'. Tentando até {len(configs)} configurações de OCR...")
+            
+            # Phase 1: Search in original image
+            for config in configs:
+                try:
+                    data = pytesseract.image_to_data(img, config=config, output_type=pytesseract.Output.DICT)
+                except Exception:
+                    continue
+                
+                words = []
+                for i in range(len(data['text'])):
+                    txt = data['text'][i].strip()
+                    if txt and float(data['conf'][i]) >= 0:
+                        words.append({
+                            'text': txt,
+                            'left': int(data['left'][i]),
+                            'top': int(data['top'][i]),
+                            'width': int(data['width'][i]),
+                            'height': int(data['height'][i])
+                        })
+                
+                if not final_words:
+                    final_words = words
+                    
+                search_words = search_text.lower().split()
+                n_search = len(search_words)
+                
+                if n_search > 0 and len(words) >= n_search:
+                    # Try exact consecutive match
+                    for i in range(len(words) - n_search + 1):
+                        match = True
+                        for j in range(n_search):
+                            if words[i + j]['text'].lower() != search_words[j]:
+                                match = False
+                                break
+                        if match:
+                            found_index = i
+                            break
+                            
+                    # Try substring consecutive match
+                    if found_index == -1:
+                        for i in range(len(words) - n_search + 1):
+                            match = True
+                            for j in range(n_search):
+                                if search_words[j] not in words[i + j]['text'].lower():
+                                    match = False
+                                    break
+                            if match:
+                                found_index = i
+                                break
+                                
+                if found_index != -1:
+                    matched_slice = words[found_index : found_index + n_search]
+                    log_func(f" -> Sucesso na busca do OCR usando config '{config or 'Padrão'}'")
+                    break
+                    
+            # Phase 2: If failed, upscale image by 2x (good for small text/numbers) and retry
+            if found_index == -1:
+                log_func(" -> Texto não encontrado na resolução original. Tentando com upscale de imagem (2x)...")
+                try:
+                    try:
+                        resample_filter = Image.Resampling.LANCZOS
+                    except AttributeError:
+                        resample_filter = Image.ANTIALIAS
+                    img_scaled = img.resize((img.width * 2, img.height * 2), resample_filter)
+                except Exception as e:
+                    log_func(f" -> Falha ao redimensionar imagem: {e}")
+                    img_scaled = None
+                    
+                if img_scaled:
+                    is_scaled = True
+                    for config in configs:
+                        try:
+                            data = pytesseract.image_to_data(img_scaled, config=config, output_type=pytesseract.Output.DICT)
+                        except Exception:
+                            continue
+                        
+                        words = []
+                        for i in range(len(data['text'])):
+                            txt = data['text'][i].strip()
+                            if txt and float(data['conf'][i]) >= 0:
+                                words.append({
+                                    'text': txt,
+                                    'left': int(data['left'][i]),
+                                    'top': int(data['top'][i]),
+                                    'width': int(data['width'][i]),
+                                    'height': int(data['height'][i])
+                                })
+                        
+                        if not final_words:
+                            final_words = words
+                            
+                        search_words = search_text.lower().split()
+                        n_search = len(search_words)
+                        
+                        if n_search > 0 and len(words) >= n_search:
+                            # Try exact consecutive match
+                            for i in range(len(words) - n_search + 1):
+                                match = True
+                                for j in range(n_search):
+                                    if words[i + j]['text'].lower() != search_words[j]:
+                                        match = False
+                                        break
+                                if match:
+                                    found_index = i
+                                    break
+                                    
+                            # Try substring consecutive match
+                            if found_index == -1:
+                                for i in range(len(words) - n_search + 1):
+                                    match = True
+                                    for j in range(n_search):
+                                        if search_words[j] not in words[i + j]['text'].lower():
+                                            match = False
+                                            break
+                                    if match:
+                                        found_index = i
+                                        break
+                                        
+                        if found_index != -1:
+                            matched_slice = words[found_index : found_index + n_search]
+                            log_func(f" -> Sucesso na busca do OCR (com upscale 2x) usando config '{config or 'Padrão'}'")
+                            break
+                            
+            if found_index != -1:
+                x = min(w['left'] for w in matched_slice)
+                y = min(w['top'] for w in matched_slice)
+                max_x = max(w['left'] + w['width'] for w in matched_slice)
+                max_y = max(w['top'] + w['height'] for w in matched_slice)
+                
+                if is_scaled:
+                    x = int(x / 2)
+                    y = int(y / 2)
+                    max_x = int(max_x / 2)
+                    max_y = int(max_y / 2)
+                    
+                width = max_x - x
+                height = max_y - y
+                
+                payload[alias] = {
+                    'x': x,
+                    'y': y,
+                    'width': width,
+                    'height': height
+                }
+                log_func(t("logs.ocr_success").format(search_text, x, y, width, height))
+            else:
+                log_func(t("logs.ocr_failed").format(search_text))
+                detected_list = [w['text'] for w in final_words]
+                if detected_list:
+                    log_func(f" -> Texto identificado no print: {repr(detected_list)}")
+                else:
+                    log_func(" -> Nenhum texto/número pôde ser identificado na imagem.")
+                payload[alias] = {
+                    'x': 0,
+                    'y': 0,
+                    'width': 0,
+                    'height': 0
+                }
+            return 'out'
+            
         elif self.type == 'key':
             key_raw = self.properties.get('key', 'enter')
             key = str(resolve_value(str(key_raw), payload))
@@ -953,7 +1273,7 @@ class VisualNode:
             operator = self.properties.get('operator', 'equals')
             target_value_raw = self.properties.get('value', '')
             
-            if '{' in variable_raw or '}' in variable_raw:
+            if '{{' in variable_raw and '}}' in variable_raw:
                 actual_value = resolve_value(variable_raw, payload)
             else:
                 actual_value = get_payload_value(payload, variable_raw)
@@ -995,7 +1315,7 @@ class VisualNode:
                 else_ifs = self.properties.get('else_ifs', [])
                 for i, else_if in enumerate(else_ifs):
                     var_else_if_raw = else_if.get('variable', '')
-                    if '{' in var_else_if_raw or '}' in var_else_if_raw:
+                    if '{{' in var_else_if_raw and '}}' in var_else_if_raw:
                         act_val_else_if = resolve_value(var_else_if_raw, payload)
                     else:
                         act_val_else_if = get_payload_value(payload, var_else_if_raw)
@@ -1553,10 +1873,12 @@ __result = __user_function()
             
         elif self.type == 'switch':
             variable = self.properties.get('variable', '')
-            while variable.startswith('{') and variable.endswith('}'):
-                variable = variable[1:-1]
-            
-            actual_value = get_payload_value(payload, variable)
+            if '{{' in variable and '}}' in variable:
+                actual_value = resolve_value(variable, payload)
+            else:
+                while variable.startswith('{') and variable.endswith('}'):
+                    variable = variable[1:-1]
+                actual_value = get_payload_value(payload, variable)
             if actual_value is None:
                 actual_value = ""
                 

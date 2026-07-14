@@ -130,11 +130,12 @@ Open your terminal and run:
 pip install pystray Pillow python-i18n
 ```
 
-#### Step 2: Install Database Drivers (Optional)
-If your flows require database connections, install the respective packages:
+#### Step 2: Install Database Drivers & OCR (Optional)
+If your flows require database connections or OCR text identification, install the respective packages:
 *   **PostgreSQL**: `pip install psycopg2-binary`
 *   **MySQL**: `pip install pymysql`
 *   **SQLite**: *Included by default in Python's standard library.*
+*   **OCR (Text Identification)**: `pip install pytesseract` (requires Google Tesseract-OCR binary engine installed on the system)
 
 ---
 

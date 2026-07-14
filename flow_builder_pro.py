@@ -716,6 +716,8 @@ class FlowBuilderProApp(
                 'start': "Início",
                 'click': f"Clique Coord {node_id}",
                 'capture': f"Capturar Dados {node_id}",
+                'screenshot': f"Tirar Print {node_id}",
+                'ocr': f"Identificar Texto {node_id}",
                 'condition': f"Condicional {node_id}",
                 'key': f"Press Tecla {node_id}",
                 'type_text': f"Digitar Texto {node_id}",
@@ -1554,6 +1556,8 @@ class FlowBuilderProApp(
                 (t("toolbox.nodes.key"), "key", "#db2777"),
                 (t("toolbox.nodes.type_text"), "type_text", "#10b981"),
                 (t("toolbox.nodes.capture"), "capture", "#f97316"),
+                (t("toolbox.nodes.screenshot"), "screenshot", "#14b8a6"),
+                (t("toolbox.nodes.ocr"), "ocr", "#84cc16"),
             ]),
             ("CONTROLE E FLUXO", [
                 (t("toolbox.nodes.condition"), "condition", "#0d9488"),
@@ -1584,7 +1588,8 @@ class FlowBuilderProApp(
         self._slide_icons = []
         
         icon_mapping = {
-            'start': 'play', 'click': 'mouse-pointer', 'capture': 'camera',
+            'start': 'play', 'click': 'mouse-pointer', 'capture': 'camera', 'screenshot': 'camera',
+            'ocr': 'font',
             'condition': 'question', 'key': 'keyboard-o', 'type_text': 'font',
             'delay': 'clock-o', 'move_mouse': 'arrows', 'postgres': 'database',
             'mysql': 'database', 'sqlite': 'database', 'api': 'globe',

@@ -36,6 +36,8 @@ class LeftPanelMixin:
                 (t("toolbox.nodes.key"), "key", "#db2777"),
                 (t("toolbox.nodes.type_text"), "type_text", "#10b981"),
                 (t("toolbox.nodes.capture"), "capture", "#f97316"),
+                (t("toolbox.nodes.screenshot"), "screenshot", "#14b8a6"),
+                (t("toolbox.nodes.ocr"), "ocr", "#84cc16"),
             ]),
             ("CONTROLE E FLUXO", [
                 (t("toolbox.nodes.condition"), "condition", "#0d9488"),

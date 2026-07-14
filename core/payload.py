@@ -5,6 +5,136 @@ Provides functions for resolving nested dictionary paths and
 interpolating placeholder variables in strings.
 """
 import re
+import tokenize
+import io
+import math
+import json
+import datetime
+
+
+class DictWrapper(dict):
+    """Recursively wraps dictionary keys for dot attribute access."""
+    def __init__(self, d):
+        super().__init__()
+        for k, v in d.items():
+            self[k] = wrap_payload_value(v)
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(f"No attribute or key '{name}' found")
+
+    def __setattr__(self, name, value):
+        self[name] = value
+
+    def __delattr__(self, name):
+        try:
+            del self[name]
+        except KeyError:
+            raise AttributeError(f"No attribute or key '{name}' found")
+
+
+def wrap_payload_value(val):
+    """Recursively wraps dictionary values with DictWrapper."""
+    if isinstance(val, dict):
+        return DictWrapper(val)
+    if isinstance(val, list):
+        return [wrap_payload_value(x) for x in val]
+    return val
+
+
+def replace_dollar_sign(expr_str, replacement="_payload"):
+    """Replaces '$' with another variable name, preserving string literals and comments."""
+    try:
+        tokens = tokenize.generate_tokens(io.StringIO(expr_str).readline)
+        result = []
+        for toknum, tokval, start, end, line in tokens:
+            if tokval == '$':
+                result.append((toknum, replacement))
+            else:
+                result.append((toknum, tokval))
+        res = tokenize.untokenize(result)
+        if isinstance(res, bytes):
+            res = res.decode('utf-8')
+        return res
+    except Exception:
+        return expr_str.replace('$', replacement)
+
+
+def parse_template(val_str):
+    """Finds all non-overlapping double curly brace placeholders {{ ... }} in the string,
+    safely handling nested curly braces and string literals inside them.
+    """
+    placeholders = []
+    i = 0
+    n = len(val_str)
+    
+    while i < n:
+        if val_str[i:i+2] == '{{':
+            start_idx = i
+            expr_start = i + 2
+            i += 2
+            
+            brace_depth = 2
+            in_string = None
+            escape = False
+            
+            while i < n:
+                char = val_str[i]
+                if in_string is not None:
+                    if escape:
+                        escape = False
+                    elif char == '\\':
+                        escape = True
+                    else:
+                        if in_string in ('"""', "'''"):
+                            q_len = len(in_string)
+                            if val_str[i:i+q_len] == in_string:
+                                in_string = None
+                                i += q_len - 1
+                        elif char == in_string:
+                            in_string = None
+                else:
+                    if val_str[i:i+3] in ('"""', "'''"):
+                        in_string = val_str[i:i+3]
+                        i += 2
+                    elif char in ('"', "'"):
+                        in_string = char
+                    elif char == '{':
+                        brace_depth += 1
+                    elif char == '}':
+                        brace_depth -= 1
+                        if brace_depth == 0:
+                            expr_str = val_str[expr_start : i-1]
+                            placeholders.append({
+                                'start': start_idx,
+                                'end': i + 1,
+                                'expr': expr_str
+                            })
+                            break
+                i += 1
+        else:
+            i += 1
+            
+    return placeholders
+
+
+def evaluate_expression(expr, payload):
+    """Evaluates a single expression using safe globals and a wrapped payload."""
+    wrapped_payload = wrap_payload_value(payload)
+    expr_replaced = replace_dollar_sign(expr, "_payload")
+    eval_globals = {
+        'math': math,
+        'json': json,
+        'datetime': datetime,
+        're': re,
+        '_payload': wrapped_payload,
+    }
+    try:
+        return eval(expr_replaced.strip(), eval_globals)
+    except Exception as e:
+        return f"<Erro: {e}>"
 
 
 def infer_payload_schema(value, max_list_items=5):
@@ -56,12 +186,15 @@ def merge_payload_schemas(target, source):
 
 def get_payload_value(payload, path):
     """Resolves nested path in dict. E.g. 'active_window.title' from payload."""
-    if path == "payload":
+    if path == "payload" or path == "$":
         return payload
     if path.startswith("payload."):
         path = path[8:]
-        if not path:
-            return payload
+    elif path.startswith("$."):
+        path = path[2:]
+        
+    if not path:
+        return payload
             
     parts = path.split('.')
     val = payload
@@ -82,48 +215,33 @@ def get_payload_value(payload, path):
             return None
     return val
 
+
 def resolve_value(val_str, payload):
-    """Resolves placeholders in format {{variable_path}} or {variable_path} using payload.
-    If the value is purely a placeholder like '{{active_window.hwnd}}' or '{active_window.hwnd}'
-    and resolves to a dict/int/float, returns the resolved type.
-    Otherwise, returns interpolated string.
+    """Resolves expressions inside double curly braces {{ expression }} using payload.
+    If the value is purely a single placeholder and evaluates to a non-string type,
+    returns that type directly. Otherwise, returns a string with interpolated values.
     """
     if not isinstance(val_str, str):
         return val_str
-    
-    # Check if it's exactly a single placeholder (double curly braces first)
-    match_double = re.match(r'^\{\{([^{}]+)\}\}$', val_str)
-    if match_double:
-        path = match_double.group(1)
-        resolved = get_payload_value(payload, path)
-        if resolved is not None:
-            return resolved
-            
-    match_single = re.match(r'^\{([^{}]+)\}$', val_str)
-    if match_single:
-        path = match_single.group(1)
-        resolved = get_payload_value(payload, path)
-        if resolved is not None:
-            return resolved
-    
-    # Otherwise, do string interpolation for all placeholders
-    formatted = val_str
-    
-    # Double curly braces: {{path}}
-    placeholders_double = re.findall(r'\{\{([^{}]+)\}\}', val_str)
-    for ph in placeholders_double:
-        resolved = get_payload_value(payload, ph)
-        if resolved is not None:
-            formatted = formatted.replace(f"{{{{{ph}}}}}", str(resolved))
-            
-    # Single curly braces: {path}
-    placeholders_single = re.findall(r'(?<!\{)\{([^{}]+)\}(?!\})', val_str)
-    for ph in placeholders_single:
-        resolved = get_payload_value(payload, ph)
-        if resolved is not None:
-            formatted = formatted.replace(f"{{{ph}}}", str(resolved))
-            
-    return formatted
+        
+    placeholders = parse_template(val_str)
+    if not placeholders:
+        return val_str
+        
+    if len(placeholders) == 1 and placeholders[0]['start'] == 0 and placeholders[0]['end'] == len(val_str):
+        expr = placeholders[0]['expr']
+        return evaluate_expression(expr, payload)
+        
+    result_chars = list(val_str)
+    for ph in reversed(placeholders):
+        start = ph['start']
+        end = ph['end']
+        expr = ph['expr']
+        val = evaluate_expression(expr, payload)
+        val_str_rep = str(val) if val is not None else ""
+        result_chars[start:end] = list(val_str_rep)
+        
+    return "".join(result_chars)
 
 
 def truncate_payload_data(val, limit=5):
