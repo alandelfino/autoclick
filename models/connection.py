@@ -148,7 +148,7 @@ class VisualConnection:
         
         self.update_line()
         if self.source:
-            self.source.update_plus_handles()
+            self.canvas.after(10, self.source.update_plus_handles)
 
     def update_line(self):
         x1, y1 = self.source.get_port_center(self.source_port)

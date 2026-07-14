@@ -38,6 +38,8 @@ class LeftPanelMixin:
                 (t("toolbox.nodes.capture"), "capture", "#f97316"),
                 (t("toolbox.nodes.screenshot"), "screenshot", "#14b8a6"),
                 (t("toolbox.nodes.ocr"), "ocr", "#84cc16"),
+                (t("toolbox.nodes.copy", default_val="Copiar (Ctrl+C)"), "copy", "#f43f5e"),
+                (t("toolbox.nodes.paste", default_val="Colar (Ctrl+V)"), "paste", "#10b981"),
             ]),
             ("CONTROLE E FLUXO", [
                 (t("toolbox.nodes.condition"), "condition", "#0d9488"),
@@ -46,6 +48,7 @@ class LeftPanelMixin:
                 (t("toolbox.nodes.continue_loop"), "continue_loop", "#0284c7"),
                 (t("toolbox.nodes.break_loop"), "break_loop", "#a21caf"),
                 (t("toolbox.nodes.switch"), "switch", "#4f46e5"),
+                (t("toolbox.nodes.end", default_val="Encerrar Fluxo"), "end", "#ef4444"),
             ]),
             ("DADOS E CONEXÕES", [
                 (t("toolbox.nodes.postgres"), "postgres", "#336791"),
@@ -53,6 +56,7 @@ class LeftPanelMixin:
                 (t("toolbox.nodes.sqlite"), "sqlite", "#003b57"),
                 (t("toolbox.nodes.api"), "api", "#0284c7"),
                 (t("toolbox.nodes.storage_var"), "storage_var", "#ec4899"),
+                (t("toolbox.nodes.json_loader", default_val="Carregar JSON"), "json_loader", "#d946ef"),
             ]),
             ("CÓDIGO E SCRIPTS", [
                 (t("toolbox.nodes.js"), "js", "#ca8a04"),

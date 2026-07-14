@@ -17,14 +17,46 @@ except Exception:
         pass
 
 
-def click_mouse(x, y):
-    """Moves cursor to x, y and simulates a left click."""
+def click_mouse(x, y, button="Botão esquerdo", action="Clique simples"):
+    """Moves cursor to x, y and simulates a mouse click event with specified button and action."""
     ctypes.windll.user32.SetCursorPos(x, y)
-    # MOUSEEVENTF_LEFTDOWN = 0x0002
-    # MOUSEEVENTF_LEFTUP = 0x0004
-    ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)
-    time.sleep(0.05)
-    ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)
+    
+    # Map button names to events
+    btn = str(button).lower().strip()
+    act = str(action).lower().strip()
+    
+    # Determine down and up flags
+    if "direito" in btn or "right" in btn:
+        down_flag = 0x0008 # MOUSEEVENTF_RIGHTDOWN
+        up_flag = 0x0010   # MOUSEEVENTF_RIGHTUP
+    elif "meio" in btn or "middle" in btn or "center" in btn:
+        down_flag = 0x0020 # MOUSEEVENTF_MIDDLEDOWN
+        up_flag = 0x0040   # MOUSEEVENTF_MIDDLEUP
+    else:
+        down_flag = 0x0002 # MOUSEEVENTF_LEFTDOWN
+        up_flag = 0x0004   # MOUSEEVENTF_LEFTUP
+        
+    if "duplo" in act or "double" in act:
+        # Click once
+        ctypes.windll.user32.mouse_event(down_flag, 0, 0, 0, 0)
+        time.sleep(0.05)
+        ctypes.windll.user32.mouse_event(up_flag, 0, 0, 0, 0)
+        time.sleep(0.1)
+        # Click twice
+        ctypes.windll.user32.mouse_event(down_flag, 0, 0, 0, 0)
+        time.sleep(0.05)
+        ctypes.windll.user32.mouse_event(up_flag, 0, 0, 0, 0)
+    elif "segurar" in act or "hold" in act or "down" in act:
+        # Clicar e segurar (just down)
+        ctypes.windll.user32.mouse_event(down_flag, 0, 0, 0, 0)
+    elif "soltar" in act or "release" in act or "up" in act:
+        # Soltar clique (just up)
+        ctypes.windll.user32.mouse_event(up_flag, 0, 0, 0, 0)
+    else:
+        # Clique simples
+        ctypes.windll.user32.mouse_event(down_flag, 0, 0, 0, 0)
+        time.sleep(0.05)
+        ctypes.windll.user32.mouse_event(up_flag, 0, 0, 0, 0)
 
 # Virtual Key Codes map for common keys
 VK_CODES = {
@@ -164,4 +196,36 @@ def get_active_window_details():
         'height': height,
         'hwnd': hwnd
     }
+
+
+def simulate_copy():
+    """Simulates pressing Ctrl+C key shortcut."""
+    # Press Ctrl (0x11)
+    ctypes.windll.user32.keybd_event(0x11, 0, 0, 0)
+    time.sleep(0.05)
+    # Press C (0x43)
+    ctypes.windll.user32.keybd_event(0x43, 0, 0, 0)
+    time.sleep(0.05)
+    # Release C (0x43)
+    ctypes.windll.user32.keybd_event(0x43, 0, 0x0002, 0)
+    time.sleep(0.05)
+    # Release Ctrl (0x11)
+    ctypes.windll.user32.keybd_event(0x11, 0, 0x0002, 0)
+    time.sleep(0.05)
+
+
+def simulate_paste():
+    """Simulates pressing Ctrl+V key shortcut."""
+    # Press Ctrl (0x11)
+    ctypes.windll.user32.keybd_event(0x11, 0, 0, 0)
+    time.sleep(0.05)
+    # Press V (0x56)
+    ctypes.windll.user32.keybd_event(0x56, 0, 0, 0)
+    time.sleep(0.05)
+    # Release V (0x56)
+    ctypes.windll.user32.keybd_event(0x56, 0, 0x0002, 0)
+    time.sleep(0.05)
+    # Release Ctrl (0x11)
+    ctypes.windll.user32.keybd_event(0x11, 0, 0x0002, 0)
+    time.sleep(0.05)
 

@@ -130,8 +130,9 @@ class NodeConfigWindowMixin:
         node_tag = [t for t in tags if t.startswith("node_") and not t.startswith("node_port_")]
         if node_tag:
             node_id = int(node_tag[0].split("_")[1])
-            node = self.nodes[node_id]
-            self.open_node_config_window(node)
+            node = self.nodes.get(node_id)
+            if node:
+                self.open_node_config_window(node)
 
     def apply_node_changes(self):
         if not self.selected_node and getattr(self, 'configuring_node', None):

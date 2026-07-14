@@ -730,7 +730,11 @@ class FlowBuilderProApp(
                 'confirm_dialog': f"Confirmar {node_id}",
                 'alert_dialog': f"Alerta {node_id}",
                 'js': f"JS Código {node_id}",
-                'python': f"Python Código {node_id}"
+                'python': f"Python Código {node_id}",
+                'json_loader': f"Carregar JSON {node_id}",
+                'copy': f"Copiar {node_id}",
+                'paste': f"Colar {node_id}",
+                'end': f"Encerrar {node_id}"
             }
             name = default_names.get(node_type, f"Nó {node_id}")
             

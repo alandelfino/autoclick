@@ -627,7 +627,27 @@ class PropertiesPanelMixin:
             ent_y.pack(fill="x", pady=(0, 15))
             ent_y.property_key = 'y'
             
-            def save_coords(event=None):
+            # Select Mouse Button
+            lbl_btn = tk.Label(self.properties_container, text="Botão do Mouse:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_btn.pack(anchor="w", pady=(0, 2))
+            
+            btn_options = ["Botão esquerdo", "Botão do meio", "Botão direito"]
+            cb_btn = ttk.Combobox(self.properties_container, values=btn_options, state="readonly", font=("Segoe UI", 9))
+            cb_btn.set(self.temp_properties.get('button', 'Botão esquerdo'))
+            cb_btn.pack(fill="x", pady=(0, 8))
+            cb_btn.property_key = 'button'
+            
+            # Select Mouse Action
+            lbl_act = tk.Label(self.properties_container, text="Ação do Clique:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_act.pack(anchor="w", pady=(0, 2))
+            
+            act_options = ["Clique simples", "Clique duplo", "Clicar e segurar", "Soltar clique"]
+            cb_act = ttk.Combobox(self.properties_container, values=act_options, state="readonly", font=("Segoe UI", 9))
+            cb_act.set(self.temp_properties.get('click_type', 'Clique simples'))
+            cb_act.pack(fill="x", pady=(0, 15))
+            cb_act.property_key = 'click_type'
+            
+            def save_click_fields(event=None):
                 val_x = ent_x.get()
                 val_y = ent_y.get()
                 try:
@@ -638,9 +658,13 @@ class PropertiesPanelMixin:
                     self.temp_properties['y'] = int(val_y)
                 except ValueError:
                     self.temp_properties['y'] = val_y
+                self.temp_properties['button'] = cb_btn.get()
+                self.temp_properties['click_type'] = cb_act.get()
                 
-            ent_x.bind("<KeyRelease>", save_coords)
-            ent_y.bind("<KeyRelease>", save_coords)
+            ent_x.bind("<KeyRelease>", save_click_fields)
+            ent_y.bind("<KeyRelease>", save_click_fields)
+            cb_btn.bind("<<ComboboxSelected>>", save_click_fields)
+            cb_act.bind("<<ComboboxSelected>>", save_click_fields)
             
             # Smart coordinate capturing helper
             btn_capture = tk.Button(
@@ -655,12 +679,18 @@ class PropertiesPanelMixin:
             lbl_type = tk.Label(self.properties_container, text=t("properties.capture_type"), font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_type.pack(anchor="w", pady=(0, 2))
             
-            cb_type = ttk.Combobox(self.properties_container, values=[t("properties.capture_active_window"), t("properties.capture_mouse_only")], state="readonly")
+            cb_type = ttk.Combobox(self.properties_container, values=[
+                t("properties.capture_active_window"), 
+                t("properties.capture_mouse_only"),
+                t("properties.capture_datetime", default_val="Data e Hora do Windows")
+            ], state="readonly")
             initial_val = self.temp_properties.get('capture_type', 'Active Window Data')
             if initial_val in ['Janela Ativa', 'Dados da Janela Ativa', 'Active Window Data']:
                 initial_val = t("properties.capture_active_window")
             elif initial_val in ['Posição do Mouse', 'Janela e Mouse', 'Dados do Mouse somente', 'Mouse Data Only']:
                 initial_val = t("properties.capture_mouse_only")
+            elif initial_val in ['Data e Hora do Windows', 'Windows Date and Time', 'DateTime']:
+                initial_val = t("properties.capture_datetime", default_val="Data e Hora do Windows")
             cb_type.set(initial_val)
             cb_type.pack(fill="x", pady=(0, 15))
             cb_type.property_key = 'capture_type'
@@ -669,6 +699,8 @@ class PropertiesPanelMixin:
                 sel = cb_type.get()
                 if sel == t("properties.capture_active_window"):
                     self.temp_properties['capture_type'] = 'Active Window Data'
+                elif sel == t("properties.capture_datetime", default_val="Data e Hora do Windows"):
+                    self.temp_properties['capture_type'] = 'DateTime'
                 else:
                     self.temp_properties['capture_type'] = 'Mouse Data Only'
                 
@@ -795,6 +827,46 @@ class PropertiesPanelMixin:
                 
             ent_image.bind("<KeyRelease>", save_ocr_fields)
             ent_text.bind("<KeyRelease>", save_ocr_fields)
+            
+        elif node.type == 'json_loader':
+            lbl_file = tk.Label(self.properties_container, text="Caminho do Arquivo JSON:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+            lbl_file.pack(anchor="w", pady=(0, 2))
+            
+            file_frame = tk.Frame(self.properties_container, bg="#f8fafc")
+            file_frame.pack(fill="x", pady=(0, 15))
+            
+            ent_file = ttk.Entry(file_frame, font=("Segoe UI", 9))
+            ent_file.insert(0, str(self.temp_properties.get('file_path', '')))
+            ent_file.pack(side="left", fill="x", expand=True, padx=(0, 5))
+            ent_file.property_key = 'file_path'
+            
+            def choose_file():
+                fp = filedialog.askopenfilename(
+                    filetypes=[("Arquivos JSON", "*.json"), ("Todos os Arquivos", "*.*")],
+                    title="Selecionar arquivo JSON"
+                )
+                if fp:
+                    ent_file.delete(0, tk.END)
+                    ent_file.insert(0, fp)
+                    self.temp_properties['file_path'] = fp
+                    node.properties['file_path'] = fp
+                    self.build_properties_panel(node)
+                    
+            btn_choose = tk.Button(
+                file_frame, text="...", font=("Segoe UI", 9, "bold"),
+                bg="#e2e8f0", fg="#475569", activebackground="#cbd5e1",
+                bd=1, relief="solid", cursor="hand2", padx=5, command=choose_file
+            )
+            btn_choose.pack(side="right")
+            
+            def save_json_fields(event=None):
+                fp = ent_file.get()
+                self.temp_properties['file_path'] = fp
+                node.properties['file_path'] = fp
+                
+            ent_file.bind("<KeyRelease>", save_json_fields)
+            ent_file.bind("<FocusOut>", lambda e: self.build_properties_panel(node))
+            ent_file.bind("<Return>", lambda e: self.build_properties_panel(node))
             
         elif node.type == 'condition':
             # Fields: Variable, Operator, Value
@@ -2100,6 +2172,23 @@ class PropertiesPanelMixin:
             schema[alias] = {'seconds': '<Número>'}
         elif node.type == 'move_mouse':
             schema[alias] = {'x': '<Número>', 'y': '<Número>'}
+        elif node.type == 'json_loader':
+            file_path = node.properties.get('file_path', '')
+            import os
+            schema[alias] = {}
+            if file_path and os.path.exists(file_path):
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    schema[alias] = infer_payload_schema(data)
+                except Exception as e:
+                    schema[alias] = f"<Erro: {str(e)}>"
+            else:
+                schema[alias] = {"status": "Carregue um arquivo JSON"}
+        elif node.type in ['copy', 'paste']:
+            schema[alias] = "<Boolean>"
+        elif node.type == 'end':
+            pass
         elif node.type in ['postgres', 'mysql', 'sqlite', 'api']:
             sample = node.properties.get('sample_payload')
             if sample:

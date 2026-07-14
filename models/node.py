@@ -153,7 +153,11 @@ class VisualNode:
         'alert_dialog': 'exclamation-triangle',
         'switch': 'random',
         'js': 'code',
-        'python': 'terminal'
+        'python': 'terminal',
+        'json_loader': 'code',
+        'copy': 'keyboard-o',
+        'paste': 'keyboard-o',
+        'end': 'ban'
     }
 
     def __init__(self, canvas, node_id, node_type, name, x, y, properties=None):
@@ -178,7 +182,8 @@ class VisualNode:
                 'ocr': 'ocr',
                 'loop': 'loop', 'break_loop': 'break', 'continue_loop': 'continue',
                 'storage_var': 'var', 'confirm_dialog': 'confirmar', 'alert_dialog': 'alerta',
-                'switch': 'switch', 'js': 'js', 'python': 'python'
+                'switch': 'switch', 'js': 'js', 'python': 'python',
+                'json_loader': 'json', 'copy': 'copia', 'paste': 'colar', 'end': 'encerrar'
             }
             prefix = alias_map.get(self.type, self.type)
             self.properties['alias'] = 'inicio' if self.type == 'start' else f"{prefix}_{self.id}"
@@ -214,7 +219,11 @@ class VisualNode:
             'alert_dialog': {'header': '#e11d48', 'title': t("toolbox.nodes.alert_dialog")},
             'switch': {'header': '#4f46e5', 'title': t("toolbox.nodes.switch")},
             'js': {'header': '#ca8a04', 'title': 'JavaScript'},
-            'python': {'header': '#2b5b84', 'title': 'Python'}
+            'python': {'header': '#2b5b84', 'title': 'Python'},
+            'json_loader': {'header': '#d946ef', 'title': t("toolbox.nodes.json_loader")},
+            'copy': {'header': '#f43f5e', 'title': t("toolbox.nodes.copy")},
+            'paste': {'header': '#10b981', 'title': t("toolbox.nodes.paste")},
+            'end': {'header': '#ef4444', 'title': t("toolbox.nodes.end")}
         }
         self.theme = self.themes.get(self.type, {'header': '#64748b', 'title': 'Nó'})
 
@@ -251,14 +260,15 @@ class VisualNode:
             'ocr': 'ocr',
             'loop': 'loop', 'break_loop': 'break', 'continue_loop': 'continue',
             'storage_var': 'var', 'confirm_dialog': 'confirmar', 'alert_dialog': 'alerta',
-            'switch': 'switch', 'js': 'js', 'python': 'python'
+            'switch': 'switch', 'js': 'js', 'python': 'python',
+            'json_loader': 'json', 'copy': 'copia', 'paste': 'colar', 'end': 'encerrar'
         }
         prefix = alias_map.get(self.type, self.type)
         alias_val = 'inicio' if self.type == 'start' else f"{prefix}_{self.id}"
         
         props = {}
         if self.type == 'click':
-            props = {'x': 0, 'y': 0}
+            props = {'x': 0, 'y': 0, 'button': 'Botão esquerdo', 'click_type': 'Clique simples'}
         elif self.type == 'capture':
             props = {'capture_type': 'Dados da Janela Ativa'}
         elif self.type == 'screenshot':
@@ -283,8 +293,10 @@ class VisualNode:
             props = {'connection_name': '', 'method': 'GET', 'path': '', 'headers': '', 'body': '', 'sample_payload': None}
         elif self.type == 'loop':
             props = {'array_data': '[]'}
-        elif self.type in ['break_loop', 'continue_loop']:
+        elif self.type in ['break_loop', 'continue_loop', 'copy', 'paste', 'end']:
             props = {}
+        elif self.type == 'json_loader':
+            props = {'file_path': ''}
         elif self.type == 'storage_var':
             props = {'variable_name': 'var_1', 'variable_value': ''}
         elif self.type == 'confirm_dialog':
@@ -377,7 +389,7 @@ class VisualNode:
                 'type': 'output', 'color': '#64748b',
                 'label': t('properties.loop_done'), 'tag': f"port_out_done_{self.id}"
             }
-        elif self.type in ['break_loop', 'continue_loop']:
+        elif self.type in ['break_loop', 'continue_loop', 'end']:
             # No output ports
             pass
         elif self.type == 'switch':
@@ -569,6 +581,13 @@ class VisualNode:
         self.update_outline()
 
     def update_plus_handles(self):
+        if getattr(self, 'is_deleted', False):
+            return
+            
+        app = getattr(self.canvas, 'app', None)
+        if not app:
+            return
+
         # 1. Clean up existing plus handles
         if hasattr(self, 'plus_handles'):
             for item_ids in list(self.plus_handles.values()):
@@ -580,10 +599,6 @@ class VisualNode:
             self.plus_handles.clear()
         else:
             self.plus_handles = {}
-
-        app = getattr(self.canvas, 'app', None)
-        if not app:
-            return
 
         zoom_scale = getattr(app, 'zoom_scale', 1.0)
         
@@ -696,6 +711,8 @@ class VisualNode:
                 (t("toolbox.nodes.capture"), "capture"),
                 (t("toolbox.nodes.screenshot"), "screenshot"),
                 (t("toolbox.nodes.ocr"), "ocr"),
+                (t("toolbox.nodes.copy", default_val="Copiar (Ctrl+C)"), "copy"),
+                (t("toolbox.nodes.paste", default_val="Colar (Ctrl+V)"), "paste"),
             ]),
             ("CONTROLE E FLUXO", [
                 (t("toolbox.nodes.condition"), "condition"),
@@ -703,6 +720,7 @@ class VisualNode:
                 (t("toolbox.nodes.loop"), "loop"),
                 (t("toolbox.nodes.continue_loop"), "continue_loop"),
                 (t("toolbox.nodes.break_loop"), "break_loop"),
+                (t("toolbox.nodes.end", default_val="Encerrar Fluxo"), "end"),
             ]),
             ("DADOS E CONEXÕES", [
                 (t("toolbox.nodes.postgres"), "postgres"),
@@ -710,6 +728,7 @@ class VisualNode:
                 (t("toolbox.nodes.sqlite"), "sqlite"),
                 (t("toolbox.nodes.api"), "api"),
                 (t("toolbox.nodes.storage_var"), "storage_var"),
+                (t("toolbox.nodes.json_loader", default_val="Carregar JSON"), "json_loader"),
             ]),
             ("DIÁLOGOS E TELAS", [
                 (t("toolbox.nodes.confirm_dialog"), "confirm_dialog"),
@@ -863,6 +882,8 @@ class VisualNode:
             y_raw = self.properties.get('y', 0)
             x_resolved = resolve_value(str(x_raw), payload)
             y_resolved = resolve_value(str(y_raw), payload)
+            button = self.properties.get('button', 'Botão esquerdo')
+            click_type = self.properties.get('click_type', 'Clique simples')
             try:
                 x = int(x_resolved)
             except ValueError:
@@ -871,9 +892,9 @@ class VisualNode:
                 y = int(y_resolved)
             except ValueError:
                 y = 0
-            log_func(t("logs.click_executing").format(x, y))
-            click_mouse(x, y)
-            result = {'x': x, 'y': y}
+            log_func(f" -> Clicando em ({x}, {y}) - {button} - {click_type}")
+            click_mouse(x, y, button, click_type)
+            result = {'x': x, 'y': y, 'button': button, 'click_type': click_type}
             payload[alias] = result
             return 'out'
             
@@ -884,6 +905,27 @@ class VisualNode:
                 title, hwnd = win_details['title'], win_details['hwnd']
                 log_func(t("logs.capture_window_success").format(title, hwnd))
                 result = {'title': title, 'hwnd': hwnd}
+                payload[alias] = result
+            elif capture_type in ['Data e Hora do Windows', 'Windows Date and Time', 'DateTime']:
+                import datetime
+                now = datetime.datetime.now()
+                dt_str = now.strftime("%Y-%m-%d %H:%M:%S")
+                date_str = now.strftime("%Y-%m-%d")
+                time_str = now.strftime("%H:%M:%S")
+                timestamp = int(now.timestamp())
+                log_func(f" -> Data e hora do Windows capturada: {dt_str}")
+                result = {
+                    'datetime': dt_str,
+                    'date': date_str,
+                    'time': time_str,
+                    'timestamp': timestamp,
+                    'year': now.year,
+                    'month': now.month,
+                    'day': now.day,
+                    'hour': now.hour,
+                    'minute': now.minute,
+                    'second': now.second
+                }
                 payload[alias] = result
             else:
                 class POINT(ctypes.Structure):
@@ -1900,14 +1942,64 @@ __result = __user_function()
             payload[alias] = actual_value
             return matched_port
             
+        elif self.type == 'json_loader':
+            file_path_raw = self.properties.get('file_path', '')
+            file_path = resolve_value(file_path_raw, payload)
+            log_func(f"Carregando arquivo JSON de: {file_path}")
+            if not file_path:
+                raise ValueError("Caminho do arquivo JSON não especificado.")
+            
+            import os
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"Arquivo JSON não encontrado no caminho: {file_path}")
+                
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+            payload[alias] = data
+            log_func(f"Arquivo JSON carregado com sucesso. Disponibilizado no payload como '{alias}'")
+            return 'out'
+
+        elif self.type == 'copy':
+            log_func("Executando Copiar (Ctrl+C)")
+            from core.automation import simulate_copy
+            simulate_copy()
+            payload[alias] = True
+            return 'out'
+
+        elif self.type == 'paste':
+            log_func("Executando Colar (Ctrl+V)")
+            from core.automation import simulate_paste
+            simulate_paste()
+            payload[alias] = True
+            return 'out'
+
+        elif self.type == 'end':
+            log_func("Encerrando execução do fluxo imediatamente...")
+            app = getattr(self.canvas, 'app', None)
+            if app:
+                app.is_running = False
+            return None
+            
         return None
 
     def delete(self):
+        self.is_deleted = True
         self.canvas.delete(self.tag)
         for p in self.ports.values():
             self.canvas.delete(p['tag'])
             if 'ui_label' in p:
                 self.canvas.delete(p['ui_label'])
+        
+        # Clean up plus handles too
+        if hasattr(self, 'plus_handles'):
+            for item_ids in list(self.plus_handles.values()):
+                for iid in item_ids:
+                    try:
+                        self.canvas.delete(iid)
+                    except Exception:
+                        pass
+            self.plus_handles.clear()
 
     def redraw(self):
         self.canvas.delete(self.tag)

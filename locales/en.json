@@ -34,7 +34,11 @@
         "continue_loop": "Continue Loop",
         "switch": "Switch Case",
         "js": "Execute JavaScript",
-        "python": "Execute Python"
+        "python": "Execute Python",
+        "json_loader": "Load JSON",
+        "copy": "Copy (Ctrl+C)",
+        "paste": "Paste (Ctrl+V)",
+        "end": "End Flow"
       }
     },
     "menu": {
@@ -105,6 +109,7 @@
       "capture_type": "Capture Type:",
       "capture_active_window": "Active Window Data",
       "capture_mouse_only": "Mouse Data Only",
+      "capture_datetime": "Windows Date and Time",
       "payload_var": "Payload Variable:",
       "payload_var_hint": "Ex: active_window.title",
       "switch_variable": "Expression Variable:",
