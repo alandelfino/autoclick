@@ -52,29 +52,41 @@ class TrayIconMixin:
         # Register global shortcuts during execution
         # F1: id=101, VK_F1 = 0x70
         # F2: id=102, VK_F2 = 0x71
-        user32.RegisterHotKey(None, 101, 0, 0x70)
-        user32.RegisterHotKey(None, 102, 0, 0x71)
+        # Escape: id=103, VK_ESCAPE = 0x1B
+        hotkeys = {
+            101: 0x70,
+            102: 0x71,
+            103: 0x1B,
+        }
+        registered_hotkeys = {
+            hotkey_id
+            for hotkey_id, virtual_key in hotkeys.items()
+            if user32.RegisterHotKey(None, hotkey_id, 0, virtual_key)
+        }
         
-        self.log_message(">> Global Hotkeys active: [F1] to Stop, [F2] to Pause/Resume")
+        if 103 in registered_hotkeys:
+            self.log_message(">> Global Hotkeys active: [ESC/F1] to Stop, [F2] to Pause/Resume")
+        else:
+            self.log_message(">> WARNING: [ESC] global shortcut unavailable. Use [F1] to Stop.")
         
         msg = wintypes.MSG()
-        while self.is_running:
-            # Non-blocking peek message
-            if user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1): # PM_REMOVE = 1
-                if msg.message == 0x0312: # WM_HOTKEY
-                    hotkey_id = msg.wParam
-                    if hotkey_id == 101:
-                        self.log_message(">> HOTKEY DETECTED: [F1] - Stopping Execution!")
-                        self.stop_flow_execution()
-                    elif hotkey_id == 102:
-                        self.log_message(">> HOTKEY DETECTED: [F2] - Toggling Pause/Resume!")
-                        self.toggle_pause()
-                user32.UnregisterHotKey(None, 101)
-                user32.RegisterHotKey(None, 101, 0, 0x70) # Re-register cleanly if needed, or dispatch
-                user32.TranslateMessage(ctypes.byref(msg))
-                user32.DispatchMessageW(ctypes.byref(msg))
-            time.sleep(0.05)
-            
-        user32.UnregisterHotKey(None, 101)
-        user32.UnregisterHotKey(None, 102)
-        self.log_message(">> Global Hotkeys deactivated.")
+        try:
+            while self.is_running:
+                # Drain pending messages without blocking the execution thread.
+                while user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1): # PM_REMOVE = 1
+                    if msg.message == 0x0312: # WM_HOTKEY
+                        hotkey_id = msg.wParam
+                        if hotkey_id in (101, 103):
+                            shortcut = "ESC" if hotkey_id == 103 else "F1"
+                            self.log_message(f">> HOTKEY DETECTED: [{shortcut}] - Stopping Execution!")
+                            self.stop_flow_execution()
+                        elif hotkey_id == 102:
+                            self.log_message(">> HOTKEY DETECTED: [F2] - Toggling Pause/Resume!")
+                            self.toggle_pause()
+                    user32.TranslateMessage(ctypes.byref(msg))
+                    user32.DispatchMessageW(ctypes.byref(msg))
+                time.sleep(0.05)
+        finally:
+            for hotkey_id in registered_hotkeys:
+                user32.UnregisterHotKey(None, hotkey_id)
+            self.log_message(">> Global Hotkeys deactivated.")

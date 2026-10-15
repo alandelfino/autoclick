@@ -16,6 +16,7 @@ import re
 from core.automation import click_mouse, simulate_keypress, get_active_window_info, simulate_type_text, get_active_window_details
 from core.payload import get_payload_value, resolve_value, truncate_payload_data
 from core.i18n_helper import t
+from core.runtime_paths import node_command
 
 
 class BreakLoopException(Exception):
@@ -155,6 +156,7 @@ class VisualNode:
         'js': 'code',
         'python': 'terminal',
         'json_loader': 'code',
+        'txt_loader': 'code',
         'copy': 'keyboard-o',
         'paste': 'keyboard-o',
         'end': 'ban'
@@ -183,7 +185,7 @@ class VisualNode:
                 'loop': 'loop', 'break_loop': 'break', 'continue_loop': 'continue',
                 'storage_var': 'var', 'confirm_dialog': 'confirmar', 'alert_dialog': 'alerta',
                 'switch': 'switch', 'js': 'js', 'python': 'python',
-                'json_loader': 'json', 'copy': 'copia', 'paste': 'colar', 'end': 'encerrar'
+                'json_loader': 'json', 'txt_loader': 'linhas', 'copy': 'copia', 'paste': 'colar', 'end': 'encerrar'
             }
             prefix = alias_map.get(self.type, self.type)
             self.properties['alias'] = 'inicio' if self.type == 'start' else f"{prefix}_{self.id}"
@@ -221,6 +223,7 @@ class VisualNode:
             'js': {'header': '#ca8a04', 'title': 'JavaScript'},
             'python': {'header': '#2b5b84', 'title': 'Python'},
             'json_loader': {'header': '#d946ef', 'title': t("toolbox.nodes.json_loader")},
+            'txt_loader': {'header': '#0891b2', 'title': t("toolbox.nodes.txt_loader")},
             'copy': {'header': '#f43f5e', 'title': t("toolbox.nodes.copy")},
             'paste': {'header': '#10b981', 'title': t("toolbox.nodes.paste")},
             'end': {'header': '#ef4444', 'title': t("toolbox.nodes.end")}
@@ -261,7 +264,7 @@ class VisualNode:
             'loop': 'loop', 'break_loop': 'break', 'continue_loop': 'continue',
             'storage_var': 'var', 'confirm_dialog': 'confirmar', 'alert_dialog': 'alerta',
             'switch': 'switch', 'js': 'js', 'python': 'python',
-            'json_loader': 'json', 'copy': 'copia', 'paste': 'colar', 'end': 'encerrar'
+            'json_loader': 'json', 'txt_loader': 'linhas', 'copy': 'copia', 'paste': 'colar', 'end': 'encerrar'
         }
         prefix = alias_map.get(self.type, self.type)
         alias_val = 'inicio' if self.type == 'start' else f"{prefix}_{self.id}"
@@ -296,6 +299,8 @@ class VisualNode:
         elif self.type in ['break_loop', 'continue_loop', 'copy', 'paste', 'end']:
             props = {}
         elif self.type == 'json_loader':
+            props = {'file_path': ''}
+        elif self.type == 'txt_loader':
             props = {'file_path': ''}
         elif self.type == 'storage_var':
             props = {'variable_name': 'var_1', 'variable_value': ''}
@@ -729,6 +734,7 @@ class VisualNode:
                 (t("toolbox.nodes.api"), "api"),
                 (t("toolbox.nodes.storage_var"), "storage_var"),
                 (t("toolbox.nodes.json_loader", default_val="Carregar JSON"), "json_loader"),
+                (t("toolbox.nodes.txt_loader", default_val="Ler arquivo TXT"), "txt_loader"),
             ]),
             ("DIÁLOGOS E TELAS", [
                 (t("toolbox.nodes.confirm_dialog"), "confirm_dialog"),
@@ -1057,7 +1063,6 @@ class VisualNode:
                 return 'out'
                 
             # Try to auto-detect Tesseract binary path on Windows if it is not in path or configured
-            import os
             try:
                 if not pytesseract.pytesseract.tesseract_cmd or not os.path.exists(pytesseract.pytesseract.tesseract_cmd):
                     common_paths = [
@@ -1287,7 +1292,17 @@ class VisualNode:
             except ValueError:
                 secs = 1.0
             log_func(t("logs.delay_waiting").format(secs))
-            time.sleep(secs)
+
+            # Sleep in short intervals so a stop request (including ESC) can
+            # interrupt long delay nodes promptly.
+            app = getattr(self.canvas, 'app', None)
+            deadline = time.monotonic() + max(0.0, secs)
+            while time.monotonic() < deadline:
+                if app is not None and not app.is_running:
+                    return 'out'
+                remaining = deadline - time.monotonic()
+                time.sleep(min(0.05, remaining))
+
             payload[alias] = {'seconds': secs}
             return 'out'
             
@@ -1480,11 +1495,10 @@ class VisualNode:
             
             import subprocess
             import tempfile
-            import os
             
             use_node = False
             try:
-                res = subprocess.run(["node", "-v"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=1)
+                res = subprocess.run([node_command(), "-v"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=1)
                 if res.returncode == 0:
                     use_node = True
             except Exception:
@@ -1548,7 +1562,7 @@ if (typeof JSON !== 'undefined') {{
                 
             try:
                 if use_node:
-                    cmd = ["node", temp_file_path]
+                    cmd = [node_command(), temp_file_path]
                 else:
                     cmd = ["cscript", "//Nologo", temp_file_path]
                     
@@ -1949,7 +1963,6 @@ __result = __user_function()
             if not file_path:
                 raise ValueError("Caminho do arquivo JSON não especificado.")
             
-            import os
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"Arquivo JSON não encontrado no caminho: {file_path}")
                 
@@ -1958,6 +1971,30 @@ __result = __user_function()
                 
             payload[alias] = data
             log_func(f"Arquivo JSON carregado com sucesso. Disponibilizado no payload como '{alias}'")
+            return 'out'
+
+        elif self.type == 'txt_loader':
+            file_path_raw = self.properties.get('file_path', '')
+            file_path = resolve_value(file_path_raw, payload)
+            log_func(t("logs.txt_loader_reading").format(file_path))
+            if not file_path:
+                raise ValueError(t("messages.txt_file_path_missing"))
+
+            if not os.path.isfile(file_path):
+                raise FileNotFoundError(t("messages.txt_file_not_found").format(file_path))
+
+            with open(file_path, 'rb') as text_file:
+                raw_content = text_file.read()
+
+            try:
+                content = raw_content.decode('utf-8-sig')
+            except UnicodeDecodeError:
+                # Common fallback for TXT files created by legacy Windows apps.
+                content = raw_content.decode('cp1252')
+
+            lines = content.splitlines()
+            payload[alias] = lines
+            log_func(t("logs.txt_loader_success").format(len(lines), alias))
             return 'out'
 
         elif self.type == 'copy':

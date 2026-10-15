@@ -36,6 +36,7 @@
         "js": "Execute JavaScript",
         "python": "Execute Python",
         "json_loader": "Load JSON",
+        "txt_loader": "Read TXT file",
         "copy": "Copy (Ctrl+C)",
         "paste": "Paste (Ctrl+V)",
         "end": "End Flow"
@@ -176,6 +177,11 @@
       "storage_var_name": "Variable Name (Storage):",
       "storage_var_value": "Variable Value:",
       "storage_var_hint": "Can use placeholders like {active_window.title}",
+      "txt_file_path": "TXT File Path:",
+      "txt_select_file": "Select TXT file",
+      "txt_files": "Text files",
+      "all_files": "All files",
+      "txt_output_hint": "Returns an array of lines in the payload. In Loop, use: {{{{ $.{} }}}}",
       "payload_preview": "PAYLOAD VALUE PREVIEW",
       "schema_viewer": "SCHEMA VIEWER (VARIABLES PATH)",
       "variables_viewer": "VARIABLES TREE VIEWER",
@@ -297,6 +303,7 @@
       "break_loop": "Interrupt Loop",
       "continue_loop": "Continue Loop",
       "storage_var": "Storage Var",
+      "txt_loader": "Read TXT file",
       "switch": "Switch Case"
     },
     "logs": {
@@ -351,6 +358,8 @@
       "loop_continue_executing": " -> Skipping loop '{}' iteration (next item)...",
       "loop_continue_warning": " -> WARNING: No active loop found to continue.",
       "storage_set": " -> Storage variable '{}' set to: {}",
+      "txt_loader_reading": " -> Reading TXT file: {}",
+      "txt_loader_success": " -> TXT file read successfully: {} lines available in '{}'.",
       "js_executing": " -> Executing JavaScript code in node '{}'...",
       "python_executing": " -> Executing Python code in node '{}'..."
     },
@@ -370,6 +379,8 @@
       "api_error": "API request failed:\n{}",
       "invalid_headers": "Invalid additional headers (expected JSON): {}",
       "url_connection_error": "URL connection error: {}",
+      "txt_file_path_missing": "TXT file path was not specified.",
+      "txt_file_not_found": "TXT file not found at: {}",
       "loop_unconnected_nodes_warning": "The following loops have end nodes that are not connected back to the loop:\n\n{}\n\nThe loop will not function correctly if not corrected.\n\nDo you want to run the flow anyway?"
     }
   }

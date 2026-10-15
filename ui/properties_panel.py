@@ -4,7 +4,7 @@ payload tree display, and related helpers.
 """
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 import copy
 import datetime
 import hashlib
@@ -828,8 +828,17 @@ class PropertiesPanelMixin:
             ent_image.bind("<KeyRelease>", save_ocr_fields)
             ent_text.bind("<KeyRelease>", save_ocr_fields)
             
-        elif node.type == 'json_loader':
-            lbl_file = tk.Label(self.properties_container, text="Caminho do Arquivo JSON:", font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
+        elif node.type in ['json_loader', 'txt_loader']:
+            is_txt = node.type == 'txt_loader'
+            path_label = t("properties.txt_file_path") if is_txt else "Caminho do Arquivo JSON:"
+            file_title = t("properties.txt_select_file") if is_txt else "Selecionar arquivo JSON"
+            file_types = (
+                [(t("properties.txt_files"), "*.txt"), (t("properties.all_files"), "*.*")]
+                if is_txt
+                else [("Arquivos JSON", "*.json"), ("Todos os Arquivos", "*.*")]
+            )
+
+            lbl_file = tk.Label(self.properties_container, text=path_label, font=("Segoe UI", 9, "bold"), fg="#475569", bg="#f8fafc")
             lbl_file.pack(anchor="w", pady=(0, 2))
             
             file_frame = tk.Frame(self.properties_container, bg="#f8fafc")
@@ -842,8 +851,8 @@ class PropertiesPanelMixin:
             
             def choose_file():
                 fp = filedialog.askopenfilename(
-                    filetypes=[("Arquivos JSON", "*.json"), ("Todos os Arquivos", "*.*")],
-                    title="Selecionar arquivo JSON"
+                    filetypes=file_types,
+                    title=file_title
                 )
                 if fp:
                     ent_file.delete(0, tk.END)
@@ -859,14 +868,23 @@ class PropertiesPanelMixin:
             )
             btn_choose.pack(side="right")
             
-            def save_json_fields(event=None):
+            def save_file_fields(event=None):
                 fp = ent_file.get()
                 self.temp_properties['file_path'] = fp
                 node.properties['file_path'] = fp
                 
-            ent_file.bind("<KeyRelease>", save_json_fields)
+            ent_file.bind("<KeyRelease>", save_file_fields)
             ent_file.bind("<FocusOut>", lambda e: self.build_properties_panel(node))
             ent_file.bind("<Return>", lambda e: self.build_properties_panel(node))
+
+            if is_txt:
+                lbl_hint = tk.Label(
+                    self.properties_container,
+                    text=t("properties.txt_output_hint").format(self.temp_properties.get('alias', 'linhas')),
+                    font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f8fafc",
+                    justify="left", wraplength=280
+                )
+                lbl_hint.pack(anchor="w", pady=(0, 15))
             
         elif node.type == 'condition':
             # Fields: Variable, Operator, Value
@@ -2185,6 +2203,8 @@ class PropertiesPanelMixin:
                     schema[alias] = f"<Erro: {str(e)}>"
             else:
                 schema[alias] = {"status": "Carregue um arquivo JSON"}
+        elif node.type == 'txt_loader':
+            schema[alias] = ["<Texto>"]
         elif node.type in ['copy', 'paste']:
             schema[alias] = "<Boolean>"
         elif node.type == 'end':

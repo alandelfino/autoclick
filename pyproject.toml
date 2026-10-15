@@ -34,6 +34,11 @@ ocr = [
 dev = [
     "pyinstaller>=6.0.0",
 ]
+full = [
+    "psycopg2-binary>=2.9.0",
+    "pymysql[rsa]>=1.1.0",
+    "pytesseract>=0.3.10",
+]
 
 [tool.setuptools]
 packages = ["core", "models", "connectors", "ui"]

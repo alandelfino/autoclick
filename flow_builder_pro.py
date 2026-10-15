@@ -28,6 +28,7 @@ import re
 from models.node import VisualNode
 from models.connection import VisualConnection
 from core.i18n_helper import t
+from core.runtime_paths import resource_path
 
 # --- Connectors (Mixins) ---
 from connectors.database import DatabaseMixin
@@ -71,7 +72,7 @@ class FlowBuilderProApp(
         # Set Window Icon
         try:
             from PIL import Image, ImageTk
-            icon_img = Image.open(r"c:\apps\autoclick\autoclick-icone.png")
+            icon_img = Image.open(resource_path("autoclick-icone.png"))
             icon_photo = ImageTk.PhotoImage(icon_img)
             self.root.iconphoto(True, icon_photo)
             self._window_icon = icon_photo
@@ -130,6 +131,7 @@ class FlowBuilderProApp(
         self.root.bind("<Control-Z>", lambda event: self.undo_action())
         self.root.bind("<Control-y>", lambda event: self.redo_action())
         self.root.bind("<Control-Y>", lambda event: self.redo_action())
+        self.root.bind_all("<Escape>", self.on_escape_pressed, add="+")
         self.root.bind("<Button-1>", self.on_global_click, add="+")
 
     def setup_ui(self):
@@ -159,9 +161,9 @@ class FlowBuilderProApp(
                 resample_filter = Image.ANTIALIAS
             
             if resample_filter is not None:
-                topbar_img = Image.open(r"c:\apps\autoclick\autoclick-icone.png").resize((24, 24), resample_filter)
+                topbar_img = Image.open(resource_path("autoclick-icone.png")).resize((24, 24), resample_filter)
             else:
-                topbar_img = Image.open(r"c:\apps\autoclick\autoclick-icone.png").resize((24, 24))
+                topbar_img = Image.open(resource_path("autoclick-icone.png")).resize((24, 24))
                 
             topbar_photo = ImageTk.PhotoImage(topbar_img)
             self.topbar_logo_img = topbar_photo
@@ -732,6 +734,7 @@ class FlowBuilderProApp(
                 'js': f"JS Código {node_id}",
                 'python': f"Python Código {node_id}",
                 'json_loader': f"Carregar JSON {node_id}",
+                'txt_loader': f"Ler TXT {node_id}",
                 'copy': f"Copiar {node_id}",
                 'paste': f"Colar {node_id}",
                 'end': f"Encerrar {node_id}"
@@ -1061,6 +1064,13 @@ class FlowBuilderProApp(
         self.is_paused = False
         self.log_message(">> Stop request received. Interrupting flow...")
 
+    def on_escape_pressed(self, event=None):
+        """Cancels a running flow when Escape is pressed inside the app."""
+        if not self.is_running:
+            return None
+        self.stop_flow_execution()
+        return "break"
+
     def toggle_pause(self):
         if not self.is_running:
             return
@@ -1111,6 +1121,11 @@ class FlowBuilderProApp(
                     
                     try:
                         next_port = current_node.execute(payload, self.log_message)
+
+                        # A node may have been interrupted while it was executing.
+                        if not self.is_running:
+                            break
+
                         self.execution_history[current_node.id]["output"] = copy.deepcopy(payload)
                         self.last_run_payload = copy.deepcopy(payload)
                         
@@ -1577,6 +1592,7 @@ class FlowBuilderProApp(
                 (t("toolbox.nodes.sqlite"), "sqlite", "#003b57"),
                 (t("toolbox.nodes.api"), "api", "#0284c7"),
                 (t("toolbox.nodes.storage_var"), "storage_var", "#ec4899"),
+                (t("toolbox.nodes.txt_loader"), "txt_loader", "#0891b2"),
             ]),
             ("CÓDIGO E SCRIPTS", [
                 (t("toolbox.nodes.js"), "js", "#ca8a04"),
@@ -1600,7 +1616,7 @@ class FlowBuilderProApp(
             'loop': 'refresh', 'break_loop': 'ban', 'continue_loop': 'arrow-right',
             'storage_var': 'cube', 'confirm_dialog': 'comments-o',
             'alert_dialog': 'exclamation-triangle', 'switch': 'random',
-            'js': 'code', 'python': 'terminal'
+            'js': 'code', 'python': 'terminal', 'txt_loader': 'code'
         }
         
         for group_title, nodes in node_groups:

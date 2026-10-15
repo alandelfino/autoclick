@@ -36,6 +36,7 @@
         "js": "Executar JavaScript",
         "python": "Executar Python",
         "json_loader": "Carregar JSON",
+        "txt_loader": "Ler arquivo TXT",
         "copy": "Copiar (Ctrl+C)",
         "paste": "Colar (Ctrl+V)",
         "end": "Encerrar Fluxo"
@@ -176,6 +177,11 @@
       "storage_var_name": "Nome da Variável (Armazenamento):",
       "storage_var_value": "Valor da Variável:",
       "storage_var_hint": "Pode usar placeholders como {active_window.title}",
+      "txt_file_path": "Caminho do Arquivo TXT:",
+      "txt_select_file": "Selecionar arquivo TXT",
+      "txt_files": "Arquivos de texto",
+      "all_files": "Todos os arquivos",
+      "txt_output_hint": "Retorna um array de linhas no payload. No Loop, use: {{{{ $.{} }}}}",
       "payload_preview": "VISUALIZAÇÃO DO VALOR DO PAYLOAD",
       "schema_viewer": "VISUALIZADOR DE ESQUEMA (CAMINHO DAS VARIÁVEIS)",
       "variables_viewer": "VISUALIZADOR DE ÁRVORE DE VARIÁVEIS",
@@ -297,6 +303,7 @@
       "break_loop": "Interromper Loop",
       "continue_loop": "Próximo Item Loop",
       "storage_var": "Var. Armazenamento",
+      "txt_loader": "Ler arquivo TXT",
       "switch": "Switch Case"
     },
     "logs": {
@@ -351,6 +358,8 @@
       "loop_continue_executing": " -> Pulando ciclo do loop '{}' (próximo item)...",
       "loop_continue_warning": " -> AVISO: Nenhum loop ativo encontrado para continuar.",
       "storage_set": " -> Variável de armazenamento '{}' definida como: {}",
+      "txt_loader_reading": " -> Lendo arquivo TXT: {}",
+      "txt_loader_success": " -> Arquivo TXT lido com sucesso: {} linhas disponíveis em '{}'.",
       "js_executing": " -> Executando código JavaScript no nó '{}'...",
       "python_executing": " -> Executando código Python no nó '{}'..."
     },
@@ -370,6 +379,8 @@
       "api_error": "Falha ao enviar requisição:\n{}",
       "invalid_headers": "Headers adicionais inválidos (esperado JSON): {}",
       "url_connection_error": "Erro de conexão URL: {}",
+      "txt_file_path_missing": "Caminho do arquivo TXT não especificado.",
+      "txt_file_not_found": "Arquivo TXT não encontrado no caminho: {}",
       "loop_unconnected_nodes_warning": "Os seguintes loops possuem nós finais que não estão conectados de volta ao loop:\n\n{}\n\nO loop não funcionará de forma correta se não for corrigido.\n\nDeseja executar o fluxo mesmo assim?"
     }
   }

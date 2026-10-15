@@ -14,3 +14,6 @@ implementation_plan.md
 
 dist
 Output
+.build-venv/
+vendor/
+build/lib/

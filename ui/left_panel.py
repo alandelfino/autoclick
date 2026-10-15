@@ -57,6 +57,7 @@ class LeftPanelMixin:
                 (t("toolbox.nodes.api"), "api", "#0284c7"),
                 (t("toolbox.nodes.storage_var"), "storage_var", "#ec4899"),
                 (t("toolbox.nodes.json_loader", default_val="Carregar JSON"), "json_loader", "#d946ef"),
+                (t("toolbox.nodes.txt_loader", default_val="Ler arquivo TXT"), "txt_loader", "#0891b2"),
             ]),
             ("CÓDIGO E SCRIPTS", [
                 (t("toolbox.nodes.js"), "js", "#ca8a04"),

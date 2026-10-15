@@ -15,9 +15,12 @@ DisableProgramGroupPage=yes
 ; Define privilégios mais baixos para permitir instalação de usuário sem UAC (instala em AppData se executado sem admin)
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog commandline
-OutputDir=c:\apps\autoclick\Output
+OutputDir=Output
 OutputBaseFilename=AutoClickSetup
-SetupIconFile=c:\apps\autoclick\logo.ico
+SetupIconFile=logo.ico
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+MinVersion=10.0
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -30,8 +33,8 @@ Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "c:\apps\autoclick\dist\AutoClick\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "c:\apps\autoclick\logo.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\AutoClick\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "logo.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\logo.ico"

@@ -57,6 +57,7 @@ Whether you are looking to eliminate repetitive manual tasks or bridge legacy de
 | **Storage Var** | Storage | Stores variables in the execution payload for later steps. | `variable_name`, `variable_value` |
 | **PostgreSQL / MySQL / SQLite** | Database | Executes SQL queries directly and appends result sets to the payload. | `connection_name`, `sql` |
 | **API Request** | Network | Sends HTTP requests (GET, POST, PUT, DELETE, PATCH) with full header/body customization. | `connection_name`, `method`, `path`, `headers`, `body` |
+| **Read TXT File** | Data | Reads a text file and returns one array item per line. | `file_path` |
 
 ---
 
@@ -112,11 +113,49 @@ autoclick/
 ## 🛠️ Requirements & Installation
 
 ### Option 1: Standard Windows Installer (Recommended)
+The installer built with this repository includes a private Python runtime, Tcl/Tk,
+Python libraries, PostgreSQL/MySQL client drivers, SQLite, Tesseract OCR and Node.js.
+The destination PC does not need Python, pip, Node.js or Tesseract installed, and
+installation works offline. Supported target: Windows 10/11 x64.
+Database servers and remote APIs remain external services configured by the user.
+
 The easiest way to run AutoClick on your PC is using the official installer:
 1. Run the [AutoClickSetup.exe](Output/AutoClickSetup.exe) installer.
 2. Select your preferred installation language (**Portuguese** or **English**). The app interface will automatically adjust to your choice.
 3. Follow the wizard steps to complete the installation and create shortcuts.
 4. Launch the application from your Desktop or Start Menu!
+
+### Building the complete Windows installer
+
+On the **build machine**, install 64-bit Python 3.10+ (including Tcl/Tk),
+[Inno Setup 6.3+](https://jrsoftware.org/isdl.php), Node.js for Windows x64,
+and a complete Windows x64 distribution of
+[Tesseract](https://tesseract-ocr.github.io/tessdoc/Installation.html).
+Keep Tesseract's DLLs, `tessdata/eng.traineddata` and license files together.
+Include additional trained languages in that folder if needed.
+
+Run from a Windows command prompt:
+
+```bat
+rem Only needed when tools are outside their default locations:
+set "TESSERACT_DIR=C:\Program Files\Tesseract-OCR"
+set "NODE_EXE=C:\Program Files\nodejs\node.exe"
+build_installer.bat
+```
+
+The script creates `.build-venv`, installs `.[full,dev]` and transitive libraries,
+checks imports and Tcl/Tk, then builds `AutoClick.spec` and `installer.iss`.
+Internet is required on the build machine to obtain Python packages.
+The build stops if a required library, native executable or English OCR data is
+missing; it never deliberately produces a reduced-feature installer.
+Output: `Output/AutoClickSetup.exe`.
+
+Python is shipped privately by PyInstaller, not registered as a system-wide
+Python installation. It therefore does not change an existing Python or PATH.
+The native OCR and JavaScript engines are also private to AutoClick.
+Retain the redistribution notices/licenses from the native distributions.
+Before distributing a release, test installation, launch, OCR, JavaScript and
+database connections in a clean Windows VM without development tools installed.
 
 ### Option 2: Run from Python Source (For Developers)
 
@@ -150,5 +189,5 @@ python flow_builder_pro.py
 *   **`Ctrl + S`**: Save current flow as JSON.
 *   **Double-click a Connection Line**: Insert a waypoint/anchor to route lines around nodes.
 *   **Right-click a Waypoint**: Delete the anchor point.
-*   **`F9`**: Global hotkey to Start/Pause execution.
-*   **`F10`**: Global hotkey to Stop execution immediately.
+*   **`Esc` or `F1`**: Stop execution immediately from any window.
+*   **`F2`**: Pause or resume execution.

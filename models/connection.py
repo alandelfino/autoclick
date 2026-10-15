@@ -360,6 +360,7 @@ class VisualConnection:
                 (t("toolbox.nodes.sqlite"), "sqlite"),
                 (t("toolbox.nodes.api"), "api"),
                 (t("toolbox.nodes.storage_var"), "storage_var"),
+                (t("toolbox.nodes.txt_loader", default_val="Ler arquivo TXT"), "txt_loader"),
             ]),
             ("DIÁLOGOS E TELAS", [
                 (t("toolbox.nodes.confirm_dialog"), "confirm_dialog"),

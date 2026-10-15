@@ -3,6 +3,7 @@ Start screen — Welcome screen with New Flow / Open Flow buttons.
 """
 import tkinter as tk
 from core.i18n_helper import t
+from core.runtime_paths import resource_path
 
 
 class StartScreenMixin:
@@ -19,7 +20,7 @@ class StartScreenMixin:
         try:
             from PIL import Image, ImageTk
             import os
-            logo_path = r"c:\apps\autoclick\Autoclick.png"
+            logo_path = resource_path("Autoclick.png")
             if os.path.exists(logo_path):
                 raw_img = Image.open(logo_path)
                 w, h = raw_img.size
